@@ -4,67 +4,43 @@ import (
 	"github.com/codegangsta/cli"
 	l4g "github.com/jeppeter/log4go"
 	"fmt"
+	"github.com/tebaka/atexit"
 	"flag"
 )
 
-type CntFlag struct {
-	cli.BoolFlag
-}
+var st_logger *l4g.Logger = nil
 
-var st_verboseflag *CntFlag
-st_verboseflag = nil
-
-func NewCntFlag(longname string,usage interface,shortname interface) *CntFlag {
-	var name string
-	var usagestr string
-	name = longname
-	switch shortname.type {
-	case string:
-		name += fmt.Sprintf(",%s", shortname)
-	default:
-		name += ""
+func exithandler() {
+	if st_logger != nil {
+		st_logger.Close()
 	}
-
-	switch usage.type {
-	case string:
-		usagestr = usage
-	default:
-		usagestr = fmt.Sprintf("set %s count value",longname)
-	}
-
-	flag := &CntFlag{
-		Name: name,
-		Usage: usagestr,
-		Value: 0
-	}
-	return flag
+	st_logger = nil
 }
 
-func (f *CntFlag) Apply(set *flag.FlagSet) {
-	f.ApplyWithError(set)
+func init() {
+	atexit.Register(exithandler)
 }
 
-func (f *CntFlag) ApplyWithError(set *flag.FlagSet) error{
-	f.Value += 1
-	return nil
+func Debug(a ...interface{}) int{
+	
 }
 
-func (f *CntFlag) String() string {
-	return fmt.Sprintf("%d",f.Value)
+func Error(a ...interface{}) int{
+
 }
 
-func (f *CntFlag) GetName() string {
-	return fmt.Sprintf("%s", f.Name)
-}
 
 func SetCliFlag(cliapp cli.App) {
 	var vflag *CntFlag
 	var wflag *cli.StringSliceFlag
 	var aflag *cli.StringSliceFlag
-	vflag = NewCntFlag("verbose","verbose mode set", "V")
+	vflag = &cli.IntFlag{
+		Name: "verbose, V"
+		Value: 0
+	}
 	st_verboseflag = vflag
 	cliapp.Flags = append(cliapp.Flags,vflag)
-	wflag = &cli.StringFlag{
+	wflag = &cli.StringSliceFlag{
 		Name: "log-files",
 		Usage: "set write rotate files",
 	}
@@ -74,9 +50,59 @@ func SetCliFlag(cliapp cli.App) {
 		Usage: "set append files"
 	}
 	cliapp.Flags = append(cliapp.Flags, aflag)
+	nostderr := &cli.BoolFlag {
+		Name: "log-nostderr"
+		Usage: "specified no stdout"
+	}
+	cliapp.Flags = append(cliapp.Flags, nostderr)	
 	return
 }
 
-func SetCliFlag(ctx *cli.Context) {
-	
+func SetCliFlag(ctx *cli.Context)  error{
+	var appfiles []string
+	var cfiles []string
+	var vmode int
+	var lglvl l4g.Level
+
+	if st_logger != nil {
+		st_logger.Close()
+	}
+	st_logger = nil
+
+
+
+	vmode = ctx.GlobalInt("verbose")
+	if vmode <= 0 {
+		lglvl = l4g.ERROR
+	} else if vmode == 1 {
+		lglvl = l4g.WARNING
+	} else if vmode == 2 {
+		lglvl = l4g.INFO
+	} else if vmode == 3 {
+		lglvl = l4g.DEBUG
+	} else if vmode == 4 {
+		lglvl = l4g.TRACE
+	} else if vmode >= 5 {
+		lglvl = l4g.FINEST
+	}
+
+	st_logger = l4g.NewLogger()
+	if ! ctx.GlobalIsSet("log-nostderr") {
+		st_logger.AddFilter("stderr", lglvl, l4g.NewStderrLogWriter())
+	}
+
+	cfiles = ctx.GlobalStringSlice("log-files")
+	if len(cfiles) > 0 {
+		for _, f := range cfiles {
+			st_logger.AddFilter(f, lglvl, l4g.NewFileLogWriter(f, false))
+		}
+	}
+
+	appfiles = ctx.GlobalFlagNames("log-appends")
+	if len(appfiles) > 0 {
+		for _, f := range appfiles {
+			st_logger.AddFilter(f, lglvl, l4g.NewFileLogWriter(f, true))
+		}
+	}
+	return nil
 }
