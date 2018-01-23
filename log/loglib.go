@@ -5,6 +5,7 @@ import (
 	"github.com/codegangsta/cli"
 	l4g "github.com/jeppeter/log4go"
 	"github.com/tebeka/atexit"
+	"os"
 	"reflect"
 	"runtime"
 )
@@ -123,6 +124,8 @@ func Error(a ...interface{}) int {
 	retval = len(outstr)
 	if st_logger != nil {
 		st_logger.Error(outstr)
+	} else {
+		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
 	if st_logger_level >= 0 {
 		outstr += "\n"
