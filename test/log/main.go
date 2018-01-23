@@ -20,7 +20,6 @@ func makeTestCmd() cli.Command {
 			c := flags[i]
 			Error("[%d]=[%s] name [%s]", i, reflect.TypeOf(c), c.GetName())
 		}
-		atexit.Exit(0)
 		return nil
 	}
 	return appcmd
@@ -39,7 +38,6 @@ func makeCmdCmd() cli.Command {
 			c := flags[i]
 			Debug("[%d]=[%s] name [%s]", i, reflect.TypeOf(c), c.GetName())
 		}
-		atexit.Exit(0)
 		return nil
 	}
 	return appcmd
@@ -50,5 +48,8 @@ func main() {
 	AddCliFlag(cliapp)
 	cliapp.Commands = append(cliapp.Commands, makeTestCmd())
 	cliapp.Commands = append(cliapp.Commands, makeCmdCmd())
-	cliapp.Run(os.Args)
+	err := cliapp.Run(os.Args)
+	Debug("return [%v]", err)
+	atexit.Exit(0)
+
 }

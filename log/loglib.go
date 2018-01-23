@@ -19,7 +19,6 @@ func exithandler() {
 	}
 	st_logger = nil
 	st_logger_level = 0
-	fmt.Printf("At Exit\n")
 }
 
 func init() {
@@ -34,14 +33,12 @@ func format_out_stack(level int) string {
 func format_out_string_total(level int, fmtstr string, a ...interface{}) string {
 	outstr := format_out_stack((level + 1))
 	outstr += fmt.Sprintf(fmtstr, a...)
-	outstr += "\n"
 	return outstr
 }
 
 func format_out_string_singal(level int, fmtstr string) string {
 	outstr := format_out_stack((level + 1))
 	outstr += fmt.Sprintf(fmtstr)
-	outstr += "\n"
 	return outstr
 }
 
@@ -86,18 +83,19 @@ func format_out_string_cap(a ...interface{}) string {
 	} else {
 		outstr += fmt.Sprintf(fmtstr, vaargs...)
 	}
-	outstr += "\n"
 	return outstr
 }
 
 func Debug(a ...interface{}) int {
 	var retval int = 0
-	outstr := format_out_string_cap(a...)
+	outstr := "<DEBUG>"
+	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
 		st_logger.Debug(outstr)
 	}
 	if st_logger_level >= 3 {
+		outstr += "\n"
 		LogDebugOutputBackGround(outstr)
 	}
 	return retval
@@ -105,12 +103,14 @@ func Debug(a ...interface{}) int {
 
 func Error(a ...interface{}) int {
 	var retval int = 0
-	outstr := format_out_string_cap(a...)
+	outstr := "<ERROR>"
+	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
 		st_logger.Error(outstr)
 	}
 	if st_logger_level >= 0 {
+		outstr += "\n"
 		LogDebugOutputBackGround(outstr)
 	}
 	return retval
@@ -148,7 +148,7 @@ func SetCliFlag(ctx *cli.Context) error {
 	var cfiles []string
 	var vmode int
 	var lglvl l4g.Level
-	var deflogfmt string = "[%T %D] (%S) %M"
+	var deflogfmt string = "[%T %D] %M"
 	var clog l4g.Logger
 
 	if st_logger != nil {
@@ -176,7 +176,6 @@ func SetCliFlag(ctx *cli.Context) error {
 		lglvl = l4g.FINEST
 		st_logger_level = 5
 	}
-	fmt.Printf("st_logger_level [%d]\n", st_logger_level)
 
 	clog = l4g.NewLogger()
 	st_logger = &clog
@@ -185,28 +184,25 @@ func SetCliFlag(ctx *cli.Context) error {
 		log4writer.SetFormat(deflogfmt)
 		st_logger.AddFilter("stderr", lglvl, log4writer)
 		clog["stderr"].Level = lglvl
-		fmt.Printf("[%s]add level [%d]\n", "stderr", clog["stderr"].Level)
 	}
 
 	cfiles = ctx.GlobalStringSlice("log-files")
 	if len(cfiles) > 0 {
 		for _, f := range cfiles {
-			log4writer := l4g.NewFileLogWriter(f, false, true)
+			log4writer := l4g.NewFileLogWriter(f, true)
 			log4writer.SetFormat(deflogfmt)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
-			fmt.Printf("[%s]add level [%d]\n", f, clog[f].Level)
 		}
 	}
 
 	appfiles = ctx.GlobalStringSlice("log-appends")
 	if len(appfiles) > 0 {
 		for _, f := range appfiles {
-			log4writer := l4g.NewFileLogWriter(f, true, false)
+			log4writer := l4g.NewFileLogWriter(f, false)
 			log4writer.SetFormat(deflogfmt)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
-			fmt.Printf("[%s]add level [%d]\n", f, clog[f].Level)
 		}
 	}
 	return nil
