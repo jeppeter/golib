@@ -101,6 +101,21 @@ func Debug(a ...interface{}) int {
 	return retval
 }
 
+func Trace(a ...interface{}) int {
+	var retval int = 0
+	outstr := "<TRACE>"
+	outstr += format_out_string_cap(a...)
+	retval = len(outstr)
+	if st_logger != nil {
+		st_logger.Debug(outstr)
+	}
+	if st_logger_level >= 5 {
+		outstr += "\n"
+		LogDebugOutputBackGround(outstr)
+	}
+	return retval
+}
+
 func Error(a ...interface{}) int {
 	var retval int = 0
 	outstr := "<ERROR>"
