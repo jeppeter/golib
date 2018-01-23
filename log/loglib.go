@@ -45,8 +45,12 @@ func format_out_string_singal(level int, fmtstr string) string {
 	return outstr
 }
 
+const (
+	def_stacklevel_added = 3
+)
+
 func format_out_string_cap(a ...interface{}) string {
-	var stacklevel int = 2
+	var stacklevel int = def_stacklevel_added
 	var vaargs []interface{}
 	var fmtstr string = ""
 	var ct string
@@ -54,7 +58,7 @@ func format_out_string_cap(a ...interface{}) string {
 		switch v := a[0].(type) {
 		case int:
 			stacklevel = a[0].(int)
-			stacklevel += 2
+			stacklevel += def_stacklevel_added
 			if len(a) > 2 {
 				vaargs = a[2:]
 			}
@@ -91,7 +95,7 @@ func Debug(a ...interface{}) int {
 	outstr := format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
-		(*st_logger).Debug(outstr)
+		st_logger.Debug(outstr)
 	}
 	if st_logger_level >= 3 {
 		LogDebugOutputBackGround(outstr)
@@ -104,7 +108,7 @@ func Error(a ...interface{}) int {
 	outstr := format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
-		(*st_logger).Error(outstr)
+		st_logger.Error(outstr)
 	}
 	if st_logger_level >= 0 {
 		LogDebugOutputBackGround(outstr)
@@ -187,7 +191,7 @@ func SetCliFlag(ctx *cli.Context) error {
 	cfiles = ctx.GlobalStringSlice("log-files")
 	if len(cfiles) > 0 {
 		for _, f := range cfiles {
-			log4writer := l4g.NewFileLogWriter(f, false)
+			log4writer := l4g.NewFileLogWriter(f, false, true)
 			log4writer.SetFormat(deflogfmt)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
@@ -198,7 +202,7 @@ func SetCliFlag(ctx *cli.Context) error {
 	appfiles = ctx.GlobalStringSlice("log-appends")
 	if len(appfiles) > 0 {
 		for _, f := range appfiles {
-			log4writer := l4g.NewFileLogWriter(f, true)
+			log4writer := l4g.NewFileLogWriter(f, true, false)
 			log4writer.SetFormat(deflogfmt)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl

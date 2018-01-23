@@ -18,9 +18,7 @@ func makeTestCmd() cli.Command {
 		flags := ctx.App.Flags
 		for i := 0; i < len(flags); i++ {
 			c := flags[i]
-			if c.GetName() == "verbose, v" {
-				Error("get verbose [%d]", i)
-			}
+			Error("[%d]=[%s] name [%s]", i, reflect.TypeOf(c), c.GetName())
 		}
 		atexit.Exit(0)
 		return nil
