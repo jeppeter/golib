@@ -104,12 +104,18 @@ func setAttr(attr interface{}) (kattr map[string]string, err error) {
 	return
 }
 
+func formatMap(kattr map[string]string) string {
+	var s string = ""
+	for k, v := range kattr {
+		s += fmt.Sprintf("[%s]=[%s]\n", k, v)
+	}
+	return s
+}
+
 func debug_kattr(pre string, kattr map[string]string) {
 	fmt.Fprintf(os.Stdout, "parse [%s]\n", pre)
 	fmt.Fprintf(os.Stdout, "---------------------------\n")
-	for k, v := range kattr {
-		fmt.Fprintf(os.Stdout, "[%s]=[%s]\n", k, v)
-	}
+	fmt.Fprintf(os.Stdout, "%s", formatMap(kattr))
 	fmt.Fprintf(os.Stdout, "+++++++++++++++++++++++++++\n")
 }
 
