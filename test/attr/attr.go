@@ -17,30 +17,6 @@ const (
 	ATTR_SPLIT_EQUAL = "split="
 )
 
-type keyAttr map[string]string
-
-func NewKeyAttr() *keyAttr {
-	p := &keyAttr{}
-	return p
-}
-
-func (k *keyAttr) GetAttr(name string) (val string, err error) {
-	var ok bool
-	val, ok = k[name]
-	if !ok {
-		err = fmt.Errorf("no [%s] key", name)
-		return
-	}
-	err = nil
-	return
-}
-
-func (k *keyAttr) SetAttr(name string, value string) {
-	k[name] = value
-}
-
-func (k *)
-
 func parseAttr(attr string) (kattr map[string]string, err error) {
 	var lattr string
 	var splitchar string = ";"
