@@ -1,12 +1,13 @@
 package main
 
 import (
-	//"encoding/json"
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/cli"
-	"github.com/jeppeter/jsonext"
+	//"github.com/jeppeter/jsonext"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -15,6 +16,30 @@ const (
 	ATTR_SPLIT       = "split"
 	ATTR_SPLIT_EQUAL = "split="
 )
+
+type keyAttr map[string]string
+
+func NewKeyAttr() *keyAttr {
+	p := &keyAttr{}
+	return p
+}
+
+func (k *keyAttr) GetAttr(name string) (val string, err error) {
+	var ok bool
+	val, ok = k[name]
+	if !ok {
+		err = fmt.Errorf("no [%s] key", name)
+		return
+	}
+	err = nil
+	return
+}
+
+func (k *keyAttr) SetAttr(name string, value string) {
+	k[name] = value
+}
+
+func (k *)
 
 func parseAttr(attr string) (kattr map[string]string, err error) {
 	var lattr string
@@ -59,7 +84,7 @@ func parseAttr(attr string) (kattr map[string]string, err error) {
 	kattr = make(map[string]string)
 	splitstrings = splitexpr.Split(lattr, -1)
 	for _, curs = range splitstrings {
-		if strings.HasPrefix(curs, ATTR_SPLIT_EQUAL) {
+		if strings.HasPrefix(curs, ATTR_SPLIT_EQUAL) || curs == "" {
 			continue
 		}
 		vk = equalexpr.Split(curs, 2)
@@ -73,25 +98,32 @@ func parseAttr(attr string) (kattr map[string]string, err error) {
 	return
 }
 
-func setAttr(attr map[string]interface{}) (kattr map[string]string, err error) {
+func setAttr(attr interface{}) (kattr map[string]string, err error) {
 	var k string
 	var v interface{}
+	var vmap map[string]interface{}
 	var vstr string
 	kattr = make(map[string]string)
 
-	for k, v = range attr {
-		if strings.ToLower(k) == ATTR_SPLIT {
-			continue
+	switch attr.(type) {
+	case map[string]interface{}:
+		vmap = attr.(map[string]interface{})
+		for k, v = range vmap {
+			if strings.ToLower(k) == ATTR_SPLIT || k == "" {
+				continue
+			}
+			switch v.(type) {
+			case string:
+				vstr = v.(string)
+			default:
+				vstr = fmt.Sprintf("%v", v)
+			}
+			kattr[k] = vstr
 		}
-
-		switch v.(type) {
-		case string:
-			vstr = v.(string)
-		default:
-			vstr = fmt.Sprintf("%v", v)
-		}
-		kattr[k] = vstr
+	default:
+		return kattr, fmt.Errorf("not valid type [%s]", reflect.TypeOf(attr))
 	}
+
 	err = nil
 	return
 }
@@ -128,7 +160,7 @@ func makeStringCommand() cli.Command {
 }
 
 func makeJsonCommand() cli.Command {
-	var v map[string]interface{}
+	var v interface{}
 	cmd := cli.Command{}
 	cmd.Name = "json"
 	cmd.ShortName = "js"
@@ -146,7 +178,7 @@ func makeJsonCommand() cli.Command {
 				os.Exit(5)
 			}
 
-			v, err = jsonext.SafeParseMessage(string(data))
+			err = json.Unmarshal(data, &v)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "can not parse [%s] [%s] error[%s]\n", curf, string(data), err.Error())
 				os.Exit(5)
@@ -158,7 +190,7 @@ func makeJsonCommand() cli.Command {
 				os.Exit(5)
 			}
 
-			debug_kattr(string(data), kattr)
+			debug_kattr(curf, kattr)
 		}
 	}
 	return cmd
