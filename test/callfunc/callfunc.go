@@ -114,7 +114,12 @@ type Bitvector struct {
 
 func main() {
 	for _, c := range os.Args[1:] {
-		FindFuncWithName(c)
+		_, err := FindFuncWithName(c)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "can not find [%s]\n", c)
+		} else {
+			fmt.Fprintf(os.Stdout, "find [%s]\n", c)
+		}
 	}
 	return
 }
