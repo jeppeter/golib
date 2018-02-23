@@ -25,7 +25,7 @@ func getFunc(outFuncPtr interface{}, name string) error {
 // Convenience struct for modifying the underlying code pointer of a function
 // value. The actual struct has other values, but always starts with a code
 // pointer.
-type FuncType struct {
+type funcType struct {
 	codePtr uintptr
 }
 
@@ -46,7 +46,7 @@ func createFuncForCodePtr(outFuncPtr interface{}, codePtr uintptr) {
 	// pointer. The function value is a struct that starts with its code
 	// pointer, so we can swap out the code pointer with our desired value.
 	funcValuePtr := reflect.ValueOf(newFuncVal).FieldByName("ptr").Pointer()
-	funcPtr := (*FuncType)(unsafe.Pointer(funcValuePtr))
+	funcPtr := (*funcType)(unsafe.Pointer(funcValuePtr))
 	funcPtr.codePtr = codePtr
 	outFuncVal.Set(newFuncVal)
 }
