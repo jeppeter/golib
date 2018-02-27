@@ -6,11 +6,16 @@ import (
 	"unsafe"
 )
 
+type ZZ struct {
+	innc int32
+}
+
 type CC struct {
 	inner   string
 	Outer   string
 	inner16 uint16
 	Outer16 uint16
+	innerzz *ZZ
 }
 
 func list_member(a interface{}) []string {
@@ -48,6 +53,7 @@ func set_member(a interface{}, key string, val interface{}) error {
 	rs := reflect.ValueOf(a).Elem()
 	rf := rs.Field(founded)
 	rf = reflect.NewAt(rf.Type(), unsafe.Pointer(rf.UnsafeAddr())).Elem()
+	fmt.Printf("rf type [%s]\n", rf.Type().Name())
 	rf.Set(reflect.ValueOf(val))
 	return nil
 }
@@ -76,6 +82,7 @@ func get_value(a interface{}, key string) interface{} {
 }
 
 func main() {
+	//var err error
 	cc := &CC{inner: "inner", Outer: "outer", inner16: uint16(16), Outer16: uint16(16)}
 
 	set_member(cc, "Outer", "annother Outer")
