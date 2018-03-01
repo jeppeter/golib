@@ -39,6 +39,34 @@ func makeFindAllCommand() cli.Command {
 	return cmd
 }
 
+func makeMatchCommand() cli.Command {
+	cmd := cli.Command{}
+	cmd.Name = "match"
+	cmd.ShortName = "ma"
+	cmd.Usage = fmt.Sprintf(" restr instrs...")
+	cmd.Action = func(c *cli.Context) {
+		if len(c.Args()) < 2 {
+			fmt.Fprintf(os.Stderr, "match %s", cmd.Usage)
+			os.Exit(4)
+		}
+		reg, err := regexp.Compile(c.Args()[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "can not compile[%s] %s", c.Args()[0], err.Error())
+			os.Exit(5)
+		}
+		for i := 1; i < len(c.Args()); i++ {
+			if reg.MatchString(c.Args()[i]) {
+				fmt.Fprintf(os.Stdout, "[%s] match [%s]\n", c.Args()[0], c.Args()[i])
+			} else {
+				fmt.Fprintf(os.Stdout, "[%s] not match [%s]\n", c.Args()[0], c.Args()[i])
+			}
+		}
+		os.Exit(0)
+	}
+
+	return cmd
+}
+
 func makeSplitCommand() cli.Command {
 	cmd := cli.Command{}
 	cmd.Name = "split"
@@ -74,6 +102,7 @@ func makeSplitCommand() cli.Command {
 func main() {
 	app := cli.NewApp()
 	app.Version = "1.0.2"
+	app.Commands = append(app.Commands, makeMatchCommand())
 	app.Commands = append(app.Commands, makeFindAllCommand())
 	app.Commands = append(app.Commands, makeSplitCommand())
 	app.Run(os.Args)
