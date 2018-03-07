@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"time"
 )
 
 func DecodePem(infile string) (ps []*pem.Block, err error) {
@@ -78,7 +79,7 @@ func (self *Asn1Seq) formatIntValue() string {
 		var i int
 		_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
 		if err == nil {
-			s += fmt.Sprintf("Integer[%d]", i)
+			s += fmt.Sprintf("Integer[%d:0x%x]", i, i)
 		} else {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		}
@@ -86,7 +87,7 @@ func (self *Asn1Seq) formatIntValue() string {
 		var i int64
 		_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
 		if err == nil {
-			s += fmt.Sprintf("Integer[%d]", i)
+			s += fmt.Sprintf("Integer[%d:0x%x]", i, i)
 		} else {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		}
@@ -136,7 +137,7 @@ func (self *Asn1Seq) formatIntValue() string {
 
 		_, err = asn1.Unmarshal(newb, bint)
 		if err == nil {
-			s += fmt.Sprintf("Integer[%s]", bint.B.String())
+			s += fmt.Sprintf("Integer[%s:0x%s]", bint.B.Text(10), bint.B.Text(16))
 		} else {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		}
@@ -157,6 +158,38 @@ func (self *Asn1Seq) formatOIDValue() string {
 	return s
 }
 
+func (self *Asn1Seq) formatPrintableString() string {
+	var s string = ""
+	s += fmt.Sprintf("%s", string(self.Value.Bytes))
+	return s
+}
+
+func (self *Asn1Seq) formatUTF8String() string {
+	var s string = ""
+	s += fmt.Sprintf("%s", string(self.Value.Bytes))
+	return s
+}
+
+func (self *Asn1Seq) formatUTCTime() string {
+	var s string = ""
+	var t time.Time
+	var err error
+	var fmtstr string = "200601021504Z"
+	t, err = time.Parse(fmtstr, string(self.Value.Bytes))
+	if err != nil {
+		s += fmt.Sprintf("%s", string(self.Value.Bytes))
+		fmt.Fprintf(os.Stderr, "parse error [%s]\n", err.Error())
+	} else {
+
+		if t.Year() > 2050 {
+			t = t.AddDate(-100, 0, 0)
+		}
+		s += fmt.Sprintf("%v", t)
+
+	}
+	return s
+}
+
 func (self *Asn1Seq) formatValue() string {
 	var s string = ""
 	switch self.Value.Tag {
@@ -164,13 +197,67 @@ func (self *Asn1Seq) formatValue() string {
 		s += self.formatIntValue()
 	case asn1.TagOID:
 		s += self.formatOIDValue()
+	case asn1.TagPrintableString:
+		s += self.formatPrintableString()
+	case asn1.TagUTF8String:
+		s += self.formatUTF8String()
+	case asn1.TagUTCTime:
+		s += self.formatUTCTime()
 	}
 	return s
 }
 
 func (self *Asn1Seq) formatClassType() string {
 	var s string = ""
-	s += fmt.Sprintf("Class:0x%x;Tag:0x%x", self.Value.Class, self.Value.Tag)
+	var clsstr string = fmt.Sprintf("0x%x", self.Value.Class)
+	var tagstr string = fmt.Sprintf("0x%x", self.Value.Tag)
+	switch self.Value.Class {
+	case asn1.ClassUniversal:
+		clsstr = "Universal"
+	case asn1.ClassApplication:
+		clsstr = "Application"
+	case asn1.ClassPrivate:
+		clsstr = "Private"
+	case asn1.ClassContextSpecific:
+		clsstr = "ContextSpecific"
+	}
+
+	switch self.Value.Tag {
+	case asn1.TagBoolean:
+		tagstr = "Boolean"
+	case asn1.TagInteger:
+		tagstr = "Integer"
+	case asn1.TagBitString:
+		tagstr = "BitString"
+	case asn1.TagOctetString:
+		tagstr = "OctetString"
+	case asn1.TagNull:
+		tagstr = "Null"
+	case asn1.TagOID:
+		tagstr = "OID"
+	case asn1.TagEnum:
+		tagstr = "Enum"
+	case asn1.TagUTF8String:
+		tagstr = "UTF8String"
+	case asn1.TagSequence:
+		tagstr = "Sequence"
+	case asn1.TagSet:
+		tagstr = "Set"
+	case asn1.TagPrintableString:
+		tagstr = "PrintableString"
+	case asn1.TagT61String:
+		tagstr = "T61String"
+	case asn1.TagIA5String:
+		tagstr = "IA5String"
+	case asn1.TagUTCTime:
+		tagstr = "UTCTime"
+	case asn1.TagGeneralizedTime:
+		tagstr = "GeneralizedTime"
+	case asn1.TagGeneralString:
+		tagstr = "GeneralString"
+	}
+
+	s += fmt.Sprintf("Class:%s;Tag:%s", clsstr, tagstr)
 	return s
 }
 
@@ -213,6 +300,11 @@ func DecodeAsn(data []byte) (seq []*Asn1Seq, err error) {
 				return
 			}
 		case 0:
+			cv.Child, err = DecodeAsn(cv.Value.Bytes)
+			if err != nil {
+				return
+			}
+		case asn1.TagSet:
 			cv.Child, err = DecodeAsn(cv.Value.Bytes)
 			if err != nil {
 				return
