@@ -67,39 +67,110 @@ func FormatBytes(data []byte) string {
 	return s
 }
 
-func (self *Asn1Seq) formatValue() string {
+type bigint struct {
+	B *big.Int
+}
+
+func (self *Asn1Seq) formatIntValue() string {
 	var s string = ""
 	var err error
-	switch self.Value.Tag {
-	case asn1.TagInteger:
-		if len(self.Value.Bytes) <= 4 {
-			var i int
-			_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
-			if err == nil {
-				s += fmt.Sprintf("Integer[%d]", i)
-			} else {
-				fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
-			}
-		} else if len(self.Value.Bytes) <= 8 {
-			var i int64
-			_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
-			if err == nil {
-				s += fmt.Sprintf("Integer[%d]", i)
-			} else {
-				fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
-			}
+	if len(self.Value.Bytes) <= 4 {
+		var i int
+		_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
+		if err == nil {
+			s += fmt.Sprintf("Integer[%d]", i)
 		} else {
-			var i *big.Int
-			i = big.NewInt(0)
-			_, err = asn1.Unmarshal(self.Value.FullBytes, i)
-			if err == nil {
-				s += fmt.Sprintf("Integer[%+v]", i)
-			} else {
-				fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
-			}
+			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
+		}
+	} else if len(self.Value.Bytes) <= 8 {
+		var i int64
+		_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
+		if err == nil {
+			s += fmt.Sprintf("Integer[%d]", i)
+		} else {
+			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
+		}
+	} else {
+		var bint *bigint
+		var newb []byte
+		var needlen int
+		var blen int
+		var i int
+		var j int
+
+		blen = len(self.Value.FullBytes)
+		needlen = blen
+		if blen <= 0x7f {
+			/*for tag and length*/
+			needlen += 2
+		} else if blen <= 0xffff {
+			needlen += 4
+		} else if blen <= 0xffffff {
+			needlen += 5
+		} else {
+			needlen += 5
+		}
+		newb = make([]byte, needlen)
+		newb[0] = byte(0x30)
+		if blen <= 0x7f {
+			newb[1] = byte(blen)
+			i = 2
+		} else if blen <= 0xffff {
+			newb[1] = byte(0x82)
+			newb[2] = byte((blen >> 8) & 0xff)
+			newb[3] = byte(blen & 0xff)
+			i = 4
+		} else if blen <= 0xffffff {
+			newb[1] = byte(0x83)
+			newb[2] = byte((blen >> 16) & 0xff)
+			newb[3] = byte((blen >> 8) & 0xff)
+			newb[4] = byte(blen & 0xff)
+			i = 5
+		}
+		for j = 0; i < needlen; j++ {
+			newb[i] = self.Value.FullBytes[j]
+			i++
 		}
 
+		bint = new(bigint)
+
+		_, err = asn1.Unmarshal(newb, bint)
+		if err == nil {
+			s += fmt.Sprintf("Integer[%s]", bint.B.String())
+		} else {
+			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
+		}
 	}
+
+	return s
+}
+
+func (self *Asn1Seq) formatOIDValue() string {
+	var s string = ""
+	var err error
+	var id asn1.ObjectIdentifier
+	_, err = asn1.Unmarshal(self.Value.FullBytes, &id)
+	if err == nil {
+		s += fmt.Sprintf("%s", id.String())
+	}
+
+	return s
+}
+
+func (self *Asn1Seq) formatValue() string {
+	var s string = ""
+	switch self.Value.Tag {
+	case asn1.TagInteger:
+		s += self.formatIntValue()
+	case asn1.TagOID:
+		s += self.formatOIDValue()
+	}
+	return s
+}
+
+func (self *Asn1Seq) formatClassType() string {
+	var s string = ""
+	s += fmt.Sprintf("Class:0x%x;Tag:0x%x", self.Value.Class, self.Value.Tag)
 	return s
 }
 
@@ -107,7 +178,7 @@ func (self *Asn1Seq) Format(tabs int) string {
 	var s string
 	var cur *Asn1Seq
 	s = ""
-	s += formatTabs(tabs, "{Class:0x%x;Tag:0x%x;IsCompound:%v;Length(%d:0x%x)}", self.Value.Class, self.Value.Tag, self.Value.IsCompound, len(self.Value.Bytes), len(self.Value.Bytes))
+	s += formatTabs(tabs, "{%s;IsCompound:%v;Length(%d:0x%x)}", self.formatClassType(), self.Value.IsCompound, len(self.Value.Bytes), len(self.Value.Bytes))
 	s += formatTabs(tabs, "{Bytes:%s}", FormatBytes(self.Value.Bytes))
 	s += formatTabs(tabs, "{FullBytes:%s}", FormatBytes(self.Value.FullBytes))
 	s += formatTabs(tabs, "{Value:%s}", self.formatValue())
