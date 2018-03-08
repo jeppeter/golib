@@ -4,6 +4,8 @@ import (
 	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
+	"github.com/jeppeter/go-extargsparse"
+	"github.com/jeppeter/log4go"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -374,8 +376,58 @@ func Pem(infile string) error {
 	return nil
 }
 
-func main() {
-	for _, c := range os.Args[1:] {
-		Pem(c)
+type PemArgs struct {
+	Verbose  int
+	Password string
+	Rsapriv  struct {
+		Subnargs []string
 	}
+	Pem struct {
+		Subnargs []string
+	}
+	Args []string
+}
+
+func init_log(args *PemArgs) error {
+	if args.Verbose {
+
+	}
+
+}
+
+func Rsa_priv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+	var args *PemArgs
+	if ns == nil || ostruct == nil {
+		return nil
+	}
+	args = ostruct.(*PemArgs)
+	return nil
+}
+
+func Pem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+	var args *PemArgs
+	if ns == nil || ostruct == nil {
+		return nil
+	}
+	args = ostruct.(*PemArgs)
+	return nil
+}
+
+func init() {
+	Rsa_priv_handler(nil, nil, nil)
+	Pem_handler(nil, nil, nil)
+}
+
+func main() {
+	var commandline = `{
+			"verbose|v" : "+",
+			"password|p" : nil,
+			"rsapriv<Rsa_priv_handler>" : {
+				"$" : "+"
+			},
+			"pem<Pem_handler>" : {
+				"$" : "+"
+			}
+		}`
+
 }

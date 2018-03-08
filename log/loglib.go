@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
+	"github.com/jeppeter/go-extargsparse"
 	l4g "github.com/jeppeter/log4go"
 	"github.com/tebeka/atexit"
 	"os"
@@ -87,6 +87,57 @@ func format_out_string_cap(a ...interface{}) string {
 	return outstr
 }
 
+func Error(a ...interface{}) int {
+	var retval int = 0
+	outstr := "<ERROR>"
+	outstr += format_out_string_cap(a...)
+	retval = len(outstr)
+	if st_logger != nil {
+		st_logger.Error(outstr)
+	} else {
+		fmt.Fprintf(os.Stderr, "no out %s", outstr)
+	}
+	if st_logger_level >= 0 {
+		outstr += "\n"
+		LogDebugOutputBackGround(outstr)
+	}
+	return retval
+}
+
+func Warn(a ...interface{}) int {
+	var retval int = 0
+	outstr := "<WARN>"
+	outstr += format_out_string_cap(a...)
+	retval = len(outstr)
+	if st_logger != nil {
+		st_logger.Warn(outstr)
+	} else {
+		fmt.Fprintf(os.Stderr, "no out %s", outstr)
+	}
+	if st_logger_level >= 1 {
+		outstr += "\n"
+		LogDebugOutputBackGround(outstr)
+	}
+	return retval
+}
+
+func Info(a ...interface{}) int {
+	var retval int = 0
+	outstr := "<INFO>"
+	outstr += format_out_string_cap(a...)
+	retval = len(outstr)
+	if st_logger != nil {
+		st_logger.Info(outstr)
+	} else {
+		fmt.Fprintf(os.Stderr, "no out %s", outstr)
+	}
+	if st_logger_level >= 2 {
+		outstr += "\n"
+		LogDebugOutputBackGround(outstr)
+	}
+	return retval
+}
+
 func Debug(a ...interface{}) int {
 	var retval int = 0
 	outstr := "<DEBUG>"
@@ -108,60 +159,28 @@ func Trace(a ...interface{}) int {
 	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
-		st_logger.Debug(outstr)
+		st_logger.Trace(outstr)
 	}
-	if st_logger_level >= 5 {
+	if st_logger_level >= 4 {
 		outstr += "\n"
 		LogDebugOutputBackGround(outstr)
 	}
 	return retval
 }
 
-func Error(a ...interface{}) int {
-	var retval int = 0
-	outstr := "<ERROR>"
-	outstr += format_out_string_cap(a...)
-	retval = len(outstr)
-	if st_logger != nil {
-		st_logger.Error(outstr)
-	} else {
-		fmt.Fprintf(os.Stderr, "no out %s", outstr)
-	}
-	if st_logger_level >= 0 {
-		outstr += "\n"
-		LogDebugOutputBackGround(outstr)
-	}
-	return retval
+func PrepareLog(parser *extargsparse.ExtArgsParse) error {
+	var commandline = `{
+			"verbose|v" : "+",
+			"log-files##set write rotate files##" : [],
+			"log-appends##set append files##" : [],
+			"log-nostderr##specified no stderr output##" : false
+		}`
+	var err error
+	err = parser.LoadCommandLineString(commandline)
+	return err
 }
 
-func AddCliFlag(cliapp *cli.App) {
-	var vflag *cli.IntFlag
-	var wflag *cli.StringSliceFlag
-	var aflag *cli.StringSliceFlag
-	vflag = &cli.IntFlag{
-		Name:  "verbose, V",
-		Value: 0,
-	}
-	cliapp.Flags = append(cliapp.Flags, vflag)
-	wflag = &cli.StringSliceFlag{
-		Name:  "log-files",
-		Usage: "set write rotate files",
-	}
-	cliapp.Flags = append(cliapp.Flags, wflag)
-	aflag = &cli.StringSliceFlag{
-		Name:  "log-appends",
-		Usage: "set append files",
-	}
-	cliapp.Flags = append(cliapp.Flags, aflag)
-	nostderr := &cli.BoolFlag{
-		Name:  "log-nostderr",
-		Usage: "specified no stdout",
-	}
-	cliapp.Flags = append(cliapp.Flags, nostderr)
-	return
-}
-
-func SetCliFlag(ctx *cli.Context) error {
+func InitLog(ns *extargsparse.NameSpaceEx) error {
 	var appfiles []string
 	var cfiles []string
 	var vmode int
@@ -174,7 +193,7 @@ func SetCliFlag(ctx *cli.Context) error {
 	}
 	st_logger = nil
 
-	vmode = ctx.GlobalInt("verbose")
+	vmode = ns.GetInt("verbose")
 	if vmode <= 0 {
 		lglvl = l4g.ERROR
 		st_logger_level = 0
@@ -197,14 +216,15 @@ func SetCliFlag(ctx *cli.Context) error {
 
 	clog = l4g.NewLogger()
 	st_logger = &clog
-	if !ctx.GlobalIsSet("log-nostderr") {
+
+	if !ns.GetBool("log_nostderr") {
 		log4writer := l4g.NewStderrLogWriter()
 		log4writer.SetFormat(deflogfmt)
 		st_logger.AddFilter("stderr", lglvl, log4writer)
 		clog["stderr"].Level = lglvl
 	}
 
-	cfiles = ctx.GlobalStringSlice("log-files")
+	cfiles = ns.GetArray("log_files")
 	if len(cfiles) > 0 {
 		for _, f := range cfiles {
 			log4writer := l4g.NewFileLogWriter(f, true)
@@ -214,7 +234,7 @@ func SetCliFlag(ctx *cli.Context) error {
 		}
 	}
 
-	appfiles = ctx.GlobalStringSlice("log-appends")
+	appfiles = ns.GetArray("log_appends")
 	if len(appfiles) > 0 {
 		for _, f := range appfiles {
 			log4writer := l4g.NewFileLogWriter(f, false)
