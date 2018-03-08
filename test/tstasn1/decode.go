@@ -1,11 +1,11 @@
 package main
 
 import (
+	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
-	"github.com/jeppeter/log4go"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -33,8 +33,9 @@ func DecodePem(infile string) (ps []*pem.Block, err error) {
 }
 
 type Asn1Seq struct {
-	Value *asn1.RawValue
-	Child []*Asn1Seq
+	Value   *asn1.RawValue
+	Child   []*Asn1Seq
+	Verbose int
 }
 
 func NewAsn1Seq(v *asn1.RawValue) *Asn1Seq {
@@ -42,6 +43,7 @@ func NewAsn1Seq(v *asn1.RawValue) *Asn1Seq {
 	self = &Asn1Seq{}
 	self.Value = v
 	self.Child = make([]*Asn1Seq, 0)
+	self.Verbose = 0
 	return self
 }
 
@@ -56,16 +58,36 @@ func formatTabs(tabs int, fmtstr string, a ...interface{}) string {
 	return s
 }
 
-func FormatBytes(data []byte) string {
+func FormatBytes(data []byte, verbose int) string {
 	var s string = ""
 	var b byte
 	var i int
 	s += "["
-	for i, b = range data {
-		if i > 0 {
-			s += ","
+	if len(data) < 16 || verbose >= 3 {
+		for i, b = range data {
+			if i > 0 {
+				s += ","
+			}
+			s += fmt.Sprintf("0x%02x", b)
 		}
-		s += fmt.Sprintf("0x%02x", b)
+	} else {
+		i = 0
+		for i < 4 {
+			if i > 0 {
+				s += ","
+			}
+			s += fmt.Sprintf("0x%02x", data[i])
+			i++
+		}
+		s += "..."
+		i = len(data) - 4
+		for i < len(data) {
+			if i > (len(data) - 4) {
+				s += ","
+			}
+			s += fmt.Sprintf("0x%02x", data[i])
+			i++
+		}
 	}
 	s += "]"
 	return s
@@ -82,7 +104,7 @@ func (self *Asn1Seq) formatIntValue() string {
 		var i int
 		_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
 		if err == nil {
-			s += fmt.Sprintf("Integer[%d:0x%x]", i, i)
+			s += fmt.Sprintf("Integer[0x%x]", i)
 		} else {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		}
@@ -90,7 +112,7 @@ func (self *Asn1Seq) formatIntValue() string {
 		var i int64
 		_, err = asn1.Unmarshal(self.Value.FullBytes, &i)
 		if err == nil {
-			s += fmt.Sprintf("Integer[%d:0x%x]", i, i)
+			s += fmt.Sprintf("Integer[0x%x]", i)
 		} else {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		}
@@ -101,6 +123,7 @@ func (self *Asn1Seq) formatIntValue() string {
 		var blen int
 		var i int
 		var j int
+		var curs string
 
 		blen = len(self.Value.FullBytes)
 		needlen = blen
@@ -140,7 +163,17 @@ func (self *Asn1Seq) formatIntValue() string {
 
 		_, err = asn1.Unmarshal(newb, bint)
 		if err == nil {
-			s += fmt.Sprintf("Integer[%s:0x%s]", bint.B.Text(10), bint.B.Text(16))
+			if self.Verbose >= 3 {
+				s += fmt.Sprintf("Integer[0x%s]", bint.B.Text(16))
+			} else {
+				curs = bint.B.Text(16)
+				if len(curs) > 16 {
+					s += fmt.Sprintf("Integer[0x%s...%s]", curs[:8], curs[(len(curs)-8):])
+				} else {
+					s += fmt.Sprintf("Integer[0x%s]", curs)
+				}
+			}
+
 		} else {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		}
@@ -301,8 +334,8 @@ func (self *Asn1Seq) Format(tabs int) string {
 	var cur *Asn1Seq
 	s = ""
 	s += formatTabs(tabs, "{%s;IsCompound:%v;Length(%d:0x%x)}", self.formatClassType(), self.Value.IsCompound, len(self.Value.Bytes), len(self.Value.Bytes))
-	s += formatTabs(tabs, "{Bytes:%s}", FormatBytes(self.Value.Bytes))
-	s += formatTabs(tabs, "{FullBytes:%s}", FormatBytes(self.Value.FullBytes))
+	s += formatTabs(tabs, "{Bytes:%s}", FormatBytes(self.Value.Bytes, self.Verbose))
+	s += formatTabs(tabs, "{FullBytes:%s}", FormatBytes(self.Value.FullBytes, self.Verbose))
 	s += formatTabs(tabs, "{Value:%s}", self.formatValue())
 	if self.Value.IsCompound || len(self.Child) > 0 {
 		for _, cur = range self.Child {
@@ -312,7 +345,7 @@ func (self *Asn1Seq) Format(tabs int) string {
 	return s
 }
 
-func DecodeAsn(data []byte) (seq []*Asn1Seq, err error) {
+func DecodeAsn(data []byte, verbose int) (seq []*Asn1Seq, err error) {
 	var rdata []byte
 	var rv *asn1.RawValue
 	var i int
@@ -328,19 +361,20 @@ func DecodeAsn(data []byte) (seq []*Asn1Seq, err error) {
 			return
 		}
 		cv = NewAsn1Seq(rv)
+		cv.Verbose = verbose
 		switch cv.Value.Tag {
 		case asn1.TagSequence:
-			cv.Child, err = DecodeAsn(cv.Value.Bytes)
+			cv.Child, err = DecodeAsn(cv.Value.Bytes, verbose)
 			if err != nil {
 				return
 			}
 		case 0:
-			cv.Child, err = DecodeAsn(cv.Value.Bytes)
+			cv.Child, err = DecodeAsn(cv.Value.Bytes, verbose)
 			if err != nil {
 				return
 			}
 		case asn1.TagSet:
-			cv.Child, err = DecodeAsn(cv.Value.Bytes)
+			cv.Child, err = DecodeAsn(cv.Value.Bytes, verbose)
 			if err != nil {
 				return
 			}
@@ -351,7 +385,7 @@ func DecodeAsn(data []byte) (seq []*Asn1Seq, err error) {
 	return
 }
 
-func Pem(infile string) error {
+func Pem(infile string, verbose int) error {
 	var ps []*pem.Block
 	var err error
 	var i, j int
@@ -363,7 +397,7 @@ func Pem(infile string) error {
 	}
 	for i = 0; i < len(ps); i++ {
 		fmt.Fprintf(os.Stdout, "[%s] decode [%d]\n", infile, i)
-		ap, err = DecodeAsn(ps[i].Bytes)
+		ap, err = DecodeAsn(ps[i].Bytes, verbose)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 			return err
@@ -388,28 +422,87 @@ type PemArgs struct {
 	Args []string
 }
 
-func init_log(args *PemArgs) error {
-	if args.Verbose {
-
+func decode_rsa_priv(f string, password string, verbose int) error {
+	var p *pem.Block
+	var data []byte
+	var err error
+	var rdata []byte
+	var ap []*Asn1Seq
+	var cur *Asn1Seq
+	var i int
+	data, err = ioutil.ReadFile(f)
+	if err != nil {
+		Error("can not read [%s] [%s]", f, err.Error())
+		return err
 	}
-
+	for len(data) > 0 {
+		p, data = pem.Decode(data)
+		if err != nil {
+			Error("can not decode [%s] [%s]", f, err.Error())
+			return err
+		}
+		rdata, err = x509.DecryptPEMBlock(p, []byte(password))
+		if err != nil {
+			Error("[%s]decrypt error [%s]\n", f, err.Error())
+			return err
+		}
+		ap, err = DecodeAsn(rdata, verbose)
+		if err != nil {
+			Error("can not decode rawdata %v err[%s]", rdata, err.Error())
+			return err
+		}
+		for i, cur = range ap {
+			fmt.Fprintf(os.Stdout, "[%d]\n", i)
+			fmt.Fprintf(os.Stdout, "%s", cur.Format(1))
+		}
+	}
+	return nil
 }
 
 func Rsa_priv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
 	var args *PemArgs
+	var err error
+	var f string
 	if ns == nil || ostruct == nil {
 		return nil
 	}
 	args = ostruct.(*PemArgs)
+	err = InitLog(ns)
+	if err != nil {
+		return err
+	}
+
+	for _, f = range args.Rsapriv.Subnargs {
+		err = decode_rsa_priv(f, args.Password, args.Verbose)
+		if err != nil {
+			return err
+		}
+	}
+	os.Exit(0)
 	return nil
 }
 
 func Pem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
 	var args *PemArgs
+	var f string
+	var err error
 	if ns == nil || ostruct == nil {
 		return nil
 	}
 	args = ostruct.(*PemArgs)
+
+	err = InitLog(ns)
+	if err != nil {
+		return err
+	}
+
+	for _, f = range args.Pem.Subnargs {
+		err = Pem(f, args.Verbose)
+		if err != nil {
+			return err
+		}
+	}
+	os.Exit(0)
 	return nil
 }
 
@@ -420,8 +513,7 @@ func init() {
 
 func main() {
 	var commandline = `{
-			"verbose|v" : "+",
-			"password|p" : nil,
+			"password|p" : null,
 			"rsapriv<Rsa_priv_handler>" : {
 				"$" : "+"
 			},
@@ -429,5 +521,36 @@ func main() {
 				"$" : "+"
 			}
 		}`
+	var parser *extargsparse.ExtArgsParse
+	var p *PemArgs = &PemArgs{}
+	var err error
+
+	parser, err = extargsparse.NewExtArgsParse(nil, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "new args err [%s]\n", err.Error())
+		os.Exit(5)
+		return
+	}
+	err = parser.LoadCommandLineString(commandline)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load command[%s] err [%s]\n", commandline, err.Error())
+		os.Exit(5)
+		return
+	}
+
+	err = PrepareLog(parser)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "prepare log err[%s]\n", err.Error())
+		os.Exit(5)
+		return
+	}
+
+	_, err = parser.ParseCommandLineEx(nil, parser, p, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "parse command err[%s]\n", err.Error())
+		os.Exit(5)
+		return
+	}
+	return
 
 }
