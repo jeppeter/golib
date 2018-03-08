@@ -32,6 +32,11 @@ func DecodePem(infile string) (ps []*pem.Block, err error) {
 	return
 }
 
+func DecodeDer(infile string) (data []byte, err error) {
+	data, err = ioutil.ReadFile(infile)
+	return
+}
+
 type Asn1Seq struct {
 	Value   *asn1.RawValue
 	Child   []*Asn1Seq
@@ -410,6 +415,30 @@ func Pem(infile string, verbose int) error {
 	return nil
 }
 
+func Der(infile string, verbose int) error {
+	var data []byte
+	var err error
+	var j int
+	var ap []*Asn1Seq
+	var p *Asn1Seq
+
+	data, err = DecodeDer(infile)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "[%s] decode\n", infile)
+	ap, err = DecodeAsn(data, verbose)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
+		return err
+	}
+	for j, p = range ap {
+		fmt.Fprintf(os.Stdout, "[%d]\n", j)
+		fmt.Fprintf(os.Stdout, "%s", p.Format(1))
+	}
+	return nil
+}
+
 type PemArgs struct {
 	Verbose  int
 	Password string
@@ -417,6 +446,9 @@ type PemArgs struct {
 		Subnargs []string
 	}
 	Pem struct {
+		Subnargs []string
+	}
+	Der struct {
 		Subnargs []string
 	}
 	Args []string
@@ -506,9 +538,34 @@ func Pem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfac
 	return nil
 }
 
+func Der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+	var args *PemArgs
+	var f string
+	var err error
+	if ns == nil || ostruct == nil {
+		return nil
+	}
+	args = ostruct.(*PemArgs)
+
+	err = InitLog(ns)
+	if err != nil {
+		return err
+	}
+
+	for _, f = range args.Der.Subnargs {
+		err = Der(f, args.Verbose)
+		if err != nil {
+			return err
+		}
+	}
+	os.Exit(0)
+	return nil
+}
+
 func init() {
 	Rsa_priv_handler(nil, nil, nil)
 	Pem_handler(nil, nil, nil)
+	Der_handler(nil, nil, nil)
 }
 
 func main() {
@@ -518,6 +575,9 @@ func main() {
 				"$" : "+"
 			},
 			"pem<Pem_handler>" : {
+				"$" : "+"
+			},
+			"der<Der_handler>" : {
 				"$" : "+"
 			}
 		}`
