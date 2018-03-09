@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
+	"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -451,6 +452,9 @@ type PemArgs struct {
 	Der struct {
 		Subnargs []string
 	}
+	Pkcs12 struct {
+		Subnargs []string
+	}
 	Args []string
 }
 
@@ -562,10 +566,27 @@ func Der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfac
 	return nil
 }
 
+var decode_pkcs12(f string ,verbose int) error {
+}
+
+func Pkcs12_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+	var args *PemArgs
+	var f string
+	var err error
+	if ns == nil {
+		return nil
+	}
+	args = ostruct.(*PemArgs)
+	for _, f = range args.Pkcs12.Subnargs {
+
+	}
+}
+
 func init() {
 	Rsa_priv_handler(nil, nil, nil)
 	Pem_handler(nil, nil, nil)
 	Der_handler(nil, nil, nil)
+	Pkcs12_handler(nil, nil, nil)
 }
 
 func main() {
@@ -578,6 +599,9 @@ func main() {
 				"$" : "+"
 			},
 			"der<Der_handler>" : {
+				"$" : "+"
+			},
+			"pkcs12<Pkcs12_handler>" : {
 				"$" : "+"
 			}
 		}`
