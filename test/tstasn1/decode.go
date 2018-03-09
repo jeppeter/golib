@@ -6,7 +6,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
-	"golang.org/x/crypto/pkcs12"
+	//"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -264,6 +264,12 @@ func (self *Asn1Seq) formatUTCTime() string {
 	return s
 }
 
+func (self *Asn1Seq) formatOctetString() string {
+	var s string = ""
+	s += FormatBytes(self.Value.Bytes, self.Verbose)
+	return s
+}
+
 func (self *Asn1Seq) formatValue() string {
 	var s string = ""
 	switch self.Value.Tag {
@@ -277,6 +283,8 @@ func (self *Asn1Seq) formatValue() string {
 		s += self.formatUTF8String()
 	case asn1.TagUTCTime:
 		s += self.formatUTCTime()
+	case asn1.TagOctetString:
+		s += self.formatOctetString()
 	}
 	return s
 }
@@ -452,7 +460,7 @@ type PemArgs struct {
 	Der struct {
 		Subnargs []string
 	}
-	Pkcs12 struct {
+	Pkcs12der struct {
 		Subnargs []string
 	}
 	Args []string
@@ -566,10 +574,19 @@ func Der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfac
 	return nil
 }
 
-var decode_pkcs12(f string ,verbose int) error {
+func decode_pkcs12_der(fname string, password string, verbose int) error {
+	var data []byte
+	var err error
+	data, err = ioutil.ReadFile(fname)
+	if err != nil {
+		return err
+	}
+	data = data
+
+	return nil
 }
 
-func Pkcs12_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+func Pkcs12_der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
 	var args *PemArgs
 	var f string
 	var err error
@@ -577,16 +594,26 @@ func Pkcs12_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 		return nil
 	}
 	args = ostruct.(*PemArgs)
-	for _, f = range args.Pkcs12.Subnargs {
-
+	err = InitLog(ns)
+	if err != nil {
+		return err
 	}
+
+	for _, f = range args.Pkcs12der.Subnargs {
+		err = decode_pkcs12_der(f, args.Password, args.Verbose)
+		if err != nil {
+			return err
+		}
+	}
+	os.Exit(0)
+	return nil
 }
 
 func init() {
 	Rsa_priv_handler(nil, nil, nil)
 	Pem_handler(nil, nil, nil)
 	Der_handler(nil, nil, nil)
-	Pkcs12_handler(nil, nil, nil)
+	Pkcs12_der_handler(nil, nil, nil)
 }
 
 func main() {
@@ -601,7 +628,7 @@ func main() {
 			"der<Der_handler>" : {
 				"$" : "+"
 			},
-			"pkcs12<Pkcs12_handler>" : {
+			"pkcs12der<Pkcs12_der_handler>" : {
 				"$" : "+"
 			}
 		}`
