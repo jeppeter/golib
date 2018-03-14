@@ -9,10 +9,11 @@ import (
 var (
 	oidDataContentType          = asn1.ObjectIdentifier([]int{1, 2, 840, 113549, 1, 7, 1})
 	oidEncryptedDataContentType = asn1.ObjectIdentifier([]int{1, 2, 840, 113549, 1, 7, 6})
-
-	oidFriendlyName     = asn1.ObjectIdentifier([]int{1, 2, 840, 113549, 1, 9, 20})
-	oidLocalKeyID       = asn1.ObjectIdentifier([]int{1, 2, 840, 113549, 1, 9, 21})
-	oidMicrosoftCSPName = asn1.ObjectIdentifier([]int{1, 3, 6, 1, 4, 1, 311, 17, 1})
+	oidFriendlyName             = asn1.ObjectIdentifier([]int{1, 2, 840, 113549, 1, 9, 20})
+	oidLocalKeyID               = asn1.ObjectIdentifier([]int{1, 2, 840, 113549, 1, 9, 21})
+	oidMicrosoftCSPName         = asn1.ObjectIdentifier([]int{1, 3, 6, 1, 4, 1, 311, 17, 1})
+	oidSHA256                   = asn1.ObjectIdentifier([]int{2, 16, 840, 1, 101, 3, 4, 2, 1})
+	oidSHA1                     = asn1.ObjectIdentifier([]int{1, 3, 14, 3, 2, 26})
 )
 
 type encryptedContentInfo struct {
@@ -54,8 +55,22 @@ func newPfxPdu() *pfxPdu {
 	return self
 }
 
-func (self *pfxPdu) Verify(passwd []byte) error {
+func (self *pfxPdu) verifySha1(passwd []byte) error {
 	return nil
+}
+
+func (self *pfxPdu) verifySha256(passwd []byte) error {
+	return nil
+}
+
+func (self *pfxPdu) Verify(passwd []byte) error {
+	switch {
+	case self.MacData.Mac.Algorithm.Algorithm.Equal(oidSHA1):
+		return self.verifySha1(passwd)
+	case self.MacData.Mac.Algorithm.Algorithm.Equal(oidSHA256):
+		return self.verifySha256(passwd)
+	}
+	return fmt.Errorf("unknown type %v", self.MacData.Mac.Algorithm.Algorithm.String())
 }
 
 type Pkcs12 struct {
