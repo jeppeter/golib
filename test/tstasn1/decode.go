@@ -463,6 +463,9 @@ type PemArgs struct {
 	Pkcs12der struct {
 		Subnargs []string
 	}
+	Derbuf struct {
+		Subnargs []string
+	}
 	Args []string
 }
 
@@ -609,6 +612,17 @@ func Pkcs12_der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return nil
 }
 
+func Derbuf_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+	var args *PemArgs
+
+	if ns == nil {
+		return nil
+	}
+
+	os.Exit(0)
+	return nil
+}
+
 func init() {
 	Rsa_priv_handler(nil, nil, nil)
 	Pem_handler(nil, nil, nil)
@@ -629,6 +643,9 @@ func main() {
 				"$" : "+"
 			},
 			"pkcs12der<Pkcs12_der_handler>" : {
+				"$" : "+"
+			},
+			"derbuf<Derbuf_handler>" : {
 				"$" : "+"
 			}
 		}`
