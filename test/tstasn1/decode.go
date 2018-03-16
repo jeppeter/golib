@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
+	"github.com/jeppeter/go-crypto/pkcs12"
 	"github.com/jeppeter/go-extargsparse"
 	//"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
@@ -582,11 +584,21 @@ func Der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfac
 func decode_pkcs12_der(fname string, password string, verbose int) error {
 	var data []byte
 	var err error
+	var p interface{}
+	var rsap *rsa.PrivateKey
+	var cert *x509.Certificate
 	data, err = ioutil.ReadFile(fname)
 	if err != nil {
 		return err
 	}
-	data = data
+
+	p, cert, err = pkcs12.Decode(data, password)
+	if err != nil {
+		return err
+	}
+	rsap = p.(*rsa.PrivateKey)
+	cert = cert
+	rsap = rsap
 
 	return nil
 }
@@ -610,6 +622,7 @@ func Pkcs12_der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 			return err
 		}
 	}
+	fmt.Fprintf(os.Stdout, "parse %v succ\n", args.Pkcs12der.Subnargs)
 	os.Exit(0)
 	return nil
 }
