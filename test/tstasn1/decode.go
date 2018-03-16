@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -399,26 +400,35 @@ func DecodeAsn(data []byte, verbose int) (seq []*Asn1Seq, err error) {
 	return
 }
 
+func decode_der(data []byte, verbose int, note string) (err error) {
+	var ap []*Asn1Seq
+	var p *Asn1Seq
+	var j int
+
+	ap, err = DecodeAsn(data, verbose)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "%s\n", note)
+	for j, p = range ap {
+		fmt.Fprintf(os.Stdout, "[%d]\n", j)
+		fmt.Fprintf(os.Stdout, "%s", p.Format(1))
+	}
+	return nil
+}
+
 func Pem(infile string, verbose int) error {
 	var ps []*pem.Block
 	var err error
-	var i, j int
-	var ap []*Asn1Seq
-	var p *Asn1Seq
+	var i int
 	ps, err = DecodePem(infile)
 	if err != nil {
 		return err
 	}
 	for i = 0; i < len(ps); i++ {
-		fmt.Fprintf(os.Stdout, "[%s] decode [%d]\n", infile, i)
-		ap, err = DecodeAsn(ps[i].Bytes, verbose)
+		err = decode_der(ps[i].Bytes, verbose, fmt.Sprintf("[%s] decode [%d]", infile, i))
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 			return err
-		}
-		for j, p = range ap {
-			fmt.Fprintf(os.Stdout, "[%d]\n", j)
-			fmt.Fprintf(os.Stdout, "%s", p.Format(1))
 		}
 	}
 	return nil
@@ -427,23 +437,15 @@ func Pem(infile string, verbose int) error {
 func Der(infile string, verbose int) error {
 	var data []byte
 	var err error
-	var j int
-	var ap []*Asn1Seq
-	var p *Asn1Seq
 
 	data, err = DecodeDer(infile)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(os.Stdout, "[%s] decode\n", infile)
-	ap, err = DecodeAsn(data, verbose)
+
+	err = decode_der(data, verbose, fmt.Sprintf("[%s] decode", infile))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "err[%s]\n", err.Error())
 		return err
-	}
-	for j, p = range ap {
-		fmt.Fprintf(os.Stdout, "[%d]\n", j)
-		fmt.Fprintf(os.Stdout, "%s", p.Format(1))
 	}
 	return nil
 }
@@ -612,11 +614,65 @@ func Pkcs12_der_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return nil
 }
 
+func getcurByte(s string) byte {
+	var cb byte
+	var iv int64 = 0
+	var err error
+	var curs string
+	var base int = 10
+	cb = byte(0)
+
+	curs = s
+
+	if strings.HasPrefix(s, "0x") ||
+		strings.HasPrefix(s, "0X") {
+		curs = s[2:]
+		base = 16
+	} else if strings.HasPrefix(s, "x") ||
+		strings.HasPrefix(s, "X") {
+		curs = s[1:]
+		base = 16
+	}
+	iv, err = strconv.ParseInt(curs, base, 64)
+	if err != nil {
+		return cb
+	}
+
+	cb = byte(iv)
+	return cb
+}
+
+func Getbytes(s string) (retb []byte) {
+	var sarr []string
+	var c string
+	retb = make([]byte, 0)
+	sarr = strings.Split(s, ",")
+	for _, c = range sarr {
+		retb = append(retb, getcurByte(c))
+	}
+	return retb
+}
+
 func Derbuf_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
 	var args *PemArgs
+	var allbytes []byte
+	var c string
+	var err error
 
 	if ns == nil {
 		return nil
+	}
+
+	args = ostruct.(*PemArgs)
+
+	allbytes = make([]byte, 0)
+	for _, c = range args.Derbuf.Subnargs {
+		allbytes = append(allbytes, Getbytes(c)...)
+	}
+
+	err = decode_der(allbytes, args.Verbose, fmt.Sprintf("byte decode"))
+	if err != nil {
+		return err
 	}
 
 	os.Exit(0)
@@ -628,6 +684,7 @@ func init() {
 	Pem_handler(nil, nil, nil)
 	Der_handler(nil, nil, nil)
 	Pkcs12_der_handler(nil, nil, nil)
+	Derbuf_handler(nil, nil, nil)
 }
 
 func main() {
