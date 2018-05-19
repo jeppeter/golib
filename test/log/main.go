@@ -75,14 +75,53 @@ func Cmd_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfac
 	return nil
 }
 
+func Data_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) error {
+	var err error
+	if ns == nil {
+		return nil
+	}
+	err = InitLog(ns)
+	if err != nil {
+		return err
+	}
+
+	for _, s := range ns.GetArray("subnargs") {
+		ErrorBuffer([]byte(s), "get s %s", s)
+		ErrorBuffer([]byte(s), "")
+		ErrorBuffer(1, []byte(s), "get s [%s]", s)
+		ErrorBuffer(1, []byte(s), "")
+		WarnBuffer([]byte(s), "get s %s", s)
+		WarnBuffer([]byte(s), "")
+		WarnBuffer(1, []byte(s), "get s [%s]", s)
+		WarnBuffer(1, []byte(s), "")
+		InfoBuffer([]byte(s), "get s %s", s)
+		InfoBuffer([]byte(s), "")
+		InfoBuffer(1, []byte(s), "get s [%s]", s)
+		InfoBuffer(1, []byte(s), "")
+		DebugBuffer([]byte(s), "get s %s", s)
+		DebugBuffer([]byte(s), "")
+		DebugBuffer(1, []byte(s), "get s [%s]", s)
+		DebugBuffer(1, []byte(s), "")
+		TraceBuffer([]byte(s), "get s %s", s)
+		TraceBuffer([]byte(s), "")
+		TraceBuffer(1, []byte(s), "get s [%s]", s)
+		TraceBuffer(1, []byte(s), "")
+	}
+	return nil
+}
+
 func init() {
 	Cmd_handler(nil, nil, nil)
+	Data_handler(nil, nil, nil)
 }
 
 func main() {
 	var commandline = `{
 		"cmd<cmd_handler>##cmd debug out##" : {
 			"$" : "*"
+		},
+		"data<data_handler>##data debug##" : {
+			"$" : "+"
 		}
 	}`
 
