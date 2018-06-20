@@ -39,6 +39,36 @@ func makeFindAllCommand() cli.Command {
 	return cmd
 }
 
+func makeFindIndexCommand() cli.Command {
+	cmd := cli.Command{}
+	cmd.Name = "findindex"
+	cmd.ShortName = "fi"
+	cmd.Usage = fmt.Sprintf(" restr instrs...")
+	cmd.Action = func(c *cli.Context) {
+		if len(c.Args()) < 2 {
+			fmt.Fprintf(os.Stderr, "findindex %s", cmd.Usage)
+			os.Exit(4)
+		}
+		reg, err := regexp.Compile(c.Args()[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "can not compile[%s] %s", c.Args()[0], err.Error())
+			os.Exit(5)
+		}
+		for i := 1; i < len(c.Args()); i++ {
+			indexes := reg.FindStringIndex(c.Args()[i])
+			if len(indexes) > 0 {
+				fmt.Fprintf(os.Stdout, "[%s] find all in [%s]\n", c.Args()[0], c.Args()[i])
+				fmt.Fprintf(os.Stdout, "\t[%d] [%d] [%s]\n", indexes[0], indexes[1], c.Args()[i][indexes[0]:indexes[1]])
+			} else {
+				fmt.Fprintf(os.Stdout, "[%s] not find all in [%s]\n", c.Args()[0], c.Args()[i])
+			}
+		}
+		os.Exit(0)
+	}
+
+	return cmd
+}
+
 func makeMatchCommand() cli.Command {
 	cmd := cli.Command{}
 	cmd.Name = "match"
@@ -105,5 +135,6 @@ func main() {
 	app.Commands = append(app.Commands, makeMatchCommand())
 	app.Commands = append(app.Commands, makeFindAllCommand())
 	app.Commands = append(app.Commands, makeSplitCommand())
+	app.Commands = append(app.Commands, makeFindIndexCommand())
 	app.Run(os.Args)
 }
