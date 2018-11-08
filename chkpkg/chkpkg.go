@@ -553,7 +553,9 @@ func main() {
 		patharr := strings.Split(paths, sep)
 		for _, curdir := range patharr {
 			gopaths.Set(curdir)
+			gopaths.Set(fmt.Sprintf("%s%cvendor", curdir, os.PathSeparator))
 			gopaths.Set(fmt.Sprintf("%s%csrc", curdir, os.PathSeparator))
+			gopaths.Set(fmt.Sprintf("%s%csrc%cvendor", curdir, os.PathSeparator, os.PathSeparator))
 		}
 	}
 	suparchs.Set(runtime.GOARCH)
