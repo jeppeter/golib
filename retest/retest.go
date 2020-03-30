@@ -2,139 +2,206 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
+	"github.com/jeppeter/go-extargsparse"
 	"os"
 	"regexp"
 )
 
-func makeFindAllCommand() cli.Command {
-	cmd := cli.Command{}
-	cmd.Name = "findall"
-	cmd.ShortName = "fa"
-	cmd.Usage = fmt.Sprintf(" restr instrs...")
-	cmd.Action = func(c *cli.Context) {
-		if len(c.Args()) < 2 {
-			fmt.Fprintf(os.Stderr, "findall %s", cmd.Usage)
-			os.Exit(4)
-		}
-		reg, err := regexp.Compile(c.Args()[0])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "can not compile[%s] %s", c.Args()[0], err.Error())
-			os.Exit(5)
-		}
-		for i := 1; i < len(c.Args()); i++ {
-			matchstrings := reg.FindStringSubmatch(c.Args()[i])
-			if len(matchstrings) > 0 {
-				fmt.Fprintf(os.Stdout, "[%s] find all in [%s]\n", c.Args()[0], c.Args()[i])
-				for j, s := range matchstrings {
-					fmt.Fprintf(os.Stdout, "\t[%d] [%s]\n", j, s)
-				}
-			} else {
-				fmt.Fprintf(os.Stdout, "[%s] not find all in [%s]\n", c.Args()[0], c.Args()[i])
-			}
-		}
-		os.Exit(0)
+func Findall_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var restr string
+	var idx int
+	var sarr []string
+	var reg *regexp.Regexp
+	var matchstrings []string
+	var j int
+	var s string
+	err = nil
+	if ns == nil {
+		return
 	}
 
-	return cmd
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = fmt.Errorf("findall need at least 2 args")
+		return
+	}
+	restr = sarr[0]
+	reg, err = regexp.Compile(restr)
+	if err != nil {
+		err = fmt.Errorf("compile [%s] error[%s]", restr, err.Error())
+		return
+	}
+
+	for idx = 1; idx < len(sarr); idx++ {
+		matchstrings = reg.FindStringSubmatch(sarr[idx])
+		if len(matchstrings) > 0 {
+			fmt.Fprintf(os.Stdout, "[%s] find all in [%s]\n", restr, sarr[idx])
+			for j, s = range matchstrings {
+				fmt.Fprintf(os.Stdout, "\t[%d] [%s]\n", j, s)
+			}
+		} else {
+			fmt.Fprintf(os.Stdout, "[%s] not find all in [%s]\n", restr, sarr[idx])
+		}
+	}
+	err = nil
+	return
 }
 
-func makeFindIndexCommand() cli.Command {
-	cmd := cli.Command{}
-	cmd.Name = "findindex"
-	cmd.ShortName = "fi"
-	cmd.Usage = fmt.Sprintf(" restr instrs...")
-	cmd.Action = func(c *cli.Context) {
-		if len(c.Args()) < 2 {
-			fmt.Fprintf(os.Stderr, "findindex %s", cmd.Usage)
-			os.Exit(4)
-		}
-		reg, err := regexp.Compile(c.Args()[0])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "can not compile[%s] %s", c.Args()[0], err.Error())
-			os.Exit(5)
-		}
-		for i := 1; i < len(c.Args()); i++ {
-			indexes := reg.FindStringIndex(c.Args()[i])
-			if len(indexes) > 0 {
-				fmt.Fprintf(os.Stdout, "[%s] find all in [%s]\n", c.Args()[0], c.Args()[i])
-				fmt.Fprintf(os.Stdout, "\t[%d] [%d] [%s]\n", indexes[0], indexes[1], c.Args()[i][indexes[0]:indexes[1]])
-			} else {
-				fmt.Fprintf(os.Stdout, "[%s] not find all in [%s]\n", c.Args()[0], c.Args()[i])
-			}
-		}
-		os.Exit(0)
+func Findindex_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var restr string
+	var reg *regexp.Regexp
+	var indexes []int
+	var idx int
+	err = nil
+	if ns == nil {
+		return
 	}
 
-	return cmd
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = fmt.Errorf("findindex need at least 2 args")
+		return
+	}
+
+	restr = sarr[0]
+	reg, err = regexp.Compile(restr)
+	if err != nil {
+		err = fmt.Errorf("compile [%s] error[%s]", restr, err.Error())
+		return
+	}
+
+	for idx = 1; idx < len(sarr); idx++ {
+		indexes = reg.FindStringIndex(sarr[idx])
+		if len(indexes) > 0 {
+			fmt.Fprintf(os.Stdout, "[%s] find all in [%s]\n", restr, sarr[idx])
+			fmt.Fprintf(os.Stdout, "\t[%d] [%d] [%s]\n", indexes[0], indexes[1], sarr[idx][indexes[0]:indexes[1]])
+		} else {
+			fmt.Fprintf(os.Stdout, "[%s] not find all in [%s]\n", restr, sarr[idx])
+		}
+	}
+
+	err = nil
+	return
 }
 
-func makeMatchCommand() cli.Command {
-	cmd := cli.Command{}
-	cmd.Name = "match"
-	cmd.ShortName = "ma"
-	cmd.Usage = fmt.Sprintf(" restr instrs...")
-	cmd.Action = func(c *cli.Context) {
-		if len(c.Args()) < 2 {
-			fmt.Fprintf(os.Stderr, "match %s", cmd.Usage)
-			os.Exit(4)
-		}
-		reg, err := regexp.Compile(c.Args()[0])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "can not compile[%s] %s", c.Args()[0], err.Error())
-			os.Exit(5)
-		}
-		for i := 1; i < len(c.Args()); i++ {
-			if reg.MatchString(c.Args()[i]) {
-				fmt.Fprintf(os.Stdout, "[%s] match [%s]\n", c.Args()[0], c.Args()[i])
-			} else {
-				fmt.Fprintf(os.Stdout, "[%s] not match [%s]\n", c.Args()[0], c.Args()[i])
-			}
-		}
-		os.Exit(0)
+func Match_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var idx int
+	var restr string
+	var reg *regexp.Regexp
+	err = nil
+	if ns == nil {
+		return
 	}
 
-	return cmd
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = fmt.Errorf("match need at least 2 args")
+		return
+	}
+
+	restr = sarr[0]
+	reg, err = regexp.Compile(restr)
+	if err != nil {
+		err = fmt.Errorf("compile [%s] error[%s]", restr, err.Error())
+		return
+	}
+
+	for idx = 1; idx < len(sarr); idx++ {
+		if reg.MatchString(sarr[idx]) {
+			fmt.Fprintf(os.Stdout, "[%s] match [%s]\n", sarr[0], sarr[idx])
+		} else {
+			fmt.Fprintf(os.Stdout, "[%s] not match [%s]\n", sarr[0], sarr[idx])
+		}
+	}
+
+	return
 }
 
-func makeSplitCommand() cli.Command {
-	cmd := cli.Command{}
-	cmd.Name = "split"
-	cmd.ShortName = "sp"
-	cmd.Usage = fmt.Sprintf("restr instrs...")
-	cmd.Action = func(c *cli.Context) {
-		if len(c.Args()) < 2 {
-			fmt.Fprintf(os.Stderr, "split %s", cmd.Usage)
-			os.Exit(4)
-		}
-		reg, err := regexp.Compile(c.Args()[0])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "can not compile[%s] %s", c.Args()[0], err.Error())
-			os.Exit(5)
-		}
-
-		for i := 1; i < len(c.Args()); i++ {
-			splitstrings := reg.Split(c.Args()[i], -1)
-			if len(splitstrings) > 0 {
-				fmt.Fprintf(os.Stdout, "[%s] split with [%s]\n", c.Args()[i], c.Args()[0])
-				for j, s := range splitstrings {
-					fmt.Fprintf(os.Stdout, "\t[%d] [%s]\n", j, s)
-				}
-			} else {
-				fmt.Fprintf(os.Stdout, "[%s] nothing with split [%s]\n", c.Args()[i], c.Args()[0])
-			}
-		}
-		os.Exit(0)
+func Split_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var idx int
+	var restr string
+	var reg *regexp.Regexp
+	var splitstrings []string
+	var j int
+	var s string
+	err = nil
+	if ns == nil {
+		return
 	}
-	return cmd
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = fmt.Errorf("split need at least 2 args")
+		return
+	}
+
+	restr = sarr[0]
+	reg, err = regexp.Compile(restr)
+	if err != nil {
+		err = fmt.Errorf("compile [%s] error[%s]", restr, err.Error())
+		return
+	}
+
+	for idx = 1; idx < len(sarr); idx++ {
+		splitstrings = reg.Split(sarr[idx], -1)
+		if len(splitstrings) > 0 {
+			fmt.Fprintf(os.Stdout, "[%s] split with [%s]\n", sarr[idx], sarr[0])
+			for j, s = range splitstrings {
+				fmt.Fprintf(os.Stdout, "\t[%d] [%s]\n", j, s)
+			}
+		} else {
+			fmt.Fprintf(os.Stdout, "[%s] nothing with split [%s]\n", sarr[idx], sarr[0])
+		}
+	}
+
+	return
+}
+
+func init() {
+	Match_handler(nil, nil, nil)
+	Findall_handler(nil, nil, nil)
+	Findindex_handler(nil, nil, nil)
+	Split_handler(nil, nil, nil)
 }
 
 func main() {
-	app := cli.NewApp()
-	app.Version = "1.0.2"
-	app.Commands = append(app.Commands, makeMatchCommand())
-	app.Commands = append(app.Commands, makeFindAllCommand())
-	app.Commands = append(app.Commands, makeSplitCommand())
-	app.Commands = append(app.Commands, makeFindIndexCommand())
-	app.Run(os.Args)
+	var commandline = `
+	{
+		"match<Match_handler>## restr instr ... to find match##" : {
+			"$" : "+"
+		},
+		"findall<Findall_handler>## restr instr ... to find all matches##" : {
+			"$" : "+"
+		},
+		"findindex<Findindex_handler>## restr instr ... to find index matches##" : {
+			"$" : "+"
+		},
+		"split<Split_handler>## restr instr ... to split string with regexp##" : {
+			"$" : "+"
+		}
+	}
+	`
+	var parser *extargsparse.ExtArgsParse
+	var err error
+
+	parser, err = extargsparse.NewExtArgsParse(nil, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "can not make parser err[%s]\n", err.Error())
+		os.Exit(5)
+	}
+	err = parser.LoadCommandLineString(commandline)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "can not parse %s\n", commandline)
+		os.Exit(5)
+	}
+
+	_, err = parser.ParseCommandLineEx(nil, nil, nil, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "can not use parse command line [%s]\n", err.Error())
+		os.Exit(4)
+	}
+	return
 }
