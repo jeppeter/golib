@@ -119,6 +119,40 @@ func Match_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 	return
 }
 
+func Imatch_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var idx int
+	var restr string
+	var reg *regexp.Regexp
+	err = nil
+	if ns == nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = fmt.Errorf("match need at least 2 args")
+		return
+	}
+
+	restr = sarr[0]
+	reg, err = regexp.Compile("(?i)" + restr)
+	if err != nil {
+		err = fmt.Errorf("compile [%s] error[%s]", restr, err.Error())
+		return
+	}
+
+	for idx = 1; idx < len(sarr); idx++ {
+		if reg.MatchString(sarr[idx]) {
+			fmt.Fprintf(os.Stdout, "[%s] match [%s]\n", sarr[0], sarr[idx])
+		} else {
+			fmt.Fprintf(os.Stdout, "[%s] not match [%s]\n", sarr[0], sarr[idx])
+		}
+	}
+
+	return
+}
+
 func Split_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
 	var idx int
@@ -162,6 +196,7 @@ func Split_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 
 func init() {
 	Match_handler(nil, nil, nil)
+	Imatch_handler(nil, nil, nil)
 	Findall_handler(nil, nil, nil)
 	Findindex_handler(nil, nil, nil)
 	Split_handler(nil, nil, nil)
@@ -171,6 +206,9 @@ func main() {
 	var commandline = `
 	{
 		"match<Match_handler>## restr instr ... to find match##" : {
+			"$" : "+"
+		},
+		"imatch<Imatch_handler>## restr instr ... to find match##" : {
 			"$" : "+"
 		},
 		"findall<Findall_handler>## restr instr ... to find all matches##" : {
