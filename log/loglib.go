@@ -33,6 +33,16 @@ func format_out_stack(level int) string {
 	return fmt.Sprintf("[%s:%d]", f, l)
 }
 
+func format_error(fmtstr string, a ...interface{}) (err error) {
+	var s string
+	s = ""
+	s += format_out_stack(2)
+	s += " "
+	s += fmt.Sprintf(fmtstr, a...)
+	err = fmt.Errorf("%s", s)
+	return
+}
+
 func format_out_string_total(level int, fmtstr string, a ...interface{}) string {
 	outstr := format_out_stack((level + 1))
 	outstr += fmt.Sprintf(fmtstr, a...)
