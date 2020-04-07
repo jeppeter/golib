@@ -101,11 +101,11 @@ func format_out_stack_data(data []byte, fmtstr string, a ...interface{}) string 
 }
 
 const (
-	def_stacklevel_added = 3
+	DEF_STACKLEVEL_ADDED = 3
 )
 
 func format_out_string_cap(a ...interface{}) string {
-	var stacklevel int = def_stacklevel_added
+	var stacklevel int = DEF_STACKLEVEL_ADDED
 	var vaargs []interface{}
 	var fmtstr string = ""
 	var ct string
@@ -113,7 +113,7 @@ func format_out_string_cap(a ...interface{}) string {
 		switch v := a[0].(type) {
 		case int:
 			stacklevel = a[0].(int)
-			stacklevel += def_stacklevel_added
+			stacklevel += DEF_STACKLEVEL_ADDED
 			if len(a) > 2 {
 				vaargs = a[2:]
 			}
@@ -145,7 +145,7 @@ func format_out_string_cap(a ...interface{}) string {
 }
 
 func format_out_data_cap(a ...interface{}) string {
-	var stacklevel int = def_stacklevel_added
+	var stacklevel int = DEF_STACKLEVEL_ADDED
 	var vaargs []interface{}
 	var data []byte = []byte{}
 	var fmtstr string = ""
@@ -154,7 +154,7 @@ func format_out_data_cap(a ...interface{}) string {
 		switch v := a[0].(type) {
 		case int:
 			stacklevel = a[0].(int)
-			stacklevel += def_stacklevel_added
+			stacklevel += DEF_STACKLEVEL_ADDED
 			if len(a) > 3 {
 				vaargs = a[3:]
 			}
