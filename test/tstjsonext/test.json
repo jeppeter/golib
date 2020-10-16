@@ -1,0 +1,18 @@
+{
+	"trueval" : true,
+	"falseval" : false,
+	"arrayval" : ["array1",233,9.2,{"arrk1" : "v1","arrk2" : "v2"},["ar1","c2"],null,true,false],
+	"floatval" : 3.222,
+	"intval" : 3,
+	"strval" : "string",
+	"nulval" : null,
+	"mapval" : {
+		"trueval" : true,
+		"falseval" : false,
+		"arrayval" : ["array1",233,9.2,{"arrk1" : "v1","arrk2" : "v2"},["ar1","c2"]],
+		"floatval" : 3.222,
+		"intval" : 3,
+		"strval" : "string",
+		"nulval" : null
+	}
+}
