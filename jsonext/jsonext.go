@@ -745,8 +745,124 @@ func GetJsonValueString(path string, vmap map[string]interface{}) (val string, e
 		return
 	}
 	if types != "string" {
-		err = fmt.Errorf("")
+		err = fmt.Errorf("[%s] type [%s] not string", path, types)
+		return
 	}
+	val = vinter.(string)
+	err = nil
+	return
+}
+
+func GetJsonValueInt(path string, vmap map[string]interface{}) (val int, err error) {
+	var types string
+	var vinter interface{}
+	var v32 uint32
+	var v64 uint64
+	var f32 float32
+	var f64 float64
+
+	vinter, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	switch types {
+	case "int":
+		val = vinter.(int)
+	case "uint32":
+		v32 = vinter.(uint32)
+		val = int(v32)
+	case "uint64":
+		v64 = vinter.(uint64)
+		val = int(v64)
+	case "float32":
+		f32 = vinter.(float32)
+		val = int(f32)
+	case "float64":
+		f64 = vinter.(float64)
+		val = int(f64)
+	default:
+		err = fmt.Errorf("[%s] type %s", path, types)
+		return
+	}
+	err = nil
+	return
+}
+
+func GetJsonValueFloat(path string, vmap map[string]interface{}) (val float64, err error) {
+	var types string
+	var vinter interface{}
+	var v32 uint32
+	var v64 uint64
+	var f32 float32
+	var vint int
+
+	vinter, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	switch types {
+	case "int":
+		vint = vinter.(int)
+		val = float64(vint)
+	case "uint32":
+		v32 = vinter.(uint32)
+		val = float64(v32)
+	case "uint64":
+		v64 = vinter.(uint64)
+		val = float64(v64)
+	case "float32":
+		f32 = vinter.(float32)
+		val = float64(f32)
+	case "float64":
+		val = vinter.(float64)
+	default:
+		err = fmt.Errorf("[%s] type %s", path, types)
+		return
+	}
+	err = nil
+	return
+}
+
+func GetJsonValueArray(path string, vmap map[string]interface{}) (val []interface{}, err error) {
+	var types string
+	var vinter interface{}
+	var v32 uint32
+	var v64 uint64
+	var f32 float32
+	var vint int
+
+	vinter, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	if types != "array" {
+		err = fmt.Errorf("[%s] not array [%s]", path, types)
+		return
+	}
+	val = vinter.([]interface{})
+	err = nil
+	return
+}
+
+func GetJsonValueMap(path string, vmap map[string]interface{}) (val map[string]interface{}, err error) {
+	var types string
+	var vinter interface{}
+	var v32 uint32
+	var v64 uint64
+	var f32 float32
+	var vint int
+
+	vinter, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	if types != "map" {
+		err = fmt.Errorf("[%s] not map [%s]", path, types)
+		return
+	}
+	val = vinter.(map[string]interface{})
+	err = nil
+	return
 }
 
 func __GetJsonValue(path string, v map[string]interface{}) (val string, err error) {
