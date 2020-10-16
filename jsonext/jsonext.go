@@ -77,7 +77,7 @@ func GetJsonArrayItemString(sarr []interface{}, idx int) (val string, err error)
 		return
 	}
 	if types != "string" {
-		err = fmt.Error("[%d] item not string [%s]", idx, types)
+		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.(string)
@@ -94,7 +94,7 @@ func GetJsonArrayItemInt(sarr []interface{}, idx int) (val int, err error) {
 		return
 	}
 	if types != "float64" {
-		err = fmt.Error("[%d] item not string [%s]", idx, types)
+		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
 		return
 	}
 	varf = vinter.(float64)
@@ -106,13 +106,12 @@ func GetJsonArrayItemInt(sarr []interface{}, idx int) (val int, err error) {
 func GetJsonArrayItemFloat(sarr []interface{}, idx int) (val float64, err error) {
 	var vinter interface{}
 	var types string
-	var varf float64
 	vinter, types, err = __GetJsonArrayItem(sarr, idx)
 	if err != nil {
 		return
 	}
 	if types != "float64" {
-		err = fmt.Error("[%d] item not string [%s]", idx, types)
+		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.(float64)
@@ -123,13 +122,12 @@ func GetJsonArrayItemFloat(sarr []interface{}, idx int) (val float64, err error)
 func GetJsonArrayItemMap(sarr []interface{}, idx int) (val map[string]interface{}, err error) {
 	var vinter interface{}
 	var types string
-	var varf float64
 	vinter, types, err = __GetJsonArrayItem(sarr, idx)
 	if err != nil {
 		return
 	}
 	if types != "map" {
-		err = fmt.Error("[%d] item not string [%s]", idx, types)
+		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.(map[string]interface{})
@@ -140,13 +138,12 @@ func GetJsonArrayItemMap(sarr []interface{}, idx int) (val map[string]interface{
 func GetJsonArrayItemArray(sarr []interface{}, idx int) (val []interface{}, err error) {
 	var vinter interface{}
 	var types string
-	var varf float64
 	vinter, types, err = __GetJsonArrayItem(sarr, idx)
 	if err != nil {
 		return
 	}
 	if types != "array" {
-		err = fmt.Error("[%d] item not string [%s]", idx, types)
+		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.([]interface{})
@@ -826,10 +823,6 @@ func GetJsonValueFloat(path string, vmap map[string]interface{}) (val float64, e
 func GetJsonValueArray(path string, vmap map[string]interface{}) (val []interface{}, err error) {
 	var types string
 	var vinter interface{}
-	var v32 uint32
-	var v64 uint64
-	var f32 float32
-	var vint int
 
 	vinter, types, err = __GetJsonValueInterface(path, vmap)
 	if err != nil {
@@ -847,10 +840,6 @@ func GetJsonValueArray(path string, vmap map[string]interface{}) (val []interfac
 func GetJsonValueMap(path string, vmap map[string]interface{}) (val map[string]interface{}, err error) {
 	var types string
 	var vinter interface{}
-	var v32 uint32
-	var v64 uint64
-	var f32 float32
-	var vint int
 
 	vinter, types, err = __GetJsonValueInterface(path, vmap)
 	if err != nil {
