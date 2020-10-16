@@ -50,20 +50,24 @@ func __GetJsonArrayItem(sarr []interface{}, idx int) (val interface{}, types str
 		return
 	}
 	val = sarr[idx]
-	switch val.(type) {
-	case string:
-		types = "string"
-	case float64:
-		types = "float64"
-	case []interface{}:
-		types = "array"
-	case map[string]interface{}:
-		types = "map"
-	case bool:
-		types = "bool"
-	default:
-		err = fmt.Errorf("[%d] type unsupported [%s]", idx, reflect.TypeOf(val).String())
-		return
+	if val == nil {
+		types = "null"
+	} else {
+		switch val.(type) {
+		case string:
+			types = "string"
+		case float64:
+			types = "float64"
+		case []interface{}:
+			types = "array"
+		case map[string]interface{}:
+			types = "map"
+		case bool:
+			types = "bool"
+		default:
+			err = fmt.Errorf("[%d] type unsupported [%s]", idx, reflect.TypeOf(val).String())
+			return
+		}
 	}
 	err = nil
 	return
@@ -115,6 +119,36 @@ func GetJsonArrayItemFloat(sarr []interface{}, idx int) (val float64, err error)
 		return
 	}
 	val = vinter.(float64)
+	err = nil
+	return
+}
+
+func GetJsonArrayItemBool(sarr []interface{}, idx int) (val bool, err error) {
+	var vinter interface{}
+	var types string
+	vinter, types, err = __GetJsonArrayItem(sarr, idx)
+	if err != nil {
+		return
+	}
+	if types != "bool" {
+		err = fmt.Errorf("[%d] item not float [%s]", idx, types)
+		return
+	}
+	val = vinter.(bool)
+	err = nil
+	return
+}
+
+func GetJsonArrayItemNull(sarr []interface{}, idx int) (err error) {
+	var types string
+	_, types, err = __GetJsonArrayItem(sarr, idx)
+	if err != nil {
+		return
+	}
+	if types != "null" {
+		err = fmt.Errorf("[%d] item not null [%s]", idx, types)
+		return
+	}
 	err = nil
 	return
 }
@@ -659,6 +693,7 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 	val = ""
 	err = nil
 	tmpext = strings.Split(path, "/")
+	pathext = []string{}
 	for _, a := range tmpext {
 		if len(a) > 0 {
 			pathext = append(pathext, a)
@@ -679,24 +714,32 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 
 			if i == (len(pathext) - 1) {
 				val = curval
-				switch curval.(type) {
-				case int:
-					types = "int"
-				case uint32:
-					types = "uint32"
-				case uint64:
-					types = "uint64"
-				case float64:
-					types = "float64"
-				case float32:
-					types = "float32"
-				case map[string]interface{}:
-					types = "map"
-				case []interface{}:
-					types = "array"
-				default:
-					err = fmt.Errorf("[%s]unknown type [%s]", pathext[i], reflect.TypeOf(val).String())
-					return
+				if val == nil {
+					types = "null"
+				} else {
+					switch curval.(type) {
+					case int:
+						types = "int"
+					case uint32:
+						types = "uint32"
+					case uint64:
+						types = "uint64"
+					case float64:
+						types = "float64"
+					case float32:
+						types = "float32"
+					case map[string]interface{}:
+						types = "map"
+					case []interface{}:
+						types = "array"
+					case bool:
+						types = "bool"
+					case string:
+						types = "string"
+					default:
+						err = fmt.Errorf("[%s]unknown type [%s]", pathext[i], reflect.TypeOf(curval).String())
+						return
+					}
 				}
 				err = nil
 				return
@@ -730,6 +773,36 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 	}
 
 	err = fmt.Errorf("can not find (%s) all over", path)
+	return
+}
+
+func GetJsonValueNull(path string, vmap map[string]interface{}) (err error) {
+	var types string
+	_, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	if types != "null" {
+		err = fmt.Errorf("[%s] type [%s] not null", path, types)
+		return
+	}
+	err = nil
+	return
+}
+
+func GetJsonValueBool(path string, vmap map[string]interface{}) (val bool, err error) {
+	var vinter interface{}
+	var types string
+	vinter, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	if types != "bool" {
+		err = fmt.Errorf("[%s] type [%s] not null", path, types)
+		return
+	}
+	val = vinter.(bool)
+	err = nil
 	return
 }
 
