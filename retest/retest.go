@@ -194,12 +194,53 @@ func Split_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 	return
 }
 
+func Replace_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var rplstr string
+	var instr string
+	var restr string
+	var result string
+	var bs []byte
+	var re *regexp.Regexp
+	var idx int
+
+	err = nil
+	if ns == nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 3 {
+		err = fmt.Errorf("replace need at least 3 args")
+		return
+	}
+
+	restr = sarr[0]
+	rplstr = sarr[1]
+	idx = 2
+	re, err = regexp.Compile(restr)
+	if err != nil {
+		err = fmt.Errorf("compile [%s] error[%s]", restr, err.Error())
+		return
+	}
+
+	for idx = 2; idx < len(sarr); idx++ {
+		instr = sarr[idx]
+		bs = re.ReplaceAll([]byte(instr), []byte(rplstr))
+		result = string(bs)
+		fmt.Fprintf(os.Stdout, "replace [%s]  [%s]([%s]) => [%s]\n", instr, restr, rplstr, result)
+	}
+	err = nil
+	return
+}
+
 func init() {
 	Match_handler(nil, nil, nil)
 	Imatch_handler(nil, nil, nil)
 	Findall_handler(nil, nil, nil)
 	Findindex_handler(nil, nil, nil)
 	Split_handler(nil, nil, nil)
+	Replace_handler(nil, nil, nil)
 }
 
 func main() {
@@ -218,6 +259,9 @@ func main() {
 			"$" : "+"
 		},
 		"split<Split_handler>## restr instr ... to split string with regexp##" : {
+			"$" : "+"
+		},
+		"replace<Replace_handler>## restr rplstr instr ... to replace match with rplstr ##" : {
 			"$" : "+"
 		}
 	}
