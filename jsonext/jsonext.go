@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	EPSILON_VALUE = float64(0.00000001)
+	EPSILON_VALUE = float64(0.000001)
 )
 
 func parseMessage(msg string) (map[string]interface{}, error) {
@@ -238,6 +238,48 @@ func (f Float64FormatClass) SupportType() string {
 	return "float64"
 }
 
+type IntFormatClass struct {
+	FormatClass
+}
+
+func (f IntFormatClass) Format(level int, keyname string, value interface{}) (string, error) {
+	ival := int(value.(int))
+	s := fmt.Sprintf(" %d", ival)
+	return s, nil
+}
+
+func (f IntFormatClass) SupportType() string {
+	return "int"
+}
+
+type Int32FormatClass struct {
+	FormatClass
+}
+
+func (f Int32FormatClass) Format(level int, keyname string, value interface{}) (string, error) {
+	ival := int32(value.(int32))
+	s := fmt.Sprintf(" %d", ival)
+	return s, nil
+}
+
+func (f Int32FormatClass) SupportType() string {
+	return "int32"
+}
+
+type Int64FormatClass struct {
+	FormatClass
+}
+
+func (f Int64FormatClass) Format(level int, keyname string, value interface{}) (string, error) {
+	ival := int64(value.(int64))
+	s := fmt.Sprintf(" %d", ival)
+	return s, nil
+}
+
+func (f Int64FormatClass) SupportType() string {
+	return "int64"
+}
+
 type Float32FormatClass struct {
 	FormatClass
 }
@@ -381,6 +423,12 @@ func init() {
 	formatMap[boolcls.SupportType()] = boolcls
 	mapstrcls := MapStringFormatClass{}
 	formatMap[mapstrcls.SupportType()] = mapstrcls
+	intcls := IntFormatClass{}
+	formatMap[intcls.SupportType()] = intcls
+	int32cls := Int32FormatClass{}
+	formatMap[int32cls.SupportType()] = int32cls
+	int64cls := Int64FormatClass{}
+	formatMap[int64cls.SupportType()] = int64cls
 }
 
 func __FormatName(level int, keyname string) string {
@@ -540,6 +588,8 @@ func SetJsonValue(path, typestr, value string, v map[string]interface{}) (map[st
 	var err error
 	var mapv map[string]interface{}
 	var arrayv []interface{}
+	var fval float64
+	var ival int
 
 	tmpext = strings.Split(path, "/")
 	for _, a := range tmpext {
@@ -569,11 +619,17 @@ func SetJsonValue(path, typestr, value string, v map[string]interface{}) (map[st
 				case "string":
 					curmap[curpath] = value
 				case "float64":
-					fval, err := strconv.ParseFloat(value, 64)
+					fval, err = strconv.ParseFloat(value, 64)
 					if err != nil {
 						return nil, err
 					}
 					curmap[curpath] = fval
+				case "int":
+					ival, err = strconv.Atoi(value)
+					if err != nil {
+						return nil, err
+					}
+					curmap[curpath] = ival
 				case "map":
 					mapv, err = GetJsonMap(value)
 					if err != nil {
