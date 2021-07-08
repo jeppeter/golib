@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"time"
 	"unicode/utf8"
 )
 
@@ -31,6 +32,17 @@ func init() {
 func format_out_stack(level int) string {
 	_, f, l, _ := runtime.Caller(level)
 	return fmt.Sprintf("[%s:%d]", f, l)
+}
+
+func format_now_string() string {
+	var s string
+	var nowt time.Time
+	s = ""
+	nowt = time.Now()
+	s = fmt.Sprintf("[%04d-%02d-%02d %02d:%02d:%02d]", nowt.Year(),
+		nowt.Month(), nowt.Day(), nowt.Hour(), nowt.Minute(), nowt.Second())
+
+	return s
 }
 
 func format_error(fmtstr string, a ...interface{}) (err error) {
@@ -214,7 +226,9 @@ func format_out_data_cap(a ...interface{}) string {
 
 func Error(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<ERROR>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<ERROR>"
 	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -231,7 +245,9 @@ func Error(a ...interface{}) int {
 
 func ErrorBuffer(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<ERROR>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<ERROR>"
 	outstr += format_out_data_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -248,7 +264,9 @@ func ErrorBuffer(a ...interface{}) int {
 
 func Warn(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<WARN>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<WARN>"
 	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -265,7 +283,9 @@ func Warn(a ...interface{}) int {
 
 func WarnBuffer(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<WARN>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<WARN>"
 	outstr += format_out_data_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -282,7 +302,9 @@ func WarnBuffer(a ...interface{}) int {
 
 func Info(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<INFO>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<INFO>"
 	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -299,7 +321,9 @@ func Info(a ...interface{}) int {
 
 func InfoBuffer(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<INFO>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<INFO>"
 	outstr += format_out_data_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -316,7 +340,9 @@ func InfoBuffer(a ...interface{}) int {
 
 func Debug(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<DEBUG>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<DEBUG>"
 	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -331,7 +357,9 @@ func Debug(a ...interface{}) int {
 
 func DebugBuffer(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<DEBUG>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<DEBUG>"
 	outstr += format_out_data_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -346,7 +374,9 @@ func DebugBuffer(a ...interface{}) int {
 
 func Trace(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<TRACE>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<TRACE>"
 	outstr += format_out_string_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -361,7 +391,9 @@ func Trace(a ...interface{}) int {
 
 func TraceBuffer(a ...interface{}) int {
 	var retval int = 0
-	outstr := "<TRACE>"
+	var outstr string
+	outstr = format_now_string()
+	outstr += "<TRACE>"
 	outstr += format_out_data_cap(a...)
 	retval = len(outstr)
 	if st_logger != nil {
@@ -391,7 +423,7 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	var cfiles []string
 	var vmode int
 	var lglvl l4g.Level
-	var deflogfmt string = "[%T %D] %M"
+	var deflogfmt string = "%M"
 	var clog l4g.Logger
 
 	if st_logger != nil {
