@@ -64,7 +64,6 @@ func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan
 
 func pipecmd_go(ns *extargsparse.NameSpaceEx) (err error) {
 	var exitch, exitout chan int
-	var exited int = 0
 
 	exitch = make(chan int)
 	exitout = make(chan int)
@@ -73,19 +72,18 @@ func pipecmd_go(ns *extargsparse.NameSpaceEx) (err error) {
 	for gl_exitmode == 0 {
 		select {
 		case <-exitout:
-			exited = 1
-			break
+			err = nil
+			return
 		case <-time.After(time.Duration(300) * time.Millisecond):
-			exited = 0
+			err = nil
 		}
 	}
 
-	if exited == 0 {
-		exitch <- 1
-		Error("wait exitout")
-		<-exitout
-		Error("wait exitout over")
-	}
+	exitch <- 1
+	Error("wait exitout")
+	<-exitout
+	Error("wait exitout over")
+	err = nil
 
 	return
 

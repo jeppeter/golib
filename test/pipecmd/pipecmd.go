@@ -144,6 +144,7 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 					Error("%s", err.Error())
 					return
 				}
+				Error("stdout [%d]", len(nbytes))
 				if len(nbytes) == 0 {
 					break
 				} else if len(nbytes) > 0 {
@@ -170,6 +171,7 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 					Error("%s", err.Error())
 					return
 				}
+				Error("stderr [%d]", len(nbytes))
 				if len(nbytes) == 0 {
 					break
 				} else if len(nbytes) > 0 {
