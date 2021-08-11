@@ -15,6 +15,10 @@ func init() {
 	Pipecmd_handler(nil, nil, nil)
 }
 
+const (
+	DEBUG_OUT_BYTES = 8192
+)
+
 var gl_exitmode int = 0
 
 func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan int) {
@@ -25,6 +29,7 @@ func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan
 	var err error
 	var sarr []string
 	var fin *os.File
+	var outlen int
 
 	defer func() {
 		Error("exit %d", exitcode)
@@ -47,38 +52,56 @@ func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan
 			return
 		}
 	}
+	Error("inputbytes [%d]", len(inputbytes))
 
 	sarr = ns.GetArray("subnargs")
 
-	outbytes, errbytes, exitcode, err = run_cmd_output(&exitch, sarr, inputbytes)
+	outbytes, errbytes, exitcode, err = run_cmd_output(exitch, sarr, inputbytes)
 	if err != nil {
 		Error("%s", err.Error())
 		return
 	}
 
-	Error("run cmd %v exitcode %d", sarr, exitcode)
-	ErrorBuffer(outbytes, "run cmd %v output", sarr)
-	ErrorBuffer(errbytes, "run cmd %v errout", sarr)
+	Error("run cmd %v exitcode %d output [%d] errout [%d]", sarr, exitcode, len(outbytes), len(errbytes))
+	outlen = len(outbytes)
+	if outlen < DEBUG_OUT_BYTES {
+		DebugBuffer(outbytes, "run cmd %v output", sarr)
+	} else {
+
+		DebugBuffer(outbytes[:DEBUG_OUT_BYTES], "run cmd %v output first %d", sarr, DEBUG_OUT_BYTES)
+		DebugBuffer(outbytes[(outlen-DEBUG_OUT_BYTES):], "run cmd %v output last %d", sarr, DEBUG_OUT_BYTES)
+	}
+
+	outlen = len(errbytes)
+	if outlen < DEBUG_OUT_BYTES {
+		DebugBuffer(errbytes, "run cmd %v errout", sarr)
+	} else {
+
+		DebugBuffer(errbytes[:DEBUG_OUT_BYTES], "run cmd %v errout first %d", sarr, DEBUG_OUT_BYTES)
+		DebugBuffer(errbytes[(outlen-DEBUG_OUT_BYTES):], "run cmd %v errout last %d", sarr, DEBUG_OUT_BYTES)
+	}
 	return
 }
 
 func pipecmd_go(ns *extargsparse.NameSpaceEx) (err error) {
 	var exitch, exitout chan int
 
-	exitch = make(chan int)
-	exitout = make(chan int)
+	exitch = make(chan int, 10)
+	exitout = make(chan int, 10)
 	go pipecmd_go_func(ns, exitch, exitout)
 
 	for gl_exitmode == 0 {
 		select {
 		case <-exitout:
 			err = nil
+			Error("get exitout")
 			return
 		case <-time.After(time.Duration(300) * time.Millisecond):
 			err = nil
 		}
 	}
 
+	Error("gl_exitmode %d", gl_exitmode)
 	exitch <- 1
 	Error("wait exitout")
 	<-exitout

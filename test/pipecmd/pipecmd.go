@@ -20,7 +20,7 @@ type ProcWait struct {
 	exitcode int
 }
 
-func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutbytes []byte, stderrbytes []byte, exitcode int, err error) {
+func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutbytes []byte, stderrbytes []byte, exitcode int, err error) {
 	var cmd *exec.Cmd = nil
 	var stdinp io.WriteCloser = nil
 	var nstdin *bufio.Writer
@@ -29,6 +29,7 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 	var procwait *ProcWait = nil
 	var outb bytes.Buffer
 	var errb bytes.Buffer
+	var curlen int
 
 	nstdin = nil
 
@@ -37,6 +38,8 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 	cmd.Args = cmds
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
+	stdoutbytes = []byte{}
+	stderrbytes = []byte{}
 	defer cmd.Wait()
 
 	if len(stdinbytes) > 0 {
@@ -51,6 +54,7 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 			}
 			stdinp = nil
 		}()
+		nstdin = bufio.NewWriter(stdinp)
 	}
 
 	err = cmd.Start()
@@ -75,10 +79,12 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 		}
 	}()
 
+	Error("inlen %d stdinbytes [%d]", inlen, len(stdinbytes))
+
 	for {
 		if exitch != nil {
 			select {
-			case <-*exitch:
+			case <-exitch:
 				err = fmt.Errorf("exitch")
 				Error("%s", err.Error())
 				return
@@ -89,29 +95,28 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 		if procwait.WaitExitTimeout(50) {
+			Error("wait exit")
+			procwait.Close()
 			break
 		}
 
 		if nstdin != nil {
-			if nstdin.Size() > 0 {
-				err = nstdin.Flush()
+			if inlen < len(stdinbytes) {
+				curlen = nstdin.Size()
+				if (len(stdinbytes) - inlen) < curlen {
+					curlen = len(stdinbytes) - inlen
+				}
+				nret, err = nstdin.Write(stdinbytes[inlen:(inlen + curlen)])
 				if err != nil {
 					Error("%s", err.Error())
 					return
 				}
+				inlen += nret
+				Error("nret %d inlen[%d] len[%d]", nret, inlen, len(stdinbytes))
 			} else {
-				if inlen < len(stdinbytes) {
-					nret, err = nstdin.Write(stdinbytes[inlen:])
-					if err != nil {
-						Error("%s", err.Error())
-						return
-					}
-					inlen += nret
-				} else {
-					nstdin = nil
-					stdinp.Close()
-					stdinp = nil
-				}
+				nstdin = nil
+				stdinp.Close()
+				stdinp = nil
 			}
 		}
 
@@ -124,6 +129,8 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 	cmd.ProcessState = nil
 	stdoutbytes = outb.Bytes()
 	stderrbytes = errb.Bytes()
+
+	Error("err out")
 
 	err = nil
 	return
