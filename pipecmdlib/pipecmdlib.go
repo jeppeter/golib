@@ -45,7 +45,6 @@ func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutby
 	if len(stdinbytes) > 0 {
 		stdinp, err = cmd.StdinPipe()
 		if err != nil {
-			Error("%s", err.Error())
 			return
 		}
 		defer func() {
@@ -59,13 +58,11 @@ func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutby
 
 	err = cmd.Start()
 	if err != nil {
-		Error("%s", err.Error())
 		return
 	}
 
 	procwait, err = NewProcWait(cmd.Process)
 	if err != nil {
-		Error("%s", err.Error())
 		return
 	}
 	defer procwait.Close()
@@ -79,14 +76,11 @@ func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutby
 		}
 	}()
 
-	Error("inlen %d stdinbytes [%d]", inlen, len(stdinbytes))
-
 	for {
 		if exitch != nil {
 			select {
 			case <-exitch:
-				err = fmt.Errorf("exitch")
-				Error("%s", err.Error())
+				err = fmt.Errorf("exit notified")
 				return
 			case <-time.After(time.Duration(10) * time.Millisecond):
 				inlen = inlen
@@ -95,7 +89,6 @@ func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutby
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 		if procwait.WaitExitTimeout(50) {
-			Error("wait exit")
 			procwait.Close()
 			break
 		}
@@ -108,12 +101,14 @@ func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutby
 				}
 				nret, err = nstdin.Write(stdinbytes[inlen:(inlen + curlen)])
 				if err != nil {
-					Error("%s", err.Error())
 					return
 				}
 				inlen += nret
-				Error("nret %d inlen[%d] len[%d]", nret, inlen, len(stdinbytes))
 			} else {
+				err = nstdin.Flush()
+				if err != nil {
+					return
+				}
 				nstdin = nil
 				stdinp.Close()
 				stdinp = nil
@@ -129,8 +124,6 @@ func run_cmd_output(exitch chan int, cmds []string, stdinbytes []byte) (stdoutby
 	cmd.ProcessState = nil
 	stdoutbytes = outb.Bytes()
 	stderrbytes = errb.Bytes()
-
-	Error("err out")
 
 	err = nil
 	return

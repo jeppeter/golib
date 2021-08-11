@@ -59,6 +59,7 @@ func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan
 	outbytes, errbytes, exitcode, err = run_cmd_output(exitch, sarr, inputbytes)
 	if err != nil {
 		Error("%s", err.Error())
+		exitcode = 1
 		return
 	}
 
