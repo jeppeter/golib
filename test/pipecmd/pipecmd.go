@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os/exec"
@@ -21,42 +22,22 @@ type ProcWait struct {
 
 func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutbytes []byte, stderrbytes []byte, exitcode int, err error) {
 	var cmd *exec.Cmd = nil
-	var stdoutp io.ReadCloser = nil
-	var stderrp io.ReadCloser = nil
 	var stdinp io.WriteCloser = nil
-	var nstdout, nstderr *bufio.Reader
 	var nstdin *bufio.Writer
 	var inlen int = 0
-	var outlen int = 0
-	var errlen int = 0
 	var nret int
-	var nbytes []byte
-	var c byte
 	var procwait *ProcWait = nil
+	var outb bytes.Buffer
+	var errb bytes.Buffer
 
-	nstdout = nil
-	nstderr = nil
 	nstdin = nil
 
 	cmd = &exec.Cmd{}
 	cmd.Path = cmds[0]
 	cmd.Args = cmds
-
-	stdoutp, err = cmd.StdoutPipe()
-	if err != nil {
-		Error("%s", err.Error())
-		return
-	}
-	defer stdoutp.Close()
-	nstdout = bufio.NewReader(stdoutp)
-
-	stderrp, err = cmd.StderrPipe()
-	if err != nil {
-		Error("%s", err.Error())
-		return
-	}
-	defer stderrp.Close()
-	nstderr = bufio.NewReader(stderrp)
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	defer cmd.Wait()
 
 	if len(stdinbytes) > 0 {
 		stdinp, err = cmd.StdinPipe()
@@ -102,7 +83,7 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 				Error("%s", err.Error())
 				return
 			case <-time.After(time.Duration(10) * time.Millisecond):
-				outlen = outlen
+				inlen = inlen
 			}
 		} else {
 			time.Sleep(time.Duration(10) * time.Millisecond)
@@ -134,122 +115,15 @@ func run_cmd_output(exitch *chan int, cmds []string, stdinbytes []byte) (stdoutb
 			}
 		}
 
-		if nstdout != nil {
-			for {
-				nbytes, err = nstdout.Peek(CMD_PEEK_SIZE)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					Error("%s", err.Error())
-					return
-				}
-				Error("stdout [%d]", len(nbytes))
-				if len(nbytes) == 0 {
-					break
-				} else if len(nbytes) > 0 {
-					for _, c = range nbytes {
-						stdoutbytes = append(stdoutbytes, c)
-					}
-					nret, err = nstdout.Read(nbytes)
-					if err != nil {
-						Error("%s", err.Error())
-						return
-					}
-					outlen += nret
-				}
-			}
-		}
-
-		if nstderr != nil {
-			for {
-				nbytes, err = nstderr.Peek(CMD_PEEK_SIZE)
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					Error("%s", err.Error())
-					return
-				}
-				Error("stderr [%d]", len(nbytes))
-				if len(nbytes) == 0 {
-					break
-				} else if len(nbytes) > 0 {
-					for _, c = range nbytes {
-						stderrbytes = append(stderrbytes, c)
-					}
-					nret, err = nstderr.Read(nbytes)
-					if err != nil {
-						Error("%s", err.Error())
-						return
-					}
-					errlen += nret
-				}
-			}
-		}
 	}
 
-	if nstdout != nil {
-		for {
-			nbytes, err = nstdout.Peek(CMD_PEEK_SIZE)
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				Error("%s", err.Error())
-				return
-			}
-			if len(nbytes) == 0 {
-				nstdout = nil
-				stdoutp.Close()
-				stdoutp = nil
-				break
-			} else if len(nbytes) > 0 {
-				for _, c = range nbytes {
-					stdoutbytes = append(stdoutbytes, c)
-				}
-				nret, err = nstderr.Read(nbytes)
-				if err != nil {
-					Error("%s", err.Error())
-					return
-				}
-				outlen += nret
-			}
-		}
-	}
-
-	if nstderr != nil {
-		for {
-			nbytes, err = nstderr.Peek(CMD_PEEK_SIZE)
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				Error("%s", err.Error())
-				return
-			}
-			if len(nbytes) == 0 {
-				nstderr = nil
-				stderrp.Close()
-				stderrp = nil
-				break
-			} else if len(nbytes) > 0 {
-				for _, c = range nbytes {
-					stderrbytes = append(stderrbytes, c)
-				}
-				nret, err = nstderr.Read(nbytes)
-				if err != nil {
-					Error("%s", err.Error())
-					return
-				}
-				errlen += nret
-			}
-		}
-	}
+	cmd.Wait()
 
 	exitcode = procwait.GetExitcode()
 	cmd.Process = nil
 	cmd.ProcessState = nil
+	stdoutbytes = outb.Bytes()
+	stderrbytes = errb.Bytes()
 
 	err = nil
 	return
