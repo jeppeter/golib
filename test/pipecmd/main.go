@@ -21,20 +21,16 @@ const (
 
 var gl_exitmode int = 0
 
-func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan int) {
+func pipecmd_go(ns *extargsparse.NameSpaceEx) (err error) {
+	var sarr []string
 	var input string
 	var inputbytes []byte
 	var outbytes, errbytes []byte
-	var exitcode int = 1
-	var err error
-	var sarr []string
-	var fin *os.File
+	var retp *ProcCommandHandle = nil
 	var outlen int
-
-	defer func() {
-		Error("exit %d", exitcode)
-		exitout <- exitcode
-	}()
+	var fin *os.File
+	var exitcode int
+	sarr = ns.GetArray("subnargs")
 
 	inputbytes = []byte{}
 	input = ns.GetString("input")
@@ -54,61 +50,53 @@ func pipecmd_go_func(ns *extargsparse.NameSpaceEx, exitch chan int, exitout chan
 	}
 	Error("inputbytes [%d]", len(inputbytes))
 
-	sarr = ns.GetArray("subnargs")
-
-	outbytes, errbytes, exitcode, err = run_cmd_output(exitch, sarr, inputbytes)
+	retp, err = NewProcCommandHandle(sarr, inputbytes)
 	if err != nil {
-		Error("%s", err.Error())
-		exitcode = 1
 		return
 	}
+	defer retp.Close()
 
-	Error("run cmd %v exitcode %d output [%d] errout [%d]", sarr, exitcode, len(outbytes), len(errbytes))
-	outlen = len(outbytes)
-	if outlen < DEBUG_OUT_BYTES {
-		DebugBuffer(outbytes, "run cmd %v output", sarr)
-	} else {
-
-		DebugBuffer(outbytes[:DEBUG_OUT_BYTES], "run cmd %v output first %d", sarr, DEBUG_OUT_BYTES)
-		DebugBuffer(outbytes[(outlen-DEBUG_OUT_BYTES):], "run cmd %v output last %d", sarr, DEBUG_OUT_BYTES)
-	}
-
-	outlen = len(errbytes)
-	if outlen < DEBUG_OUT_BYTES {
-		DebugBuffer(errbytes, "run cmd %v errout", sarr)
-	} else {
-
-		DebugBuffer(errbytes[:DEBUG_OUT_BYTES], "run cmd %v errout first %d", sarr, DEBUG_OUT_BYTES)
-		DebugBuffer(errbytes[(outlen-DEBUG_OUT_BYTES):], "run cmd %v errout last %d", sarr, DEBUG_OUT_BYTES)
-	}
-	return
-}
-
-func pipecmd_go(ns *extargsparse.NameSpaceEx) (err error) {
-	var exitch, exitout chan int
-
-	exitch = make(chan int, 10)
-	exitout = make(chan int, 10)
-	go pipecmd_go_func(ns, exitch, exitout)
+	retp.Start()
 
 	for gl_exitmode == 0 {
-		select {
-		case <-exitout:
-			err = nil
-			Error("get exitout")
-			return
-		case <-time.After(time.Duration(300) * time.Millisecond):
-			err = nil
+		time.Sleep(time.Duration(300) * time.Millisecond)
+		if retp.Exited() {
+			break
 		}
 	}
 
-	Error("gl_exitmode %d", gl_exitmode)
-	exitch <- 1
-	Error("wait exitout")
-	<-exitout
-	Error("wait exitout over")
-	err = nil
+	if gl_exitmode == 0 {
+		outbytes, errbytes, err = retp.GetOutput()
+		if err != nil {
+			return
+		}
 
+		exitcode, err = retp.GetExitcode()
+		if err != nil {
+			return
+		}
+
+		Error("run cmd %v exitcode %d output [%d] errout [%d]", sarr, exitcode, len(outbytes), len(errbytes))
+		outlen = len(outbytes)
+		if outlen < DEBUG_OUT_BYTES {
+			DebugBuffer(outbytes, "run cmd %v output", sarr)
+		} else {
+
+			DebugBuffer(outbytes[:DEBUG_OUT_BYTES], "run cmd %v output first %d", sarr, DEBUG_OUT_BYTES)
+			DebugBuffer(outbytes[(outlen-DEBUG_OUT_BYTES):], "run cmd %v output last %d", sarr, DEBUG_OUT_BYTES)
+		}
+
+		outlen = len(errbytes)
+		if outlen < DEBUG_OUT_BYTES {
+			DebugBuffer(errbytes, "run cmd %v errout", sarr)
+		} else {
+
+			DebugBuffer(errbytes[:DEBUG_OUT_BYTES], "run cmd %v errout first %d", sarr, DEBUG_OUT_BYTES)
+			DebugBuffer(errbytes[(outlen-DEBUG_OUT_BYTES):], "run cmd %v errout last %d", sarr, DEBUG_OUT_BYTES)
+		}
+	}
+
+	err = nil
 	return
 
 }
