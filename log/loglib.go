@@ -72,8 +72,9 @@ func format_out_stack_data(data []byte, fmtstr string, a ...interface{}) string 
 	var r rune
 	var p []byte
 	var j int
-	outstr := ""
+	outstr := fmt.Sprintf(" size [0x%x:%d]", len(data), len(data))
 	if fmtstr != "" {
+		outstr += " "
 		outstr += fmt.Sprintf(fmtstr, a...)
 	}
 	lasti = 0

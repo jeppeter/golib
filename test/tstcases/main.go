@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
+	"github.com/tebeka/atexit"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io/ioutil"
@@ -336,12 +337,51 @@ func Unitoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+func Readfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var outbytes []byte
+	var sarr []string
+	var i int
+	var s string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	Error("sarr %v", sarr)
+	if len(sarr) == 0 {
+		outbytes, err = read_file("")
+		if err != nil {
+			return
+		}
+		Error("sarr %v", sarr)
+		ErrorBuffer(outbytes, "read stdin")
+	} else {
+		for i, s = range sarr {
+			outbytes, err = read_file(s)
+			if err != nil {
+				return
+			}
+			DebugBuffer(outbytes, "read [%d][%s]", i, s)
+		}
+	}
+	err = nil
+	return
+}
+
 func init() {
 	Chan_handler(nil, nil, nil)
 	Utf8togbk_handler(nil, nil, nil)
 	Gbktoutf8_handler(nil, nil, nil)
 	Utf8touni_handler(nil, nil, nil)
 	Unitoutf8_handler(nil, nil, nil)
+	Readfile_handler(nil, nil, nil)
 }
 
 func main() {
@@ -365,30 +405,34 @@ func main() {
 		},
 		"unitoutf8<Unitoutf8_handler>## codes ... to get codes from utf-8 to unicode##" : {
 			"$" : "+"
+		},
+		"readfile<Readfile_handler>## [fname] ... to read file default stdout ##" : {
+			"$" : "*"
 		}
 	}`
 
 	parser, err = extargsparse.NewExtArgsParse(nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not make parser err[%s]\n", err.Error())
-		os.Exit(5)
+		atexit.Exit(5)
 	}
 
 	err = PrepareLog(parser)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not set [%s]\n", err.Error())
-		os.Exit(5)
+		atexit.Exit(5)
 	}
 	err = parser.LoadCommandLineString(commandline)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not parse %s\n", commandline)
-		os.Exit(5)
+		atexit.Exit(5)
 	}
 
 	_, err = parser.ParseCommandLineEx(nil, nil, nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not use parse command line [%s]\n", err.Error())
-		os.Exit(4)
+		atexit.Exit(4)
 	}
+	atexit.Exit(0)
 	return
 }
