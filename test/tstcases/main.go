@@ -337,7 +337,7 @@ func Unitoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
-func Readfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+func Readfilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var outbytes []byte
 	var sarr []string
 	var i int
@@ -354,17 +354,15 @@ func Readfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	}
 
 	sarr = ns.GetArray("subnargs")
-	Error("sarr %v", sarr)
 	if len(sarr) == 0 {
-		outbytes, err = read_file("")
+		outbytes, err = read_file_bytes("")
 		if err != nil {
 			return
 		}
-		Error("sarr %v", sarr)
-		ErrorBuffer(outbytes, "read stdin")
+		DebugBuffer(outbytes, "read stdin")
 	} else {
 		for i, s = range sarr {
-			outbytes, err = read_file(s)
+			outbytes, err = read_file_bytes(s)
 			if err != nil {
 				return
 			}
@@ -381,16 +379,19 @@ func init() {
 	Gbktoutf8_handler(nil, nil, nil)
 	Utf8touni_handler(nil, nil, nil)
 	Unitoutf8_handler(nil, nil, nil)
-	Readfile_handler(nil, nil, nil)
+	Readfilebyte_handler(nil, nil, nil)
 }
 
 func main() {
 	var commandline string
 	var err error
 	var parser *extargsparse.ExtArgsParse
+	var ns *extargsparse.NameSpaceEx
 
 	commandline = `{
 		"timeout|t" : 500,
+		"input|i" : null,
+		"output|o" : null,
 		"chan<Chan_handler>##outstr ... to set out string##" : {
 			"$" : "+"
 		},
@@ -406,7 +407,7 @@ func main() {
 		"unitoutf8<Unitoutf8_handler>## codes ... to get codes from utf-8 to unicode##" : {
 			"$" : "+"
 		},
-		"readfile<Readfile_handler>## [fname] ... to read file default stdout ##" : {
+		"readfilebyte<Readfilebyte_handler>## [fname] ... to read file default stdout ##" : {
 			"$" : "*"
 		}
 	}`
@@ -428,11 +429,16 @@ func main() {
 		atexit.Exit(5)
 	}
 
-	_, err = parser.ParseCommandLineEx(nil, nil, nil, nil)
+	ns, err = parser.ParseCommandLineEx(nil, nil, nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not use parse command line [%s]\n", err.Error())
 		atexit.Exit(4)
 	}
+	if len(ns.GetString("subcommand")) == 0 {
+		fmt.Fprintf(os.Stderr, "can not get subcommand\n")
+		atexit.Exit(5)
+	}
+	fmt.Fprintf(os.Stdout, "subcommand [%s] succ\n", ns.GetString("subcommand"))
 	atexit.Exit(0)
 	return
 }
