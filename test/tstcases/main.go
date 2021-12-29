@@ -473,6 +473,34 @@ func Writefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+func Deletefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var s string
+	var i int
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	for i, s = range sarr {
+		err = DeleteFile(s)
+		if err != nil {
+			err = fmt.Errorf("delete [%d].[%s] error[%s]", i, s, err.Error())
+			return
+		}
+		fmt.Printf("delete [%s] succ\n", s)
+	}
+
+	return
+}
+
 func init() {
 	Chan_handler(nil, nil, nil)
 	Utf8togbk_handler(nil, nil, nil)
@@ -483,6 +511,7 @@ func init() {
 	Writefilebyte_handler(nil, nil, nil)
 	Readfile_handler(nil, nil, nil)
 	Writefile_handler(nil, nil, nil)
+	Deletefile_handler(nil, nil, nil)
 }
 
 func main() {
@@ -520,6 +549,9 @@ func main() {
 			"$" : "*"
 		},
 		"writefile<Writefile_handler>## strs ... to write file output default stdout##" : {
+			"$" : "+"
+		},
+		"deletefile<Deletefile_handler>## fname ... to delete file##" : {
 			"$" : "+"
 		}
 	}`

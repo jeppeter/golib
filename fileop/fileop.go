@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -65,5 +66,19 @@ func ReadFile(fname string) (s string, err error) {
 
 func WriteFile(fname string, ostring string) (nret int, err error) {
 	nret, err = WriteFileBytes(fname, []byte(ostring))
+	return
+}
+
+func DeleteFile(fname string) (err error) {
+	var err2 error
+	err = os.Remove(fname)
+	if err != nil {
+		_, err2 = os.Stat(fname)
+		if err2 != nil {
+			if errors.Is(err2, os.ErrNotExist) {
+				err = nil
+			}
+		}
+	}
 	return
 }
