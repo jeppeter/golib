@@ -355,14 +355,14 @@ func Readfilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx
 
 	sarr = ns.GetArray("subnargs")
 	if len(sarr) == 0 {
-		outbytes, err = read_file_bytes("")
+		outbytes, err = ReadFileBytes("")
 		if err != nil {
 			return
 		}
 		DebugBuffer(outbytes, "read stdin")
 	} else {
 		for i, s = range sarr {
-			outbytes, err = read_file_bytes(s)
+			outbytes, err = ReadFileBytes(s)
 			if err != nil {
 				return
 			}
@@ -373,6 +373,38 @@ func Readfilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx
 	return
 }
 
+func Writefilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var output string = ""
+	var s string
+	var outs string
+	var nret int
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	output = ns.GetString("output")
+	outs = ""
+	for _, s = range sarr {
+		outs += fmt.Sprintf("%s\n", s)
+	}
+
+	nret, err = WriteFileBytes(output, []byte(outs))
+	if err != nil {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "write [%s] nret [%d]\n", output, nret)
+	return
+}
+
 func init() {
 	Chan_handler(nil, nil, nil)
 	Utf8togbk_handler(nil, nil, nil)
@@ -380,6 +412,7 @@ func init() {
 	Utf8touni_handler(nil, nil, nil)
 	Unitoutf8_handler(nil, nil, nil)
 	Readfilebyte_handler(nil, nil, nil)
+	Writefilebyte_handler(nil, nil, nil)
 }
 
 func main() {
@@ -407,8 +440,11 @@ func main() {
 		"unitoutf8<Unitoutf8_handler>## codes ... to get codes from utf-8 to unicode##" : {
 			"$" : "+"
 		},
-		"readfilebyte<Readfilebyte_handler>## [fname] ... to read file default stdout ##" : {
+		"readfilebyte<Readfilebyte_handler>## [fname] ... to read file default stdin ##" : {
 			"$" : "*"
+		},
+		"writefilebyte<Writefilebyte_handler>## strs ... to write file output default stdout##" : {
+			"$" : "+"
 		}
 	}`
 

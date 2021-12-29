@@ -1,20 +1,61 @@
 package main
 
-func read_file_bytes(fname string) (rbytes []byte, err error) {
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
+func ReadFileBytes(fname string) (rbytes []byte, err error) {
+	var fp *os.File = os.Stdin
 	err = nil
 	rbytes = []byte{}
+	defer func() {
+		if fp != nil && fp != os.Stdin {
+			fp.Close()
+		}
+		fp = nil
+	}()
+
+	if fname != "" {
+		fp, err = os.Open(fname)
+		if err != nil {
+			err = fmt.Errorf("open [%s] error[%s]", fname, err.Error())
+			return
+		}
+	}
+	rbytes, err = ioutil.ReadAll(fp)
 	return
 }
 
-func write_file_bytes(fname string, obytes []byte) (err error) {
+func WriteFileBytes(fname string, obytes []byte) (nret int, err error) {
+	var fp *os.File = os.Stdout
 	err = nil
+	nret = 0
+
+	defer func() {
+		if fp != nil && fp != os.Stdout {
+			fp.Close()
+		}
+		fp = nil
+	}()
+
+	if fname != "" {
+		fp, err = os.Create(fname)
+		if err != nil {
+			err = fmt.Errorf("create [%s] error[%s]", fname, err.Error())
+			return
+		}
+	}
+	nret, err = fp.Write(obytes)
+
 	return
 }
 
-func read_file(fname string) (s string, err error) {
+func ReadFile(fname string) (s string, err error) {
 	var ob []byte
 	s = ""
-	ob, err = read_file_bytes(fname)
+	ob, err = ReadFileBytes(fname)
 	if err != nil {
 		return
 	}
@@ -22,7 +63,7 @@ func read_file(fname string) (s string, err error) {
 	return
 }
 
-func write_file(fname string, ostring string) (err error) {
-	err = write_file_bytes(fname, []byte(ostring))
+func WriteFile(fname string, ostring string) (nret int, err error) {
+	nret, err = WriteFileBytes(fname, []byte(ostring))
 	return
 }
