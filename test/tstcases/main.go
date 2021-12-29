@@ -405,6 +405,74 @@ func Writefilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ct
 	return
 }
 
+func Readfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var outs string
+	var sarr []string
+	var i int
+	var s string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) == 0 {
+		outs, err = ReadFile("")
+		if err != nil {
+			return
+		}
+		Debug("read file [stdin]\n%s", outs)
+	} else {
+		for i, s = range sarr {
+			outs, err = ReadFile(s)
+			if err != nil {
+				return
+			}
+			Debug("read [%d][%s]\n%s", i, s, outs)
+		}
+	}
+	err = nil
+	return
+}
+
+func Writefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var output string = ""
+	var s string
+	var outs string
+	var nret int
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	output = ns.GetString("output")
+	outs = ""
+	for _, s = range sarr {
+		outs += fmt.Sprintf("%s\n", s)
+	}
+
+	nret, err = WriteFile(output, outs)
+	if err != nil {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "write [%s] nret [%d]\n", output, nret)
+	return
+}
+
 func init() {
 	Chan_handler(nil, nil, nil)
 	Utf8togbk_handler(nil, nil, nil)
@@ -413,6 +481,8 @@ func init() {
 	Unitoutf8_handler(nil, nil, nil)
 	Readfilebyte_handler(nil, nil, nil)
 	Writefilebyte_handler(nil, nil, nil)
+	Readfile_handler(nil, nil, nil)
+	Writefile_handler(nil, nil, nil)
 }
 
 func main() {
@@ -444,6 +514,12 @@ func main() {
 			"$" : "*"
 		},
 		"writefilebyte<Writefilebyte_handler>## strs ... to write file output default stdout##" : {
+			"$" : "+"
+		},
+		"readfile<Readfile_handler>## [fname] ... to read file default stdin ##" : {
+			"$" : "*"
+		},
+		"writefile<Writefile_handler>## strs ... to write file output default stdout##" : {
 			"$" : "+"
 		}
 	}`
