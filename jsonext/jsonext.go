@@ -832,6 +832,11 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 	return
 }
 
+func GetJsonValueInterface(path string, v map[string]interface{}) (val interface{}, types string, err error) {
+	val, types, err = __GetJsonValueInterface(path, v)
+	return
+}
+
 func GetJsonValueNull(path string, vmap map[string]interface{}) (err error) {
 	var types string
 	_, types, err = __GetJsonValueInterface(path, vmap)
