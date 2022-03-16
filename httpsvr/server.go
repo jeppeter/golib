@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
+	//"github.com/tebeka/atexit"
 	"net/http"
+	//"time"
 )
 
 func init() {
@@ -18,6 +20,9 @@ type HttpSvr struct {
 func (ht *HttpSvr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	Debug("path %s", r.URL.Path)
 	fmt.Fprintf(w, ht.content)
+	if r.URL.Path == "/stop" {
+		ht.refsvr.Shutdown(r.Context())
+	}
 }
 
 func Server_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -44,7 +49,10 @@ func Server_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	svr.Handler = mux
 
 	Debug("listen on %s", ls)
-	svr.ListenAndServe()
+	err = svr.ListenAndServe()
+	if err != nil {
+		Error("%s", err.Error())
+	}
 	err = nil
 	return
 
