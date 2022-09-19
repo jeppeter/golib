@@ -5,6 +5,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 func ReadFileBytes(fname string) (rbytes []byte, err error) {
@@ -80,5 +84,98 @@ func DeleteFile(fname string) (err error) {
 			}
 		}
 	}
+	return
+}
+
+func GetExeDir() (dirname string, err error) {
+	var paths []string
+	var envpath string
+	var curpath string
+	var wholepath string
+	var finfo os.FileInfo
+	err = nil
+	dirname = ""
+	dirname, err = filepath.Abs(os.Args[0])
+	if err == nil {
+		finfo, err = os.Stat(dirname)
+		if err == nil && !finfo.IsDir() && finfo.Size() > 0 {
+			dirname = filepath.Dir(dirname)
+			return
+		}
+	}
+
+	/*it may be called by the path*/
+	envpath = os.Getenv("PATH")
+	if len(envpath) == 0 {
+		err = dbgutil.FormatError("can not get PATH")
+		return
+	}
+
+	if runtime.GOOS == "windows" {
+		paths = strings.Split(envpath, ";")
+	} else {
+		paths = strings.Split(envpath, ":")
+	}
+
+	for _, curpath = range paths {
+		wholepath = path.Join(curpath, os.Args[0])
+		finfo, err = os.Stat(wholepath)
+		if err != nil {
+			continue
+		}
+		if !finfo.IsDir() && finfo.Size() > 0 {
+			dirname = filepath.Dir(wholepath)
+			err = nil
+			return
+		}
+	}
+	dirname = ""
+	err = dbgutil.FormatError("can not get exe from path")
+	return
+}
+
+func GetExeFull() (fullname string, err error) {
+	var paths []string
+	var envpath string
+	var curpath string
+	var wholepath string
+	var finfo os.FileInfo
+	err = nil
+	fullname = ""
+	fullname, err = filepath.Abs(os.Args[0])
+	if err == nil {
+		finfo, err = os.Stat(fullname)
+		if err == nil && !finfo.IsDir() && finfo.Size() > 0 {
+			return
+		}
+	}
+
+	/*it may be called by the path*/
+	envpath = os.Getenv("PATH")
+	if len(envpath) == 0 {
+		err = dbgutil.FormatError("can not get PATH")
+		return
+	}
+
+	if runtime.GOOS == "windows" {
+		paths = strings.Split(envpath, ";")
+	} else {
+		paths = strings.Split(envpath, ":")
+	}
+
+	for _, curpath = range paths {
+		wholepath = path.Join(curpath, os.Args[0])
+		finfo, err = os.Stat(wholepath)
+		if err != nil {
+			continue
+		}
+		if !finfo.IsDir() && finfo.Size() > 0 {
+			fullname = wholepath
+			err = nil
+			return
+		}
+	}
+	fullname = ""
+	err = dbgutil.FormatError("can not get exe from path")
 	return
 }

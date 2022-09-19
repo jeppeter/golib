@@ -14,3 +14,22 @@ func SplitLines(ins string) (retsarr []string) {
 	}
 	return
 }
+
+func QuoteString(s string) (rets string) {
+	var b []byte
+	var retb []byte
+	var i int
+	b = []byte(s)
+	retb = append(retb, byte('"'))
+	for i = 0; i < len(b); i++ {
+		if b[i] == byte('"') || b[i] == byte('\\') {
+			retb = append(retb, byte('\\'))
+		}
+		retb = append(retb, b[i])
+	}
+
+	retb = append(retb, byte('"'))
+
+	rets = string(retb)
+	return
+}
