@@ -1,8 +1,8 @@
-package main
+package fileop
 
 import (
+	"dbgutil"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -21,7 +21,7 @@ func ReadFileBytes(fname string) (rbytes []byte, err error) {
 	if fname != "" {
 		fp, err = os.Open(fname)
 		if err != nil {
-			err = fmt.Errorf("open [%s] error[%s]", fname, err.Error())
+			err = dbgutil.FormatError("open [%s] error[%s]", fname, err.Error())
 			return
 		}
 	}
@@ -44,7 +44,7 @@ func WriteFileBytes(fname string, obytes []byte) (nret int, err error) {
 	if fname != "" {
 		fp, err = os.Create(fname)
 		if err != nil {
-			err = fmt.Errorf("create [%s] error[%s]", fname, err.Error())
+			err = dbgutil.FormatError("create [%s] error[%s]", fname, err.Error())
 			return
 		}
 	}

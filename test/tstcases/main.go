@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	"dbgutil"
+	"fileop"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"github.com/tebeka/atexit"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io/ioutil"
+	"logutil"
 	"os"
 	"strconv"
 	"strings"
@@ -37,7 +40,7 @@ func Chan_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfa
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -148,7 +151,7 @@ func uni_to_utf8(inbytes []byte) (outbytes []byte, err error) {
 	ps += "\""
 	s, err = strconv.Unquote(ps)
 	if err != nil {
-		err = format_error("[%s] error [%s]", ps, err.Error())
+		err = dbgutil.FormatError("[%s] error [%s]", ps, err.Error())
 		return
 	}
 
@@ -225,7 +228,7 @@ func Gbktoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -235,7 +238,7 @@ func Gbktoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	Debug("inbyte %v", inbytes)
+	logutil.Debug("inbyte %v", inbytes)
 
 	outbytes, err = gbk_to_utf8(inbytes)
 	if err != nil {
@@ -256,7 +259,7 @@ func Utf8togbk_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -285,7 +288,7 @@ func Utf8touni_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -315,7 +318,7 @@ func Unitoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -348,25 +351,25 @@ func Readfilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
 
 	sarr = ns.GetArray("subnargs")
 	if len(sarr) == 0 {
-		outbytes, err = ReadFileBytes("")
+		outbytes, err = fileop.ReadFileBytes("")
 		if err != nil {
 			return
 		}
-		DebugBuffer(outbytes, "read stdin")
+		logutil.DebugBuffer(outbytes, "read stdin")
 	} else {
 		for i, s = range sarr {
-			outbytes, err = ReadFileBytes(s)
+			outbytes, err = fileop.ReadFileBytes(s)
 			if err != nil {
 				return
 			}
-			DebugBuffer(outbytes, "read [%d][%s]", i, s)
+			logutil.DebugBuffer(outbytes, "read [%d][%s]", i, s)
 		}
 	}
 	err = nil
@@ -385,7 +388,7 @@ func Writefilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ct
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -397,7 +400,7 @@ func Writefilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ct
 		outs += fmt.Sprintf("%s\n", s)
 	}
 
-	nret, err = WriteFileBytes(output, []byte(outs))
+	nret, err = fileop.WriteFileBytes(output, []byte(outs))
 	if err != nil {
 		return
 	}
@@ -416,25 +419,25 @@ func Readfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
 
 	sarr = ns.GetArray("subnargs")
 	if len(sarr) == 0 {
-		outs, err = ReadFile("")
+		outs, err = fileop.ReadFile("")
 		if err != nil {
 			return
 		}
-		Debug("read file [stdin]\n%s", outs)
+		logutil.Debug("read file [stdin]\n%s", outs)
 	} else {
 		for i, s = range sarr {
-			outs, err = ReadFile(s)
+			outs, err = fileop.ReadFile(s)
 			if err != nil {
 				return
 			}
-			Debug("read [%d][%s]\n%s", i, s, outs)
+			logutil.Debug("read [%d][%s]\n%s", i, s, outs)
 		}
 	}
 	err = nil
@@ -453,7 +456,7 @@ func Writefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
@@ -465,7 +468,7 @@ func Writefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		outs += fmt.Sprintf("%s\n", s)
 	}
 
-	nret, err = WriteFile(output, outs)
+	nret, err = fileop.WriteFile(output, outs)
 	if err != nil {
 		return
 	}
@@ -483,14 +486,14 @@ func Deletefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 		return
 	}
 
-	err = InitLog(ns)
+	err = logutil.InitLog(ns)
 	if err != nil {
 		return
 	}
 
 	sarr = ns.GetArray("subnargs")
 	for i, s = range sarr {
-		err = DeleteFile(s)
+		err = fileop.DeleteFile(s)
 		if err != nil {
 			err = fmt.Errorf("delete [%d].[%s] error[%s]", i, s, err.Error())
 			return
@@ -562,7 +565,7 @@ func main() {
 		atexit.Exit(5)
 	}
 
-	err = PrepareLog(parser)
+	err = logutil.PrepareLog(parser)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not set [%s]\n", err.Error())
 		atexit.Exit(5)
