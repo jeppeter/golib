@@ -504,6 +504,34 @@ func Deletefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
+func Parseu64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var i int
+	var retv uint64
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	for i = 0; i < len(sarr); i++ {
+		retv, err = strconv.ParseUint(sarr[i], 10, 64)
+		if err != nil {
+			err = dbgutil.FormatError("parse [%s] error[%s]", sarr[i], err.Error())
+			return
+		}
+		fmt.Printf("[%s]=[%d]\n", sarr[i], retv)
+	}
+	err = nil
+	return
+}
+
 func init() {
 	Chan_handler(nil, nil, nil)
 	Utf8togbk_handler(nil, nil, nil)
@@ -515,6 +543,7 @@ func init() {
 	Readfile_handler(nil, nil, nil)
 	Writefile_handler(nil, nil, nil)
 	Deletefile_handler(nil, nil, nil)
+	Parseu64_handler(nil, nil, nil)
 }
 
 func main() {
@@ -555,6 +584,9 @@ func main() {
 			"$" : "+"
 		},
 		"deletefile<Deletefile_handler>## fname ... to delete file##" : {
+			"$" : "+"
+		},
+		"parseu64<Parseu64_handler>##val ... to parse u64##" : {
 			"$" : "+"
 		}
 	}`
