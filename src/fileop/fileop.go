@@ -179,3 +179,20 @@ func GetExeFull() (fullname string, err error) {
 	err = dbgutil.FormatError("can not get exe from path")
 	return
 }
+
+func MkdirSafe(dname string, mask int) (err error) {
+	if mask < 0 {
+		err = os.MkdirAll(dname, 0750)
+	} else {
+		err = os.MkdirAll(dname, os.FileMode(mask))
+	}
+	if err != nil {
+		if os.IsExist(err) {
+			err = nil
+		} else {
+			err = dbgutil.FormatError("create [%s] error[%s]", dname, err.Error())
+		}
+	}
+	return
+
+}
