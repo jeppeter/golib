@@ -18,7 +18,7 @@ func format_out_string_total(level int, fmtstr string, a ...interface{}) string 
 }
 
 const (
-	def_stacklevel_added = 3
+	def_stacklevel_added = 2
 )
 
 func FormatError(a ...interface{}) (err error) {
