@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"logutil"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -558,6 +559,30 @@ func Mkdirsafe_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+type MemInfo struct {
+	Startaddr uint64
+	Endaddr   uint64
+}
+
+func Querymem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var meminfo []MemInfo
+	var i int
+	var info MemInfo
+	err = nil
+
+	if ns == nil {
+		return
+	}
+	meminfo, err = get_current_process_exec_info(os.Getpid())
+	if err != nil {
+		return
+	}
+	for i, info = range meminfo {
+		fmt.Printf("[%d].start 0x%x end 0x%x\n", i, info.Startaddr, info.Endaddr)
+	}
+	return
+}
+
 func init() {
 	Chan_handler(nil, nil, nil)
 	Utf8togbk_handler(nil, nil, nil)
@@ -571,6 +596,19 @@ func init() {
 	Deletefile_handler(nil, nil, nil)
 	Parseu64_handler(nil, nil, nil)
 	Mkdirsafe_handler(nil, nil, nil)
+	Goversioncheck_handler(nil, nil, nil)
+	Querymem_handler(nil, nil, nil)
+}
+
+func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	fmt.Printf("version %s\n", runtime.Version())
+	return
 }
 
 func main() {
@@ -618,6 +656,12 @@ func main() {
 		},
 		"mkdirsafe<Mkdirsafe_handler>##dir ... to make dir safe##" : {
 			"$" : "+"
+		},
+		"goversioncheck<Goversioncheck_handler>##to check go compiler version##" : {
+			"$" : 0
+		},
+		"querymem<Querymem_handler>##to list current process memory##" : {
+			"$" : 0
 		}
 	}`
 

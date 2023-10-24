@@ -1,6 +1,8 @@
 
 set GOPATH=%GOPATH%;%CD%\..\..\
 set GOOS=windows
-go build -o tstcases.exe main.go 
+set GOARCH=amd64
+go build -o tstcases.exe main.go  mem_windows.go
 set GOOS=linux
-go build -o tstcases main.go 
+set GOARCH=amd64
+go build -o tstcases main.go  mem_linux.go
