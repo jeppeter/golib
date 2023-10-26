@@ -32,7 +32,7 @@ func read_file_bytes(fname string) (rbytes []byte, err error) {
 	return
 }
 
-func get_current_process_exec_info(pid int) (startaddr uintptr, endaddr uintptr, err error) {
+func get_current_process_exec_info() (startaddr uintptr, endaddr uintptr, err error) {
 	var exename string
 	var exebyte []byte
 	var exefile string
@@ -50,6 +50,7 @@ func get_current_process_exec_info(pid int) (startaddr uintptr, endaddr uintptr,
 	var hsarr []string
 	var finded bool = false
 	var ci int64
+	var pid int = os.Getpid()
 	startaddr = 0
 	endaddr = 0
 	err = fmt.Errorf("not valid")

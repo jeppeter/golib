@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"syscall"
 	"unsafe"
 )
@@ -62,8 +63,9 @@ func Module32First(snapshot syscall.Handle, moduleEntry *ModuleEntry32) (err err
 	return
 }
 
-func get_current_process_exec_info(pid int) (startaddr uintptr, endaddr uintptr, err error) {
+func get_current_process_exec_info() (startaddr uintptr, endaddr uintptr, err error) {
 	var modinfo ModuleEntry32
+	var pid int = os.Getpid()
 	err = nil
 	startaddr = 0
 	endaddr = 0

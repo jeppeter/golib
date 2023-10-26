@@ -598,7 +598,7 @@ func Querymem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	if ns == nil {
 		return
 	}
-	startaddr, endaddr, err = get_current_process_exec_info(os.Getpid())
+	startaddr, endaddr, err = get_current_process_exec_info()
 	if err != nil {
 		return
 	}
