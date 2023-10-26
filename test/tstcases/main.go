@@ -573,10 +573,8 @@ func get_func_addr(name string, startaddr uintptr, endaddr uintptr) (findptr *ru
 		for {
 			curfunc = runtime.FuncForPC(curaddr)
 			if curfunc != nil {
-				fmt.Printf("0x%x addr %s\n", curaddr, curfunc.Name())
 				if curfunc.Name() == name {
 					findptr = curfunc
-					fmt.Printf("get %s addr 0x%x\n", name, curfunc.Entry())
 					err = nil
 					break
 				}
@@ -589,12 +587,12 @@ func get_func_addr(name string, startaddr uintptr, endaddr uintptr) (findptr *ru
 		stepaddr = stepaddr >> 1
 	}
 	return
-
 }
 
 func Querymem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var startaddr uintptr
 	var endaddr uintptr
+	var funcptr *runtime.Func
 	err = nil
 
 	if ns == nil {
@@ -604,7 +602,11 @@ func Querymem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	if err != nil {
 		return
 	}
-	_, err = get_func_addr("main.Querymem_handler", startaddr, endaddr)
+	funcptr, err = get_func_addr("main.Querymem_handler", startaddr, endaddr)
+	if err != nil {
+		return
+	}
+	fmt.Printf("call main.Querymem_handler 0x%x\n", funcptr.Entry())
 
 	return
 }
