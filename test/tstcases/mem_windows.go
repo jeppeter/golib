@@ -62,11 +62,11 @@ func Module32First(snapshot syscall.Handle, moduleEntry *ModuleEntry32) (err err
 	return
 }
 
-func get_current_process_exec_info(pid int) (infos []MemInfo, err error) {
+func get_current_process_exec_info(pid int) (startaddr uintptr, endaddr uintptr, err error) {
 	var modinfo ModuleEntry32
-	var curinfo MemInfo
 	err = nil
-	infos = []MemInfo{}
+	startaddr = 0
+	endaddr = 0
 
 	snaphd, err := syscall.CreateToolhelp32Snapshot(syscall.TH32CS_SNAPMODULE|syscall.TH32CS_SNAPMODULE32, uint32(pid))
 	if err != nil {
@@ -80,9 +80,8 @@ func get_current_process_exec_info(pid int) (infos []MemInfo, err error) {
 		return
 	}
 
-	curinfo.Startaddr = uintptr(modinfo.ModBaseAddr)
-	curinfo.Endaddr = uintptr(modinfo.ModBaseAddr) + uintptr(modinfo.ModBaseSize)
-	infos = append(infos, curinfo)
+	startaddr = uintptr(modinfo.ModBaseAddr)
+	endaddr = uintptr(modinfo.ModBaseAddr) + uintptr(modinfo.ModBaseSize)
 	err = nil
 
 	return

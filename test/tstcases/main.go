@@ -559,11 +559,6 @@ func Mkdirsafe_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
-type MemInfo struct {
-	Startaddr uintptr
-	Endaddr   uintptr
-}
-
 func get_func_addr(name string, startaddr uintptr, endaddr uintptr) (findptr *runtime.Func, err error) {
 	//var names []string
 	//var searchaddr []uintptr
@@ -598,22 +593,18 @@ func get_func_addr(name string, startaddr uintptr, endaddr uintptr) (findptr *ru
 }
 
 func Querymem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var meminfo []MemInfo
-	var i int
-	var info MemInfo
+	var startaddr uintptr
+	var endaddr uintptr
 	err = nil
 
 	if ns == nil {
 		return
 	}
-	meminfo, err = get_current_process_exec_info(os.Getpid())
+	startaddr, endaddr, err = get_current_process_exec_info(os.Getpid())
 	if err != nil {
 		return
 	}
-	for i, info = range meminfo {
-		fmt.Printf("[%d].start 0x%x end 0x%x\n", i, info.Startaddr, info.Endaddr)
-	}
-	_, err = get_func_addr("main.Querymem_handler", meminfo[0].Startaddr, meminfo[0].Endaddr)
+	_, err = get_func_addr("main.Querymem_handler", startaddr, endaddr)
 
 	return
 }
