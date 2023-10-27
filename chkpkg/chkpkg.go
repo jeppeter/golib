@@ -30,6 +30,7 @@ type PackageDep struct {
 var allos []string
 var allarchs []string
 var defpkgs []string
+var mainpaths []string
 
 func init() {
 	allos = []string{}
@@ -63,6 +64,8 @@ func init() {
 	defpkgs = append(defpkgs, "fmt")
 	defpkgs = append(defpkgs, "C")
 	defpkgs = append(defpkgs, "a")
+	defpkgs = append(defpkgs, "c/d")
+	defpkgs = append(defpkgs, "p")
 }
 
 func NewPackageDep() *PackageDep {
@@ -140,6 +143,9 @@ func (pkg *PackageDep) get_imports_inner(fname string) (imports []string, err er
 	fset = token.NewFileSet()
 	fileast, err = parser.ParseFile(fset, fname, nil, parser.ImportsOnly)
 	if err != nil {
+		Error("parse [%s] error just next", fname)
+		/*we just pass next one*/
+		err = nil
 		return
 	}
 
@@ -152,7 +158,7 @@ func (pkg *PackageDep) get_imports_inner(fname string) (imports []string, err er
 		}
 	}
 	err = nil
-	//Debug("%s imports %s", fname, imports)
+	Debug("%s imports %s", fname, imports)
 	return
 }
 
@@ -558,6 +564,19 @@ func main() {
 			gopaths.Set(fmt.Sprintf("%s%csrc%cvendor", curdir, os.PathSeparator, os.PathSeparator))
 		}
 	}
+
+	paths = os.Getenv("GOROOT")
+	if len(paths) > 0 {
+		sep := fmt.Sprintf("%c", os.PathListSeparator)
+		patharr := strings.Split(paths, sep)
+		for _, curdir := range patharr {
+			gopaths.Set(curdir)
+			gopaths.Set(fmt.Sprintf("%s%cvendor", curdir, os.PathSeparator))
+			gopaths.Set(fmt.Sprintf("%s%csrc", curdir, os.PathSeparator))
+			gopaths.Set(fmt.Sprintf("%s%csrc%cvendor", curdir, os.PathSeparator, os.PathSeparator))
+		}
+	}
+
 	suparchs.Set(runtime.GOARCH)
 	supos.Set(runtime.GOOS)
 
