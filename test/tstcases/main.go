@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"logutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -626,6 +627,7 @@ func init() {
 	Mkdirsafe_handler(nil, nil, nil)
 	Goversioncheck_handler(nil, nil, nil)
 	Querymem_handler(nil, nil, nil)
+	Normpath_handler(nil,nil,nil)
 }
 
 func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -636,6 +638,30 @@ func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, c
 	}
 
 	fmt.Printf("version %s\n", runtime.Version())
+	return
+}
+
+func Normpath_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var a string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	for _, a = range sarr {
+		var np string
+		np ,err = filepath.Abs(a)
+		if err == nil {
+			fmt.Printf("[%s] => [%s]\n",a,np)
+		} else {
+			fmt.Printf("[%s] error[%s]\n",a,err.Error())
+		}
+	}
+
+	err = nil
 	return
 }
 
@@ -690,6 +716,9 @@ func main() {
 		},
 		"querymem<Querymem_handler>##to list current process memory##" : {
 			"$" : 0
+		},
+		"normpath<Normpath_handler>##path ... to normal like path##" : {
+			"$" : "+"
 		}
 	}`
 
