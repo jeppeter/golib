@@ -133,12 +133,51 @@ func (pkg *PackageDep) pop_curfile() string {
 	return retfull
 }
 
+func is_pass_main_file(fname string) (retv bool) {
+	var err error
+	var absf string
+	retv = false;
+
+	absf, err = filepath.Abs(fname)
+	if err != nil {
+		return
+	}
+
+	for _, curdir := range mainpaths {
+		if strings.HasPrefix(absf,curdir) {
+			retv = true
+			return
+		}
+	}
+
+	return
+
+}
+
 func (pkg *PackageDep) get_imports_inner(fname string) (imports []string, err error) {
 	var fileast *ast.File
 	var fset *token.FileSet
 	var curpkg string
 	imports = []string{}
 	err = nil
+
+	if !is_pass_main_file(fname) {
+		fset = token.NewFileSet()
+		fileast, err = parser.ParseFile(fset,fname,nil,parser.PackageClauseOnly)
+		if err != nil {
+			Error("parse [%s] error just next", fname)
+			/*we just pass next one*/
+			err = nil
+			return
+		}
+		if fileast.Name.Name == "main" {
+			/*it is not to do any main */
+			imports = []string{}
+			err = nil
+			return
+		}
+	}
+
 
 	fset = token.NewFileSet()
 	fileast, err = parser.ParseFile(fset, fname, nil, parser.ImportsOnly)
@@ -631,6 +670,14 @@ func main() {
 	}
 
 	pkg.SetFilterArch(filters)
+	for _,curdir :=range flag.Args() {
+		cf , err := filepath.Abs(curdir)
+		if err != nil {
+			Error("%s",err.Error())
+			os.Exit(5)
+		}
+		mainpaths = append(mainpaths,cf)
+	}
 
 	for _, curdir := range flag.Args() {
 		err := pkg.SearchDir(curdir)
