@@ -48,7 +48,7 @@ func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, ex
 		return
 	}
 	stime = time.Now()
-	etime = stime.Add(time.Duration(timeout) * time.Second)
+	etime = stime.Add(time.Duration(timeout) * time.Millisecond)
 	waiting = 1
 	for waiting > 0 {
 		ctime = time.Now()

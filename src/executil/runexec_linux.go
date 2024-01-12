@@ -18,7 +18,9 @@ func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, ex
 	var cmd *exec.Cmd
 	var waiting int = 1
 	var wpid int
-	logutil.Trace("cmds %v", cmds)
+	for i, c := range cmds {
+		logutil.Trace("[%d]=[%s]", i, c)
+	}
 	cmd = &exec.Cmd{}
 	cmd.Path = cmds[0]
 	cmd.Args = cmds
@@ -32,7 +34,7 @@ func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, ex
 	}
 	if timeout > 0 {
 		stime = time.Now()
-		etime = stime.Add(time.Duration(timeout) * time.Second)
+		etime = stime.Add(time.Duration(timeout) * time.Millisecond)
 	}
 	waiting = 1
 	for waiting > 0 {

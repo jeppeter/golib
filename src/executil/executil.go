@@ -12,19 +12,18 @@ import (
 	"strings"
 )
 
-func GetExeDir() (dirname string, err error) {
+func GetExeFile() (exename string, err error) {
 	var paths []string
 	var envpath string
 	var curpath string
 	var wholepath string
 	var finfo os.FileInfo
 	err = nil
-	dirname = ""
-	dirname, err = filepath.Abs(os.Args[0])
+	exename = ""
+	exename, err = filepath.Abs(os.Args[0])
 	if err == nil {
-		finfo, err = os.Stat(dirname)
+		finfo, err = os.Stat(exename)
 		if err == nil && !finfo.IsDir() && finfo.Size() > 0 {
-			dirname = filepath.Dir(dirname)
 			return
 		}
 	}
@@ -48,13 +47,23 @@ func GetExeDir() (dirname string, err error) {
 			continue
 		}
 		if !finfo.IsDir() && finfo.Size() > 0 {
-			dirname = filepath.Dir(wholepath)
+			exename = wholepath
 			err = nil
 			return
 		}
 	}
-	dirname = ""
+	exename = ""
 	err = dbgutil.FormatError("can not get exe from path")
+	return
+}
+
+func GetExeDir() (dirname string, err error) {
+	var exename string
+	exename, err = GetExeFile()
+	if err != nil {
+		return
+	}
+	dirname = filepath.Dir(exename)
 	return
 }
 
