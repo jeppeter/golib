@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fileop"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"jsonext"
+	"logutil"
 	"os"
 	"strconv"
 )
@@ -11,6 +13,7 @@ import (
 func init() {
 	Getarrayidx_handler(nil, nil, nil)
 	Getjson_handler(nil, nil, nil)
+	Insertarray_handler(nil, nil, nil)
 }
 
 func Getjson_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -183,15 +186,82 @@ func Getarrayidx_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 	return
 }
 
+func Insertarray_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var path string
+	var jsonfile string
+	var idx int
+	var vmap map[string]interface{}
+	var ins string
+	var outs string
+	var valstr string
+	var typestr string
+	var output string
+	err = nil
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 3 {
+		err = fmt.Errorf("need path idx valstr ")
+		return
+	}
+
+	jsonfile = ns.GetString("input")
+	output = ns.GetString("output")
+	path = sarr[0]
+	idx, err = strconv.Atoi(sarr[1])
+	if err != nil {
+		return
+	}
+	typestr = sarr[2]
+	valstr = sarr[3]
+
+	ins, err = fileop.ReadFile(jsonfile)
+	if err != nil {
+		return
+	}
+
+	vmap, err = jsonext.SafeParseMessage(ins)
+	if err != nil {
+		return
+	}
+	if err != nil {
+		return
+	}
+	vmap, err = jsonext.InsertJsonArrayItem(path, idx, typestr, valstr, vmap)
+	if err != nil {
+		return
+	}
+	outs, err = jsonext.FormatJsonValue(0, "", vmap)
+	if err != nil {
+		return
+	}
+
+	_, err = fileop.WriteFile(output, outs)
+	return
+}
+
 func main() {
 	var parser *extargsparse.ExtArgsParse
 	var err error
 	var commandline string = `
 	{
+		"input|i" : null,
+		"output|o" : null,
 		"getjson<Getjson_handler>##jsonfile path type : type can be int float array map string null bool##" : {
 			"$" : 3
 		},
 		"getarrayidx<Getarrayidx_handler>##jsonfile path type idx to get array index type can be int float array map string null bool##" : {
+			"$" : 4
+		},
+		"insertarray<Insertarray_handler>##path idx typestr valuestr to append json idx -1 means append##" : {
 			"$" : 4
 		}
 	}
@@ -204,6 +274,12 @@ func main() {
 	err = parser.LoadCommandLineString(commandline)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "load [%s] error [%s]", commandline, err.Error())
+		os.Exit(5)
+	}
+
+	err = logutil.PrepareLog(parser)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "PrepareLog error [%s]", err.Error())
 		os.Exit(5)
 	}
 

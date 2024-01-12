@@ -1,9 +1,10 @@
 package jsonext
 
 import (
+	"dbgutil"
 	"encoding/json"
 	"fmt"
-	//"log"
+	"logutil"
 	"math"
 	"os"
 	"reflect"
@@ -46,7 +47,7 @@ func GetJsonArray(valstr string) (retv []interface{}, err error) {
 
 func __GetJsonArrayItem(sarr []interface{}, idx int) (val interface{}, types string, err error) {
 	if len(sarr) <= idx {
-		err = fmt.Errorf("[%d] out of range", idx)
+		err = dbgutil.FormatError("[%d] out of range", idx)
 		return
 	}
 	val = sarr[idx]
@@ -65,7 +66,7 @@ func __GetJsonArrayItem(sarr []interface{}, idx int) (val interface{}, types str
 		case bool:
 			types = "bool"
 		default:
-			err = fmt.Errorf("[%d] type unsupported [%s]", idx, reflect.TypeOf(val).String())
+			err = dbgutil.FormatError("[%d] type unsupported [%s]", idx, reflect.TypeOf(val).String())
 			return
 		}
 	}
@@ -81,7 +82,7 @@ func GetJsonArrayItemString(sarr []interface{}, idx int) (val string, err error)
 		return
 	}
 	if types != "string" {
-		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.(string)
@@ -98,7 +99,7 @@ func GetJsonArrayItemInt(sarr []interface{}, idx int) (val int, err error) {
 		return
 	}
 	if types != "float64" {
-		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not string [%s]", idx, types)
 		return
 	}
 	varf = vinter.(float64)
@@ -115,7 +116,7 @@ func GetJsonArrayItemFloat(sarr []interface{}, idx int) (val float64, err error)
 		return
 	}
 	if types != "float64" {
-		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.(float64)
@@ -131,7 +132,7 @@ func GetJsonArrayItemBool(sarr []interface{}, idx int) (val bool, err error) {
 		return
 	}
 	if types != "bool" {
-		err = fmt.Errorf("[%d] item not float [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not float [%s]", idx, types)
 		return
 	}
 	val = vinter.(bool)
@@ -146,7 +147,7 @@ func GetJsonArrayItemNull(sarr []interface{}, idx int) (err error) {
 		return
 	}
 	if types != "null" {
-		err = fmt.Errorf("[%d] item not null [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not null [%s]", idx, types)
 		return
 	}
 	err = nil
@@ -161,7 +162,7 @@ func GetJsonArrayItemMap(sarr []interface{}, idx int) (val map[string]interface{
 		return
 	}
 	if types != "map" {
-		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.(map[string]interface{})
@@ -177,7 +178,7 @@ func GetJsonArrayItemArray(sarr []interface{}, idx int) (val []interface{}, err 
 		return
 	}
 	if types != "array" {
-		err = fmt.Errorf("[%d] item not string [%s]", idx, types)
+		err = dbgutil.FormatError("[%d] item not string [%s]", idx, types)
 		return
 	}
 	val = vinter.([]interface{})
@@ -349,7 +350,7 @@ func (f MapStringFormatClass) Format(level int, keyname string, v interface{}) (
 	for i, kk := range sortkeys {
 		kv, ok := curmap[kk]
 		if !ok {
-			err := fmt.Errorf("can not find key (%s)", kk)
+			err := dbgutil.FormatError("can not find key (%s)", kk)
 			return "", err
 		}
 		if i != 0 {
@@ -441,11 +442,14 @@ func __FormatName(level int, keyname string) string {
 func __FormatValue(level int, keyname string, value interface{}) (string, error) {
 	var err error
 	var typestr string
+	if value == nil {
+		return "null", nil
+	}
 	s := ""
 	typestr = reflect.TypeOf(value).String()
 	fcls, ok := formatMap[typestr]
 	if !ok {
-		err := fmt.Errorf("(%s) support type %s", keyname, typestr)
+		err := dbgutil.FormatError("(%s) support type %s", keyname, typestr)
 		return "", err
 	}
 
@@ -517,7 +521,7 @@ func FormatJsonValue(level int, keyname string, v map[string]interface{}) (strin
 	for i, kk := range sortkeys {
 		kv, ok := curmap[kk]
 		if !ok {
-			err := fmt.Errorf("can not find key (%s)", kk)
+			err := dbgutil.FormatError("can not find key (%s)", kk)
 			return "", err
 		}
 		if i != 0 {
@@ -602,7 +606,7 @@ func SetJsonValue(path, typestr, value string, v map[string]interface{}) (map[st
 	curmap := v
 	if len(pathext) == 0 {
 		if typestr != "map" {
-			err = fmt.Errorf("invalid path(%s) and type(%s)", path, typestr)
+			err = dbgutil.FormatError("invalid path(%s) and type(%s)", path, typestr)
 			return nil, err
 		}
 		mapv, err = GetJsonMap(value)
@@ -643,7 +647,7 @@ func SetJsonValue(path, typestr, value string, v map[string]interface{}) (map[st
 					}
 					curmap[curpath] = arrayv
 				default:
-					err = fmt.Errorf("unknown type %s", typestr)
+					err = dbgutil.FormatError("unknown type %s", typestr)
 					return nil, err
 				}
 				return v, nil
@@ -667,7 +671,7 @@ func SetJsonValue(path, typestr, value string, v map[string]interface{}) (map[st
 		}
 	}
 
-	err = fmt.Errorf("unknown path %s", path)
+	err = dbgutil.FormatError("unknown path %s", path)
 	return nil, err
 }
 
@@ -691,7 +695,7 @@ func DeleteJsonValue(path string, v map[string]interface{}, force int) (map[stri
 				if force > 0 {
 					return v, nil
 				}
-				err = fmt.Errorf("can not find (%s) value", path)
+				err = dbgutil.FormatError("can not find (%s) value", path)
 				return nil, err
 			}
 			if i == (len(pathext) - 1) {
@@ -707,7 +711,7 @@ func DeleteJsonValue(path string, v map[string]interface{}, force int) (map[stri
 					delete(curmap, curpath)
 					return v, nil
 				}
-				err = fmt.Errorf("can not handle path %s", curpath)
+				err = dbgutil.FormatError("can not handle path %s", curpath)
 				return nil, err
 			}
 		}
@@ -720,7 +724,7 @@ func DeleteJsonValue(path string, v map[string]interface{}, force int) (map[stri
 		return v, nil
 	}
 
-	err = fmt.Errorf("unknown path %s", path)
+	err = dbgutil.FormatError("unknown path %s", path)
 	return nil, err
 
 }
@@ -764,7 +768,7 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 			var ok bool
 			curval, ok = curmap[curpath]
 			if !ok {
-				err = fmt.Errorf("can not find (%s) in %s", curpath, path)
+				err = dbgutil.FormatError("can not find (%s) in %s", curpath, path)
 				return
 			}
 
@@ -793,7 +797,7 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 					case string:
 						types = "string"
 					default:
-						err = fmt.Errorf("[%s]unknown type [%s]", pathext[i], reflect.TypeOf(curval).String())
+						err = dbgutil.FormatError("[%s]unknown type [%s]", pathext[i], reflect.TypeOf(curval).String())
 						return
 					}
 				}
@@ -805,17 +809,17 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 			case map[string]interface{}:
 				cval, ok = curval.(map[string]interface{})
 				if !ok {
-					err = fmt.Errorf("can not parse in (%s) for path(%s)", curpath, path)
+					err = dbgutil.FormatError("can not parse in (%s) for path(%s)", curpath, path)
 					return
 				}
 			case []interface{}:
 				cval, ok = curval.([]interface{})
 				if !ok {
-					err = fmt.Errorf("can not parse in (%s) for path(%s)", curpath, path)
+					err = dbgutil.FormatError("can not parse in (%s) for path(%s)", curpath, path)
 					return
 				}
 			default:
-				err = fmt.Errorf("type of (%s) error", path)
+				err = dbgutil.FormatError("type of (%s) error", path)
 				return
 			}
 			curmap = cval.(map[string]interface{})
@@ -828,7 +832,7 @@ func __GetJsonValueInterface(path string, v map[string]interface{}) (val interfa
 		return
 	}
 
-	err = fmt.Errorf("can not find (%s) all over", path)
+	err = dbgutil.FormatError("can not find (%s) all over", path)
 	return
 }
 
@@ -844,7 +848,7 @@ func GetJsonValueNull(path string, vmap map[string]interface{}) (err error) {
 		return
 	}
 	if types != "null" {
-		err = fmt.Errorf("[%s] type [%s] not null", path, types)
+		err = dbgutil.FormatError("[%s] type [%s] not null", path, types)
 		return
 	}
 	err = nil
@@ -859,7 +863,7 @@ func GetJsonValueBool(path string, vmap map[string]interface{}) (val bool, err e
 		return
 	}
 	if types != "bool" {
-		err = fmt.Errorf("[%s] type [%s] not null", path, types)
+		err = dbgutil.FormatError("[%s] type [%s] not null", path, types)
 		return
 	}
 	val = vinter.(bool)
@@ -876,7 +880,7 @@ func GetJsonValueString(path string, vmap map[string]interface{}) (val string, e
 		return
 	}
 	if types != "string" {
-		err = fmt.Errorf("[%s] type [%s] not string", path, types)
+		err = dbgutil.FormatError("[%s] type [%s] not string", path, types)
 		return
 	}
 	val = vinter.(string)
@@ -912,7 +916,7 @@ func GetJsonValueInt(path string, vmap map[string]interface{}) (val int, err err
 		f64 = vinter.(float64)
 		val = int(f64)
 	default:
-		err = fmt.Errorf("[%s] type %s", path, types)
+		err = dbgutil.FormatError("[%s] type %s", path, types)
 		return
 	}
 	err = nil
@@ -947,7 +951,7 @@ func GetJsonValueFloat(path string, vmap map[string]interface{}) (val float64, e
 	case "float64":
 		val = vinter.(float64)
 	default:
-		err = fmt.Errorf("[%s] type %s", path, types)
+		err = dbgutil.FormatError("[%s] type %s", path, types)
 		return
 	}
 	err = nil
@@ -963,11 +967,150 @@ func GetJsonValueArray(path string, vmap map[string]interface{}) (val []interfac
 		return
 	}
 	if types != "array" {
-		err = fmt.Errorf("[%s] not array [%s]", path, types)
+		err = dbgutil.FormatError("[%s] not array [%s]", path, types)
 		return
 	}
 	val = vinter.([]interface{})
 	err = nil
+	return
+}
+
+func InsertJsonArrayItem(path string, idx int, typestr, valstr string, vmap map[string]interface{}) (outmap map[string]interface{}, err error) {
+	var insertarray []interface{}
+	var valint interface{}
+	var types string
+	var curmap map[string]interface{}
+	var insertval interface{}
+	var curidx int
+	var ins string
+
+	outmap, _ = GetJsonMap("{}")
+
+	valint, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		/**/
+		if idx > 0 {
+			err = dbgutil.FormatError("[%s].%d not exist", path, idx)
+			return
+		}
+		curmap, err = GetJsonMap("{\"nk\": []}")
+		if err != nil {
+			return
+		}
+		insertarray, err = GetJsonValueArray("nk", curmap)
+	} else {
+		if types != "array" {
+			err = dbgutil.FormatError("[%s] type [%s] not array", path, types)
+			return
+		}
+		insertarray = valint.([]interface{})
+
+		if idx >= len(insertarray) {
+			err = dbgutil.FormatError("[%s].idx %d out of range %d", path, idx, len(insertarray))
+			return
+		}
+	}
+
+	err = json.Unmarshal([]byte(valstr), &insertval)
+	if err != nil {
+		if typestr == "string" {
+			var qs string
+			qs = strconv.Quote(valstr)
+			logutil.Debug("qs [%s]", qs)
+			err = json.Unmarshal([]byte(qs), &insertval)
+		}
+		if err != nil {
+			err = dbgutil.FormatError("unmarshal [%s] error [%s]", valstr, err.Error())
+			return
+		}
+	}
+
+	if insertval == nil {
+		if typestr != "null" && typestr != "string" {
+			err = dbgutil.FormatError("not accept nil for not null or string type")
+			return
+		}
+	} else {
+		switch insertval.(type) {
+		case int:
+			if typestr != "int" {
+				err = dbgutil.FormatError("not int for [%s]", valstr)
+				return
+			}
+		case uint32:
+			if typestr != "int" {
+				err = dbgutil.FormatError("not int for [%s]", valstr)
+				return
+			}
+		case uint64:
+			if typestr != "int" {
+				err = dbgutil.FormatError("not int for [%s]", valstr)
+				return
+			}
+		case float64:
+			if typestr != "int" && typestr != "float" {
+				err = dbgutil.FormatError("not int or float for [%s]", valstr)
+				return
+			}
+		case float32:
+			if typestr != "int" && typestr != "float" {
+				err = dbgutil.FormatError("not int or float for [%s]", valstr)
+				return
+			}
+		case string:
+			if typestr != "string" {
+				err = dbgutil.FormatError("not string for [%s]", valstr)
+				return
+			}
+		case map[string]interface{}:
+			if typestr != "map" {
+				err = dbgutil.FormatError("not map for [%s]", valstr)
+				return
+			}
+		case []interface{}:
+			if typestr != "array" {
+				err = dbgutil.FormatError("not array for [%s]", valstr)
+				return
+			}
+		case bool:
+			if typestr != "bool" {
+				err = dbgutil.FormatError("not bool for [%s]", valstr)
+				return
+			}
+		default:
+			err = dbgutil.FormatError("not valid type %s", reflect.TypeOf(insertval).String())
+			return
+		}
+	}
+
+	if idx < 0 {
+		insertarray = append(insertarray, insertval)
+	} else {
+		var outarray []interface{}
+		err = json.Unmarshal([]byte("[]"), &outarray)
+		if err != nil {
+			err = dbgutil.FormatError("unmarshal [] error [%s]", err.Error())
+			return
+		}
+		for curidx = 0; curidx < len(insertarray); curidx++ {
+			if curidx == idx {
+				outarray = append(outarray, insertval)
+			}
+			outarray = append(outarray, insertarray[curidx])
+		}
+		insertarray = outarray
+	}
+
+	var inb []byte
+	inb, err = json.Marshal(insertarray)
+	if err != nil {
+		return
+	}
+	ins = string(inb)
+	outmap, err = SetJsonValue(path, "array", ins, vmap)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -980,7 +1123,7 @@ func GetJsonValueMap(path string, vmap map[string]interface{}) (val map[string]i
 		return
 	}
 	if types != "map" {
-		err = fmt.Errorf("[%s] not map [%s]", path, types)
+		err = dbgutil.FormatError("[%s] not map [%s]", path, types)
 		return
 	}
 	val = vinter.(map[string]interface{})
@@ -1010,7 +1153,7 @@ func __GetJsonValue(path string, v map[string]interface{}) (val string, err erro
 			var ok bool
 			curval, ok = curmap[curpath]
 			if !ok {
-				err = fmt.Errorf("can not find (%s) in %s", curpath, path)
+				err = dbgutil.FormatError("can not find (%s) in %s", curpath, path)
 				return
 			}
 
@@ -1047,17 +1190,17 @@ func __GetJsonValue(path string, v map[string]interface{}) (val string, err erro
 			case map[string]interface{}:
 				cval, ok = curval.(map[string]interface{})
 				if !ok {
-					err = fmt.Errorf("can not parse in (%s) for path(%s)", curpath, path)
+					err = dbgutil.FormatError("can not parse in (%s) for path(%s)", curpath, path)
 					return
 				}
 			case []interface{}:
 				cval, ok = curval.([]interface{})
 				if !ok {
-					err = fmt.Errorf("can not parse in (%s) for path(%s)", curpath, path)
+					err = dbgutil.FormatError("can not parse in (%s) for path(%s)", curpath, path)
 					return
 				}
 			default:
-				err = fmt.Errorf("type of (%s) error", path)
+				err = dbgutil.FormatError("type of (%s) error", path)
 				return
 			}
 			curmap = cval.(map[string]interface{})
@@ -1072,7 +1215,7 @@ func __GetJsonValue(path string, v map[string]interface{}) (val string, err erro
 		return
 	}
 
-	err = fmt.Errorf("can not find (%s) all over", path)
+	err = dbgutil.FormatError("can not find (%s) all over", path)
 	return
 }
 

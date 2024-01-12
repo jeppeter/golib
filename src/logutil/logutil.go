@@ -21,6 +21,7 @@ type Background interface {
 var st_logger *l4g.Logger = nil
 var st_logger_level int = 0
 var st_background Background = nil
+var st_logger_nostderr_output bool = false
 
 func exithandler() {
 	st_background.CloseDebugOutputBackGround()
@@ -211,6 +212,13 @@ func format_out_data_cap(a ...interface{}) string {
 	return outstr
 }
 
+func output_stderr(level int, outs string) {
+	if level <= st_logger_level && !st_logger_nostderr_output {
+		fmt.Fprintf(os.Stderr, "%s\n", outs)
+		os.Stderr.Sync()
+	}
+}
+
 func Error(a ...interface{}) int {
 	var retval int = 0
 	outstr := "<ERROR>"
@@ -221,6 +229,7 @@ func Error(a ...interface{}) int {
 	} else {
 		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
+	output_stderr(0, outstr)
 	if st_logger_level >= 0 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -238,6 +247,7 @@ func ErrorBuffer(a ...interface{}) int {
 	} else {
 		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
+	output_stderr(0, outstr)
 	if st_logger_level >= 0 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -255,6 +265,7 @@ func Warn(a ...interface{}) int {
 	} else {
 		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
+	output_stderr(1, outstr)
 	if st_logger_level >= 1 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -272,6 +283,7 @@ func WarnBuffer(a ...interface{}) int {
 	} else {
 		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
+	output_stderr(1, outstr)
 	if st_logger_level >= 1 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -289,6 +301,7 @@ func Info(a ...interface{}) int {
 	} else {
 		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
+	output_stderr(2, outstr)
 	if st_logger_level >= 2 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -306,6 +319,7 @@ func InfoBuffer(a ...interface{}) int {
 	} else {
 		fmt.Fprintf(os.Stderr, "no out %s", outstr)
 	}
+	output_stderr(2, outstr)
 	if st_logger_level >= 2 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -321,6 +335,7 @@ func Debug(a ...interface{}) int {
 	if st_logger != nil {
 		st_logger.Debug(outstr)
 	}
+	output_stderr(3, outstr)
 	if st_logger_level >= 3 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -336,6 +351,7 @@ func DebugBuffer(a ...interface{}) int {
 	if st_logger != nil {
 		st_logger.Debug(outstr)
 	}
+	output_stderr(3, outstr)
 	if st_logger_level >= 3 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -351,6 +367,7 @@ func Trace(a ...interface{}) int {
 	if st_logger != nil {
 		st_logger.Trace(outstr)
 	}
+	output_stderr(4, outstr)
 	if st_logger_level >= 4 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -366,6 +383,7 @@ func TraceBuffer(a ...interface{}) int {
 	if st_logger != nil {
 		st_logger.Trace(outstr)
 	}
+	output_stderr(4, outstr)
 	if st_logger_level >= 4 {
 		outstr += "\n"
 		st_background.LogDebugOutputBackGround(outstr)
@@ -421,12 +439,7 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 
 	clog = l4g.NewLogger()
 	st_logger = &clog
-	if !ns.GetBool("log_nostderr") {
-		log4writer := l4g.NewStderrLogWriter()
-		log4writer.SetFormat(deflogfmt)
-		st_logger.AddFilter("stderr", lglvl, log4writer)
-		clog["stderr"].Level = lglvl
-	}
+	st_logger_nostderr_output = ns.GetBool("log_nostderr")
 
 	cfiles = ns.GetArray("log_files")
 	if len(cfiles) > 0 {
