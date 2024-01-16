@@ -77,3 +77,8 @@ func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, ex
 	errstr = string(errb.Bytes())
 	return
 }
+
+func Deamon() (err error) {
+	err = dbgutil.FormatError("not supported Daemon")
+	return
+}

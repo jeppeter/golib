@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"dbgutil"
 	"logutil"
+	"os"
 	"os/exec"
 	"syscall"
 	"time"
@@ -53,6 +54,26 @@ func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, ex
 
 	outstr = string(outb.Bytes())
 	errstr = string(errb.Bytes())
+	return
+}
+
+func Deamon() (err error) {
+	var id uintptr
+	id, _, _ = syscall.Syscall(syscall.SYS_FORK, 0, 0, 0)
+	if err != nil {
+		err = dbgutil.FormatError("[%d]fork error [%s]", os.Getpid(), err.Error())
+		return
+	}
+	if id != 0 {
+		os.Exit(0)
+	}
+
+	_, err = syscall.Setsid()
+	if err != nil {
+		err = dbgutil.FormatError("[%d]Setsid error [%s]", os.Getpid(), err.Error())
+		return
+	}
+	err = nil
 	return
 
 }
