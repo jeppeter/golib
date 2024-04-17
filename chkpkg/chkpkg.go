@@ -66,6 +66,8 @@ func init() {
 	defpkgs = append(defpkgs, "a")
 	defpkgs = append(defpkgs, "c/d")
 	defpkgs = append(defpkgs, "p")
+
+	defpkgs = append(defpkgs, "crypto/ecdh")
 }
 
 func NewPackageDep() *PackageDep {
@@ -136,7 +138,7 @@ func (pkg *PackageDep) pop_curfile() string {
 func is_pass_main_file(fname string) (retv bool) {
 	var err error
 	var absf string
-	retv = false;
+	retv = false
 
 	absf, err = filepath.Abs(fname)
 	if err != nil {
@@ -144,7 +146,7 @@ func is_pass_main_file(fname string) (retv bool) {
 	}
 
 	for _, curdir := range mainpaths {
-		if strings.HasPrefix(absf,curdir) {
+		if strings.HasPrefix(absf, curdir) {
 			retv = true
 			return
 		}
@@ -163,7 +165,7 @@ func (pkg *PackageDep) get_imports_inner(fname string) (imports []string, err er
 
 	if !is_pass_main_file(fname) {
 		fset = token.NewFileSet()
-		fileast, err = parser.ParseFile(fset,fname,nil,parser.PackageClauseOnly)
+		fileast, err = parser.ParseFile(fset, fname, nil, parser.PackageClauseOnly)
 		if err != nil {
 			Error("parse [%s] error just next", fname)
 			/*we just pass next one*/
@@ -177,7 +179,6 @@ func (pkg *PackageDep) get_imports_inner(fname string) (imports []string, err er
 			return
 		}
 	}
-
 
 	fset = token.NewFileSet()
 	fileast, err = parser.ParseFile(fset, fname, nil, parser.ImportsOnly)
@@ -670,13 +671,13 @@ func main() {
 	}
 
 	pkg.SetFilterArch(filters)
-	for _,curdir :=range flag.Args() {
-		cf , err := filepath.Abs(curdir)
+	for _, curdir := range flag.Args() {
+		cf, err := filepath.Abs(curdir)
 		if err != nil {
-			Error("%s",err.Error())
+			Error("%s", err.Error())
 			os.Exit(5)
 		}
-		mainpaths = append(mainpaths,cf)
+		mainpaths = append(mainpaths, cf)
 	}
 
 	for _, curdir := range flag.Args() {
