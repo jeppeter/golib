@@ -627,7 +627,8 @@ func init() {
 	Mkdirsafe_handler(nil, nil, nil)
 	Goversioncheck_handler(nil, nil, nil)
 	Querymem_handler(nil, nil, nil)
-	Normpath_handler(nil,nil,nil)
+	Normpath_handler(nil, nil, nil)
+	Cmprtver_handler(nil, nil, nil)
 }
 
 func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -653,12 +654,113 @@ func Normpath_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	sarr = ns.GetArray("subnargs")
 	for _, a = range sarr {
 		var np string
-		np ,err = filepath.Abs(a)
+		np, err = filepath.Abs(a)
 		if err == nil {
-			fmt.Printf("[%s] => [%s]\n",a,np)
+			fmt.Printf("[%s] => [%s]\n", a, np)
 		} else {
-			fmt.Printf("[%s] error[%s]\n",a,err.Error())
+			fmt.Printf("[%s] error[%s]\n", a, err.Error())
 		}
+	}
+
+	err = nil
+	return
+}
+
+type CmpVer struct {
+	verstr string
+	verint []int
+}
+
+func NewCmpVer(s string) (retv *CmpVer, err error) {
+	retv = &CmpVer{}
+	retv.verstr = s
+	retv.verint = []int{}
+	var sarr []string
+	var ns string
+	ns = strings.ReplaceAll(s, "go", "")
+	sarr = strings.Split(ns, ".")
+	var idx int = 0
+	var v int
+	for idx < len(sarr) {
+		v, err = strconv.Atoi(sarr[idx])
+		if err != nil {
+			v = 0
+		}
+		retv.verint = append(retv.verint, v)
+		idx += 1
+	}
+	err = nil
+	return
+}
+
+func (retp *CmpVer) Compare(other *CmpVer) (val int) {
+	val = 0
+	var idx int = 0
+	for {
+		if idx >= len(retp.verint) && idx >= len(other.verint) {
+			return
+		}
+
+		if idx >= len(retp.verint) {
+			val = -1
+			return
+		}
+
+		if idx >= len(other.verint) {
+			val = 1
+			return
+		}
+
+		if retp.verint[idx] > other.verint[idx] {
+			val = 1
+			return
+		} else if retp.verint[idx] < other.verint[idx] {
+			val = -1
+			return
+		}
+		idx += 1
+	}
+	return
+}
+
+func Cmprtver_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	err = nil
+	var rtver *CmpVer = nil
+	var cmpver *CmpVer = nil
+
+	if ns == nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = fmt.Errorf("need cmpver")
+		return
+	}
+
+	var rts string
+	var cmps string
+
+	rts = runtime.Version()
+	cmps = sarr[0]
+
+	rtver, err = NewCmpVer(rts)
+	if err != nil {
+		return
+	}
+	cmpver, err = NewCmpVer(cmps)
+	if err != nil {
+		return
+	}
+
+	val := rtver.Compare(cmpver)
+	if val > 0 {
+		fmt.Printf("[%s] > [%s]\n", rts, cmps)
+	} else if val < 0 {
+		fmt.Printf("[%s] < [%s]\n", rts, cmps)
+	} else {
+		fmt.Printf("[%s] == [%s]\n", rts, cmps)
 	}
 
 	err = nil
@@ -719,7 +821,11 @@ func main() {
 		},
 		"normpath<Normpath_handler>##path ... to normal like path##" : {
 			"$" : "+"
+		},
+		"cmprtver<Cmprtver_handler>##version to compare with runtime##" : {
+			"$" : 1
 		}
+
 	}`
 
 	parser, err = extargsparse.NewExtArgsParse(nil, nil)

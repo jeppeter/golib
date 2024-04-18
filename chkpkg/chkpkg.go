@@ -27,6 +27,63 @@ type PackageDep struct {
 	m_notos         []string
 }
 
+type CmpVer struct {
+	verstr string
+	verint []int
+}
+
+func NewCmpVer(s string) (retv *CmpVer, err error) {
+	retv = &CmpVer{}
+	retv.verstr = s
+	retv.verint = []int{}
+	var sarr []string
+	var ns string
+	ns = strings.ReplaceAll(s, "go", "")
+	sarr = strings.Split(ns, ".")
+	var idx int = 0
+	var v int
+	for idx < len(sarr) {
+		v, err = strconv.Atoi(sarr[idx])
+		if err != nil {
+			v = 0
+		}
+		retv.verint = append(retv.verint, v)
+		idx += 1
+	}
+	err = nil
+	return
+}
+
+func (retp *CmpVer) Compare(other *CmpVer) (val int) {
+	val = 0
+	var idx int = 0
+	for {
+		if idx >= len(retp.verint) && idx >= len(other.verint) {
+			return
+		}
+
+		if idx >= len(retp.verint) {
+			val = -1
+			return
+		}
+
+		if idx >= len(other.verint) {
+			val = 1
+			return
+		}
+
+		if retp.verint[idx] > other.verint[idx] {
+			val = 1
+			return
+		} else if retp.verint[idx] < other.verint[idx] {
+			val = -1
+			return
+		}
+		idx += 1
+	}
+	return
+}
+
 var allos []string
 var allarchs []string
 var defpkgs []string
@@ -66,8 +123,13 @@ func init() {
 	defpkgs = append(defpkgs, "a")
 	defpkgs = append(defpkgs, "c/d")
 	defpkgs = append(defpkgs, "p")
-
-	defpkgs = append(defpkgs, "crypto/ecdh")
+	rtver, _ := NewCmpVer(runtime.Version())
+	cmpver, _ := NewCmpVer("go1.20.0")
+	val := rtver.Compare(cmpver)
+	if val < 0 {
+		/*because the crypto/ecdh on the go1.20.0 version*/
+		defpkgs = append(defpkgs, "crypto/ecdh")
+	}
 }
 
 func NewPackageDep() *PackageDep {
