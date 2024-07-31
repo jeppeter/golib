@@ -3,9 +3,12 @@ package executil
 import (
 	"bytes"
 	"dbgutil"
+	"fileop"
 	"logutil"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -73,6 +76,39 @@ func Deamon() (err error) {
 		err = dbgutil.FormatError("[%d]Setsid error [%s]", os.Getpid(), err.Error())
 		return
 	}
+	err = nil
+	return
+
+}
+
+func GetTicksFromBoot() (retv uint64, err error) {
+	var s string
+	s, err = fileop.ReadFile("/proc/uptime")
+	if err != nil {
+		return
+	}
+	var sarr []string
+	var restr string = "\\s+"
+	var reg *regexp.Regexp
+	var totalf float64
+	reg, err = regexp.Compile(restr)
+	if err != nil {
+		err = dbgutil.FormatError("compile [%s] error [%s]", restr, err.Error())
+		return
+	}
+	sarr = reg.Split(s, -1)
+	if len(sarr) <= 1 {
+		err = dbgutil.FormatError("split [%s] not valid", s)
+		return
+	}
+
+	totalf, err = strconv.ParseFloat(sarr[1], 64)
+	if err != nil {
+		err = dbgutil.FormatError("parse [%s] not valid [%s]", sarr[1], err.Error())
+		return
+	}
+
+	retv = uint64(totalf * 1000)
 	err = nil
 	return
 

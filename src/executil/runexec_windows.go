@@ -82,3 +82,33 @@ func Deamon() (err error) {
 	err = dbgutil.FormatError("not supported Daemon")
 	return
 }
+
+func GetTicksFromBoot() (retv uint64, err error) {
+	var h syscall.Handle
+	var proc uintptr
+	var proc64 uintptr
+	var retval uintptr
+	retv = 0
+	h, err = syscall.LoadLibrary("kernel32.dll")
+	if err != nil {
+		err = dbgutil.FormatError("load kernel32.dll error %s", err.Error())
+		return
+	}
+	defer func() {
+		syscall.FreeLibrary(h)
+	}()
+	proc64, err = syscall.GetProcAddress(h, "GetTickCount64")
+	if err != nil {
+		proc, err = syscall.GetProcAddress(h, "GetTickCount")
+		if err != nil {
+			err = dbgutil.FormatError("GetTickCount search error %s", err.Error())
+			return
+		}
+		retval, _, _ = syscall.Syscall(proc, 0, 0, 0, 0)
+	} else {
+		retval, _, _ = syscall.Syscall(proc64, 0, 0, 0, 0)
+	}
+	retv = uint64(retval)
+	err = nil
+	return
+}

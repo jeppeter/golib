@@ -11,6 +11,7 @@ import (
 func init() {
 	Runtimeout_handler(nil, nil, nil)
 	Getexec_handler(nil, nil, nil)
+	Getbootticks_handler(nil, nil, nil)
 }
 
 func Runtimeout_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -63,6 +64,24 @@ func Getexec_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
+func Getbootticks_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var ticks uint64
+	err = nil
+	if ns == nil {
+		return
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	ticks, err = executil.GetTicksFromBoot()
+	if err != nil {
+		return
+	}
+	fmt.Printf("ticks %d\n", ticks)
+	return
+}
+
 func main() {
 	var parser *extargsparse.ExtArgsParse
 	var err error
@@ -76,6 +95,9 @@ func main() {
 		},
 		"getexec<Getexec_handler>##to get execname and file##" : {
 			"$" : 0
+		},
+		"getbootticks<Getbootticks_handler>##to get ticks##" : {
+			"$" :0
 		}
 	}
 	`
