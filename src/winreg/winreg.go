@@ -1,0 +1,409 @@
+package winreg
+
+import (
+	"dbgutil"
+	"fmt"
+	"golang.org/x/sys/windows/registry"
+	"reflect"
+	"strconv"
+	"strings"
+	"syscall"
+	"unicode/utf16"
+	"unsafe"
+)
+
+var st_RootKeyMap map[string]registry.Key
+var st_AccessMap map[string]uint32
+
+func init() {
+	st_RootKeyMap = make(map[string]registry.Key)
+	st_RootKeyMap["HKLM"] = registry.LOCAL_MACHINE
+	st_RootKeyMap["HKCU"] = registry.CURRENT_USER
+	st_RootKeyMap["HKCR"] = registry.CLASSES_ROOT
+	st_RootKeyMap["HKU"] = registry.USERS
+	st_RootKeyMap["HKCC"] = registry.CURRENT_CONFIG
+	st_AccessMap = make(map[string]uint32)
+	st_AccessMap["ALL"] = registry.ALL_ACCESS
+	st_AccessMap["EXECUTE"] = registry.EXECUTE
+	st_AccessMap["QUERY_VALUE"] = registry.QUERY_VALUE
+	st_AccessMap["READ"] = registry.READ
+	st_AccessMap["SET_VALUE"] = registry.SET_VALUE
+	st_AccessMap["WRITE"] = registry.WRITE
+	st_AccessMap["ENUMERATE_SUB_KEYS"] = registry.ENUMERATE_SUB_KEYS
+}
+
+func getRootKey(root string) (key registry.Key, err error) {
+	key, ok := st_RootKeyMap[root]
+	if ok {
+		err = nil
+		return
+	}
+	err = fmt.Errorf("can not find %s", root)
+	return
+}
+
+func getRegAccess(accesstype string) (access uint32, err error) {
+	access = uint32(0)
+	strs := strings.Split(accesstype, "|")
+	for _, s := range strs {
+		val, ok := st_AccessMap[s]
+		if !ok {
+			err = fmt.Errorf("can not find %s as type", s)
+			return
+		}
+		access |= val
+	}
+	err = nil
+	return
+}
+
+func ReadRegString(root, path, key string) (value string, typestr string, err error) {
+	var rbuf []byte
+	var rbufsize int
+	var val32 uint32
+	var val64 uint64
+	var valtype uint32
+	var retn int
+	var startn, curn, curidx, cntn int
+	var u16ptr []uint16
+	rk, err := getRootKey(root)
+	if err != nil {
+		return
+	}
+	k, err := registry.OpenKey(rk, path, registry.QUERY_VALUE)
+	if err != nil {
+		return
+	}
+	defer k.Close()
+
+	rbuf = nil
+	rbufsize = 32
+	for {
+		rbuf = make([]byte, rbufsize, rbufsize)
+		retn, valtype, err = k.GetValue(key, rbuf)
+		if err != nil {
+			errtype := reflect.TypeOf(err)
+			if strings.Compare(errtype.Name(), "Errno") == 0 {
+				if err.(syscall.Errno) == syscall.ERROR_MORE_DATA {
+					rbufsize <<= 1
+					continue
+				}
+			}
+			return
+		}
+		if rbufsize > retn {
+			break
+		}
+		rbufsize <<= 1
+	}
+	typestr = ""
+	value = ""
+	err = nil
+	if valtype == registry.NONE {
+		typestr = "NONE"
+		value = ""
+	} else if valtype == registry.SZ || valtype == registry.EXPAND_SZ {
+		typestr = "SZ"
+		if valtype == registry.EXPAND_SZ {
+			typestr = "EXPAND_SZ"
+		}
+		if (retn % 2) != 0 {
+			retn++
+		}
+		u16ptr = (*[1 << 29]uint16)(unsafe.Pointer(&rbuf[0]))[:retn]
+		retn /= 2
+		cntn = 0
+		for cntn < retn {
+			if u16ptr[cntn] == uint16(0) {
+				break
+			}
+			cntn++
+		}
+		value = string(utf16.Decode(u16ptr[:cntn]))
+	} else if valtype == registry.BINARY || valtype == registry.FULL_RESOURCE_DESCRIPTOR ||
+		valtype == registry.RESOURCE_LIST {
+		typestr = "BINARY"
+		if valtype == registry.FULL_RESOURCE_DESCRIPTOR {
+			typestr = "FULL_RESOURCE_DESCRIPTOR"
+		}
+		if valtype == registry.RESOURCE_LIST {
+			typestr = "RESOURCE_LIST"
+		}
+		value = ""
+		for i, c := range rbuf[:retn] {
+			if i > 0 {
+				value += ","
+			}
+			value += fmt.Sprintf("0x%02x", c)
+		}
+	} else if valtype == registry.DWORD {
+		typestr = "DWORD"
+		val32 = 0
+		for i, c := range rbuf[:retn] {
+			val32 += (uint32(c) << (uint32(i) * 8))
+		}
+		value = fmt.Sprintf("%d", val32)
+	} else if valtype == registry.DWORD_BIG_ENDIAN {
+		typestr = "DWORD_BIG_ENDIAN"
+		val32 = 0
+		for _, c := range rbuf[:retn] {
+			val32 <<= 8
+			val32 += uint32(c)
+		}
+		value = fmt.Sprintf("%d", val32)
+	} else if valtype == registry.LINK {
+		typestr = "LINK"
+		value = string(rbuf[:retn])
+	} else if valtype == registry.MULTI_SZ {
+		typestr = "MULTI_SZ"
+		startn = 0
+		curidx = 0
+		/*we add 1 last one*/
+		if (retn % 2) != 0 {
+			retn++
+		}
+		retn = retn / 2
+		u16ptr = (*[1 << 29]uint16)(unsafe.Pointer(&rbuf[0]))[:retn]
+		for startn < retn {
+			curn = startn
+			for curn < retn {
+				if u16ptr[curn] == uint16(0x0) {
+					break
+				}
+				curn++
+			}
+			if curn == startn {
+				break
+			}
+			if curidx > 0 {
+				value += "\\0"
+			}
+			value += string(utf16.Decode(u16ptr[startn:curn]))
+			curidx++
+			/*for the next one*/
+			startn = curn + 1
+		}
+	} else if valtype == registry.QWORD {
+		typestr = "QWORD"
+		val64 = 0
+		for i, c := range rbuf[:retn] {
+			val64 += (uint64(c) << (uint32(i) * 8))
+		}
+		value = fmt.Sprintf("%v", val64)
+	} else {
+		err = fmt.Errorf("can not find type %d (%s\\%s)", valtype, path, key)
+	}
+	return
+}
+
+func parserXNumber(value string) (ival64 int64, err error) {
+	if strings.HasPrefix(value, "0x") ||
+		strings.HasPrefix(value, "0X") {
+		ival64, err = strconv.ParseInt(value[2:], 16, 64)
+	} else if strings.HasPrefix(value, "x") ||
+		strings.HasPrefix(value, "X") {
+		ival64, err = strconv.ParseInt(value[1:], 16, 64)
+	} else {
+		ival64, err = strconv.ParseInt(value, 10, 64)
+	}
+
+	return
+}
+
+func WriteRegString(root, path, key, value, typestr string) error {
+	var tmpstr string
+	var rbuf []byte
+	var cbyte byte
+	var ival64 int64
+	var strs []string
+	var startn, curn int
+	rk, err := getRootKey(root)
+	if err != nil {
+		return err
+	}
+	k, err := registry.OpenKey(rk, path, registry.WRITE)
+	if err != nil {
+		return err
+	}
+	defer k.Close()
+	if strings.Compare(typestr, "SZ") == 0 || strings.Compare(typestr, "EXPAND_SZ") == 0 {
+		err = k.SetStringValue(key, value)
+	} else if strings.Compare(typestr, "MULTI_SZ") == 0 {
+		startn = 0
+		strs = make([]string, 0, 0)
+		for startn < len(value) {
+			curn = startn
+			for curn < len(value) {
+				if value[curn] == '\\' &&
+					curn < (len(value)-1) && value[(curn+1)] == '0' {
+					curn += 2
+					break
+				}
+				curn++
+			}
+			if curn < len(value) {
+				strs = append(strs, value[startn:(curn-2)])
+			} else {
+				strs = append(strs, value[startn:curn])
+			}
+			startn = curn
+		}
+		err = k.SetStringsValue(key, strs)
+	} else if strings.Compare(typestr, "BINARY") == 0 {
+		startn = 0
+		rbuf = make([]byte, 0, 0)
+		for startn < len(value) {
+			curn = startn
+			for curn < len(value) {
+				if curn == ',' {
+					curn++
+					break
+				}
+				curn++
+			}
+			if curn < len(value) {
+				tmpstr = value[startn:(curn - 1)]
+			} else {
+				tmpstr = value[startn:curn]
+			}
+
+			ival64, err = parserXNumber(tmpstr)
+
+			if err != nil {
+				return err
+			}
+
+			cbyte = byte(ival64)
+			rbuf = append(rbuf, cbyte)
+			startn = curn
+		}
+
+		err = k.SetBinaryValue(key, rbuf)
+	} else if strings.Compare(typestr, "DWORD") == 0 || strings.Compare(typestr, "DWORD_BIG_ENDIAN") == 0 {
+		ival64, err = parserXNumber(value)
+		if err != nil {
+			return err
+		}
+		err = k.SetDWordValue(key, uint32(ival64))
+	} else if strings.Compare(typestr, "QWORD") == 0 {
+		ival64, err = parserXNumber(value)
+		if err != nil {
+			return err
+		}
+		err = k.SetQWordValue(key, uint64(ival64))
+	} else {
+		err = fmt.Errorf("unknown type (%s)", typestr)
+	}
+	return err
+}
+
+func CreateRegKey(root, path string, accesstype string, existok bool) error {
+	rk, err := getRootKey(root)
+	if err != nil {
+		return err
+	}
+	access, err := getRegAccess(accesstype)
+	if err != nil {
+		return err
+	}
+	newk, existed, err := registry.CreateKey(rk, path, access)
+	if err != nil {
+		return err
+	}
+	defer newk.Close()
+	if existed && !existok {
+		err = fmt.Errorf("[%s] %s existed", root, path)
+		return err
+	}
+	return nil
+}
+
+func DeleteRegKey(root, path string) error {
+	rk, err := getRootKey(root)
+	if err != nil {
+		return err
+	}
+
+	err = registry.DeleteKey(rk, path)
+	if err != nil {
+		errtype := reflect.TypeOf(err)
+		if strings.Compare(errtype.Name(), "Errno") == 0 {
+			if err.(syscall.Errno) == syscall.ERROR_FILE_NOT_FOUND {
+				/*that means not find ,so ok*/
+				return nil
+			}
+			err = dbgutil.FormatError("errno (%d)", (int)(err.(syscall.Errno)))
+		}
+		return err
+	}
+	return nil
+}
+
+func DeleteRegValue(root, path, value string) error {
+	var curk registry.Key
+	rk, err := getRootKey(root)
+	if err != nil {
+		return err
+	}
+
+	curk, err = registry.OpenKey(rk, path, registry.WRITE|registry.EXECUTE)
+	if err != nil {
+		if reflect.TypeOf(err).Name() == "Errno" {
+			if err.(syscall.Errno) == syscall.ERROR_FILE_NOT_FOUND {
+				/*that means not find ,so ok*/
+				return nil
+			}
+		}
+		return err
+	}
+	defer curk.Close()
+
+	err = curk.DeleteValue(value)
+	if err != nil {
+		if reflect.TypeOf(err).Name() == "Errno" {
+			if err.(syscall.Errno) == syscall.ERROR_FILE_NOT_FOUND {
+				/*that means not find ,so ok*/
+				return nil
+			}
+		}
+
+		return err
+	}
+	return nil
+}
+
+func EnumerateRegKeys(root, path string, maxnum int) (keys []string, err error) {
+	rk, err := getRootKey(root)
+	if err != nil {
+		return
+	}
+
+	k, err := registry.OpenKey(rk, path, registry.EXECUTE)
+	if err != nil {
+		return
+	}
+	defer k.Close()
+	keys, err = k.ReadSubKeyNames(maxnum)
+	if err != nil {
+		err = dbgutil.FormatError("subkeys error(%s)", err.Error())
+	}
+	return
+}
+
+func EnumerateRegValueKeys(root, path string, maxnum int) (valkeys []string, err error) {
+	rk, err := getRootKey(root)
+	if err != nil {
+		return
+	}
+
+	k, err := registry.OpenKey(rk, path, registry.EXECUTE)
+	if err != nil {
+		return
+	}
+	defer k.Close()
+	valkeys, err = k.ReadValueNames(maxnum)
+	if err != nil {
+		err = dbgutil.FormatError("valuekeys error(%s)", err.Error())
+	}
+	return
+}
