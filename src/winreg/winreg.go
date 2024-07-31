@@ -15,21 +15,36 @@ import (
 var st_RootKeyMap map[string]registry.Key
 var st_AccessMap map[string]uint32
 
+const (
+	HKLM_ROOT     = "HKLM"
+	HKCU_ROOT     = "HKCU"
+	HKU_ROOT      = "HKU"
+	HKCC_ROOT     = "HKCC"
+	HKCR_ROOT     = "HKCR"
+	REG_ALL       = "ALL"
+	REG_EXECUTE   = "EXECUTE"
+	REG_QUERY     = "QUERY_VALUE"
+	REG_READ      = "READ"
+	REG_SET       = "SET_VALUE"
+	REG_WRITE     = "WRITE"
+	REG_ENUMERATE = "ENUMERATE_SUB_KEYS"
+)
+
 func init() {
 	st_RootKeyMap = make(map[string]registry.Key)
-	st_RootKeyMap["HKLM"] = registry.LOCAL_MACHINE
-	st_RootKeyMap["HKCU"] = registry.CURRENT_USER
-	st_RootKeyMap["HKCR"] = registry.CLASSES_ROOT
-	st_RootKeyMap["HKU"] = registry.USERS
-	st_RootKeyMap["HKCC"] = registry.CURRENT_CONFIG
+	st_RootKeyMap[HKLM_ROOT] = registry.LOCAL_MACHINE
+	st_RootKeyMap[HKCU_ROOT] = registry.CURRENT_USER
+	st_RootKeyMap[HKCR_ROOT] = registry.CLASSES_ROOT
+	st_RootKeyMap[HKU_ROOT] = registry.USERS
+	st_RootKeyMap[HKCC_ROOT] = registry.CURRENT_CONFIG
 	st_AccessMap = make(map[string]uint32)
-	st_AccessMap["ALL"] = registry.ALL_ACCESS
-	st_AccessMap["EXECUTE"] = registry.EXECUTE
-	st_AccessMap["QUERY_VALUE"] = registry.QUERY_VALUE
-	st_AccessMap["READ"] = registry.READ
-	st_AccessMap["SET_VALUE"] = registry.SET_VALUE
-	st_AccessMap["WRITE"] = registry.WRITE
-	st_AccessMap["ENUMERATE_SUB_KEYS"] = registry.ENUMERATE_SUB_KEYS
+	st_AccessMap[REG_ALL] = registry.ALL_ACCESS
+	st_AccessMap[REG_EXECUTE] = registry.EXECUTE
+	st_AccessMap[REG_QUERY] = registry.QUERY_VALUE
+	st_AccessMap[REG_READ] = registry.READ
+	st_AccessMap[REG_SET] = registry.SET_VALUE
+	st_AccessMap[REG_WRITE] = registry.WRITE
+	st_AccessMap[REG_ENUMERATE] = registry.ENUMERATE_SUB_KEYS
 }
 
 func getRootKey(root string) (key registry.Key, err error) {
