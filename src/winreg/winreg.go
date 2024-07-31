@@ -38,7 +38,7 @@ func getRootKey(root string) (key registry.Key, err error) {
 		err = nil
 		return
 	}
-	err = fmt.Errorf("can not find %s", root)
+	err = dbgutil.FormatError("can not find %s", root)
 	return
 }
 
@@ -72,6 +72,7 @@ func ReadRegString(root, path, key string) (value string, typestr string, err er
 	}
 	k, err := registry.OpenKey(rk, path, registry.QUERY_VALUE)
 	if err != nil {
+		err = dbgutil.FormatError("open [%s].[%s] error[%s]", root, path, err.Error())
 		return
 	}
 	defer k.Close()
@@ -89,6 +90,7 @@ func ReadRegString(root, path, key string) (value string, typestr string, err er
 					continue
 				}
 			}
+			err = dbgutil.FormatError("read [%s].[%s].[%s] error [%s]", root, path, key, err.Error())
 			return
 		}
 		if rbufsize > retn {
@@ -191,7 +193,7 @@ func ReadRegString(root, path, key string) (value string, typestr string, err er
 		}
 		value = fmt.Sprintf("%v", val64)
 	} else {
-		err = fmt.Errorf("can not find type %d (%s\\%s)", valtype, path, key)
+		err = dbgutil.FormatError("can not find type %d (%s\\%s)", valtype, path, key)
 	}
 	return
 }
