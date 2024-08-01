@@ -6,7 +6,9 @@ import (
 	l4g "github.com/jeppeter/log4go"
 	"github.com/tebeka/atexit"
 	"os"
+	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -410,6 +412,68 @@ func PrepareLog(parser *extargsparse.ExtArgsParse) error {
 	return err
 }
 
+func filter_maxfiles(fname string, maxbackup int) (err error) {
+	var dname string
+	var bname string
+	var finfos []os.FileInfo
+	var fh *os.File
+	var finfo os.FileInfo
+	var i int
+	var numexpr *regexp.Regexp
+	var exprstr string
+	var matchstrings []string
+	var ival int
+	var curname string
+	err = nil
+	dname = filepath.Dir(fname)
+	bname = filepath.Base(fname)
+	fh, err = os.Open(dname)
+	if err != nil {
+		fmt.Printf("open [%s]error [%s]\n", fname, err.Error())
+		err = nil
+		return
+	}
+	defer fh.Close()
+
+	exprstr = fmt.Sprintf("%s\\.([0-9]+)", bname)
+	numexpr, err = regexp.Compile(exprstr)
+	if err != nil {
+		err = fmt.Errorf("%s", format_out_string_total(1, "can not compile [%s] error[%s]", exprstr, err.Error()))
+		return
+	}
+
+	for {
+		finfos, err = fh.Readdir(10)
+		if err != nil {
+			err = nil
+			return
+		}
+		for i, finfo = range finfos {
+			if !finfo.IsDir() {
+				matchstrings = numexpr.FindStringSubmatch(finfo.Name())
+				if len(matchstrings) > 1 {
+					ival, err = strconv.Atoi(matchstrings[1])
+					if err == nil {
+						if ival >= maxbackup {
+							curname = filepath.Join(dname, finfo.Name())
+							err = os.Remove(curname)
+							if err != nil {
+								err = fmt.Errorf("%s", format_out_string_total(1, "[%d]can not remove [%s] error[%s]", i, curname, err.Error()))
+								return
+							}
+						}
+					}
+				}
+			}
+
+		}
+	}
+
+	err = nil
+	return
+
+}
+
 func InitLog(ns *extargsparse.NameSpaceEx) error {
 	var appfiles []string
 	var cfiles []string
@@ -418,8 +482,10 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	var deflogfmt string = "[%T %D] %M"
 	var clog l4g.Logger
 	var sarr []string
-	var iv int
 	var err error
+	var maxlines int
+	var maxbackups int
+	var fname string
 
 	if st_logger != nil {
 		st_logger.Close()
@@ -455,25 +521,33 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	if len(cfiles) > 0 {
 		for _, f := range cfiles {
 			sarr = strings.Split(f, ",")
-			log4writer := l4g.NewFileLogWriter(sarr[0], true)
-			log4writer.SetFormat(deflogfmt)
-			iv = DEFAULT_LOG_MAX_LINES
+			fname = sarr[0]
+			maxlines = DEFAULT_LOG_MAX_LINES
 			if len(sarr) > 1 {
-				iv, err = strconv.Atoi(sarr[1])
+				maxlines, err = strconv.Atoi(sarr[1])
 				if err != nil {
-					iv = DEFAULT_LOG_MAX_LINES
+					maxlines = DEFAULT_LOG_MAX_LINES
 				}
 			}
-			log4writer.SetRotateLines(iv)
 
-			iv = DEFAULT_LOG_ROTATE_NUM
+			maxbackups = DEFAULT_LOG_ROTATE_NUM
 			if len(sarr) > 2 {
-				iv, err = strconv.Atoi(sarr[2])
+				maxbackups, err = strconv.Atoi(sarr[2])
 				if err != nil {
-					iv = DEFAULT_LOG_ROTATE_NUM
+					maxbackups = DEFAULT_LOG_ROTATE_NUM
 				}
 			}
-			log4writer.SetRotateMaxBackup(iv)
+			if maxbackups < DEFAULT_LOG_ROTATE_NUM {
+				maxbackups = DEFAULT_LOG_ROTATE_NUM
+			}
+
+			filter_maxfiles(fname, maxbackups)
+
+			log4writer := l4g.NewFileLogWriter(fname, true)
+			log4writer.SetFormat(deflogfmt)
+			log4writer.SetRotateLines(maxlines)
+
+			log4writer.SetRotateMaxBackup(maxbackups)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
 		}
@@ -483,26 +557,34 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	if len(appfiles) > 0 {
 		for _, f := range appfiles {
 			sarr = strings.Split(f, ",")
-			log4writer := l4g.NewFileLogWriter(sarr[0], true)
-			log4writer.SetFormat(deflogfmt)
-			iv = DEFAULT_LOG_MAX_LINES
+			fname = sarr[0]
+			maxlines = DEFAULT_LOG_MAX_LINES
 			if len(sarr) > 1 {
-				iv, err = strconv.Atoi(sarr[1])
+				maxlines, err = strconv.Atoi(sarr[1])
 				if err != nil {
-					iv = DEFAULT_LOG_MAX_LINES
+					maxlines = DEFAULT_LOG_MAX_LINES
 				}
 			}
-			log4writer.SetRotateLines(iv)
 
-			iv = DEFAULT_LOG_ROTATE_NUM
+			maxbackups = DEFAULT_LOG_ROTATE_NUM
 			if len(sarr) > 2 {
-				iv, err = strconv.Atoi(sarr[2])
+				maxbackups, err = strconv.Atoi(sarr[2])
 				if err != nil {
-					iv = DEFAULT_LOG_ROTATE_NUM
+					maxbackups = DEFAULT_LOG_ROTATE_NUM
 				}
 			}
-			log4writer.SetRotateMaxBackup(iv)
 
+			if maxbackups < DEFAULT_LOG_ROTATE_NUM {
+				maxbackups = DEFAULT_LOG_ROTATE_NUM
+			}
+
+			filter_maxfiles(fname, maxbackups)
+
+			log4writer := l4g.NewFileLogWriter(fname, true)
+			log4writer.SetFormat(deflogfmt)
+			log4writer.SetRotateLines(maxlines)
+
+			log4writer.SetRotateMaxBackup(maxbackups)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
 		}
