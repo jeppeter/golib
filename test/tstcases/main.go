@@ -629,6 +629,7 @@ func init() {
 	Querymem_handler(nil, nil, nil)
 	Normpath_handler(nil, nil, nil)
 	Cmprtver_handler(nil, nil, nil)
+	Logtest_handler(nil, nil, nil)
 }
 
 func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -767,6 +768,39 @@ func Cmprtver_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	return
 }
 
+func Logtest_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var maxlines int = 10
+	var i int
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	logutil.InitLog(ns)
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) > 0 {
+		maxlines, err = strconv.Atoi(sarr[0])
+		if err != nil {
+			err = dbgutil.FormatError("[%s] not valid", sarr[0])
+			return
+		}
+	}
+
+	for i = 0; i < maxlines; i++ {
+		logutil.Warn("[%d] lines", i)
+		logutil.Error("[%d] lines", i)
+		logutil.Debug("[%d] lines", i)
+		logutil.Info("[%d] lines", i)
+		logutil.Trace("[%d] lines", i)
+	}
+
+	err = nil
+	return
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -824,6 +858,9 @@ func main() {
 		},
 		"cmprtver<Cmprtver_handler>##version to compare with runtime##" : {
 			"$" : 1
+		},
+		"logtest<Logtest_handler>##[num] to debug loglines default 10##" : {
+			"$" : "?"
 		}
 
 	}`

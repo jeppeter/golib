@@ -8,6 +8,8 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"strconv"
+	"strings"
 	//"strconv"
 	//"unicode/utf8"
 )
@@ -17,6 +19,11 @@ type Background interface {
 
 	CloseDebugOutputBackGround() error
 }
+
+const (
+	DEFAULT_LOG_MAX_LINES  = 100000000
+	DEFAULT_LOG_ROTATE_NUM = 2
+)
 
 var st_logger *l4g.Logger = nil
 var st_logger_level int = 0
@@ -394,8 +401,8 @@ func TraceBuffer(a ...interface{}) int {
 func PrepareLog(parser *extargsparse.ExtArgsParse) error {
 	var commandline = `{
 			"verbose|v" : "+",
-			"log-files##set write rotate files##" : [],
-			"log-appends##set append files##" : [],
+			"log-files##set write rotate files format name,maxlines##" : [],
+			"log-appends##set append files name,maxlines,maxbackups##" : [],
 			"log-nostderr##specified no stderr output##" : false
 		}`
 	var err error
@@ -410,6 +417,9 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	var lglvl l4g.Level
 	var deflogfmt string = "[%T %D] %M"
 	var clog l4g.Logger
+	var sarr []string
+	var iv int
+	var err error
 
 	if st_logger != nil {
 		st_logger.Close()
@@ -444,8 +454,26 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	cfiles = ns.GetArray("log_files")
 	if len(cfiles) > 0 {
 		for _, f := range cfiles {
-			log4writer := l4g.NewFileLogWriter(f, true)
+			sarr = strings.Split(f, ",")
+			log4writer := l4g.NewFileLogWriter(sarr[0], true)
 			log4writer.SetFormat(deflogfmt)
+			iv = DEFAULT_LOG_MAX_LINES
+			if len(sarr) > 1 {
+				iv, err = strconv.Atoi(sarr[1])
+				if err != nil {
+					iv = DEFAULT_LOG_MAX_LINES
+				}
+			}
+			log4writer.SetRotateLines(iv)
+
+			iv = DEFAULT_LOG_ROTATE_NUM
+			if len(sarr) > 2 {
+				iv, err = strconv.Atoi(sarr[2])
+				if err != nil {
+					iv = DEFAULT_LOG_ROTATE_NUM
+				}
+			}
+			log4writer.SetRotateMaxBackup(iv)
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
 		}
@@ -454,8 +482,27 @@ func InitLog(ns *extargsparse.NameSpaceEx) error {
 	appfiles = ns.GetArray("log_appends")
 	if len(appfiles) > 0 {
 		for _, f := range appfiles {
-			log4writer := l4g.NewFileLogWriter(f, false)
+			sarr = strings.Split(f, ",")
+			log4writer := l4g.NewFileLogWriter(sarr[0], true)
 			log4writer.SetFormat(deflogfmt)
+			iv = DEFAULT_LOG_MAX_LINES
+			if len(sarr) > 1 {
+				iv, err = strconv.Atoi(sarr[1])
+				if err != nil {
+					iv = DEFAULT_LOG_MAX_LINES
+				}
+			}
+			log4writer.SetRotateLines(iv)
+
+			iv = DEFAULT_LOG_ROTATE_NUM
+			if len(sarr) > 2 {
+				iv, err = strconv.Atoi(sarr[2])
+				if err != nil {
+					iv = DEFAULT_LOG_ROTATE_NUM
+				}
+			}
+			log4writer.SetRotateMaxBackup(iv)
+
 			st_logger.AddFilter(f, lglvl, log4writer)
 			clog[f].Level = lglvl
 		}
