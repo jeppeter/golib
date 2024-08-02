@@ -214,7 +214,6 @@ func find_childs(pid int, vmap map[string][]int) (retp *ChildProcs, err error) {
 		for i = 0; i < len(curfindpids); i++ {
 			bval = has_searched(curfindpids[i].Pid, searchpids)
 			if !bval {
-				searchpids = append(searchpids, curfindpids[i].Pid)
 				nv = fmt.Sprintf("%d", curfindpids[i].Pid)
 				cpids, ok = vmap[nv]
 				if ok {
@@ -223,11 +222,14 @@ func find_childs(pid int, vmap map[string][]int) (retp *ChildProcs, err error) {
 					logutil.Debug("[%s] next add search %v", nv, cpids)
 
 					for j = 0; j < len(cpids); j++ {
-						cch = NewChildProcs(cpids[j])
-						insertpids.Children = append(insertpids.Children, cch)
-						nextfindpids = append(nextfindpids, cch)
+						if cpids[j] != curfindpids[i].Pid {
+							cch = NewChildProcs(cpids[j])
+							insertpids.Children = append(insertpids.Children, cch)
+							nextfindpids = append(nextfindpids, cch)
+						}
 					}
 				}
+				searchpids = append(searchpids, curfindpids[i].Pid)
 			}
 
 		}
