@@ -113,3 +113,8 @@ func GetTicksFromBoot() (retv uint64, err error) {
 	return
 
 }
+
+func GetChildProcs(pid int) (retp *ChildProcs, err error) {
+	err = dbgutil.FormatError("not supported")
+	return
+}

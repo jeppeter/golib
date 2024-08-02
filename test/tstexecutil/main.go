@@ -6,12 +6,14 @@ import (
 	"github.com/jeppeter/go-extargsparse"
 	"logutil"
 	"os"
+	"strconv"
 )
 
 func init() {
 	Runtimeout_handler(nil, nil, nil)
 	Getexec_handler(nil, nil, nil)
 	Getbootticks_handler(nil, nil, nil)
+	Childpid_handler(nil, nil, nil)
 }
 
 func Runtimeout_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -82,6 +84,35 @@ func Getbootticks_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx
 	return
 }
 
+func Childpid_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var rp *executil.ChildProcs = nil
+	var i int
+	var pid int
+	err = nil
+	if ns == nil {
+		return
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	for i = 0; i < len(sarr); i++ {
+		pid, err = strconv.Atoi(sarr[i])
+		if err != nil {
+			return
+		}
+		rp, err = executil.GetChildProcs(pid)
+		if err != nil {
+			return
+		}
+		fmt.Printf("ChildPids\n%s", rp.String())
+	}
+	err = nil
+	return
+}
+
 func main() {
 	var parser *extargsparse.ExtArgsParse
 	var err error
@@ -98,6 +129,9 @@ func main() {
 		},
 		"getbootticks<Getbootticks_handler>##to get ticks##" : {
 			"$" :0
+		},
+		"childpid<Childpid_handler>##pid to list child##" : {
+			"$": "+"
 		}
 	}
 	`

@@ -3,6 +3,7 @@ package executil
 import (
 	"bytes"
 	"dbgutil"
+	"fmt"
 	"logutil"
 	"os"
 	"os/exec"
@@ -140,5 +141,98 @@ func StartAndDetach(cmds []string) (pid int, err error) {
 	pid = cmd.Process.Pid
 	err = nil
 	cmd.Process.Release()
+	return
+}
+
+type ChildProcs struct {
+	Pid      int
+	Children []*ChildProcs
+}
+
+func NewChildProcs(pid int) *ChildProcs {
+	var retp *ChildProcs
+	retp = &ChildProcs{}
+	retp.Pid = pid
+	retp.Children = []*ChildProcs{}
+	return retp
+}
+
+func (p *ChildProcs) tab_string(tab int, s string) string {
+	var rets string
+	var i int
+	for i = 0; i < tab; i++ {
+		rets += fmt.Sprintf("    ")
+	}
+	rets += s
+	rets += "\n"
+	return rets
+}
+
+func (p *ChildProcs) format(tab int) string {
+	var rets string
+	var i int
+	rets += p.tab_string(tab, fmt.Sprintf("%d", p.Pid))
+	for i = 0; i < len(p.Children); i++ {
+		rets += p.Children[i].format(tab + 1)
+	}
+	return rets
+}
+
+func (p *ChildProcs) String() string {
+	return p.format(0)
+}
+
+func has_searched(pid int, pids []int) bool {
+	var i int
+	for i = 0; i < len(pids); i++ {
+		if pid == pids[i] {
+			return true
+		}
+	}
+	return false
+}
+
+func find_childs(pid int, vmap map[string][]int) (retp *ChildProcs, err error) {
+	var curfindpids []*ChildProcs
+	var nextfindpids []*ChildProcs
+	var docont bool
+	var cpids []int
+	var ok bool
+	var insertpids *ChildProcs
+	var cch *ChildProcs
+	var i, j int
+	var bval bool
+	var searchpids []int = []int{}
+	var nv string
+	retp = NewChildProcs(pid)
+	/*now to make curpids*/
+	curfindpids = []*ChildProcs{retp}
+	docont = true
+	for docont {
+		nextfindpids = []*ChildProcs{}
+		docont = false
+		for i = 0; i < len(curfindpids); i++ {
+			bval = has_searched(curfindpids[i].Pid, searchpids)
+			if !bval {
+				nv = fmt.Sprintf("%d", curfindpids[i].Pid)
+				cpids, ok = vmap[nv]
+				if ok {
+					docont = true
+					insertpids = curfindpids[i]
+					logutil.Debug("[%s] next add search %v", nv, cpids)
+
+					for j = 0; j < len(cpids); j++ {
+						cch = NewChildProcs(cpids[j])
+						searchpids = append(searchpids, cpids[j])
+						insertpids.Children = append(insertpids.Children, cch)
+						nextfindpids = append(nextfindpids, cch)
+					}
+				}
+			}
+
+		}
+		curfindpids = nextfindpids
+	}
+	err = nil
 	return
 }

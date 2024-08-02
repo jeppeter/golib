@@ -3,8 +3,12 @@ package executil
 import (
 	"bytes"
 	"dbgutil"
+	"fmt"
 	"logutil"
 	"os/exec"
+	"regexp"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -111,4 +115,85 @@ func GetTicksFromBoot() (retv uint64, err error) {
 	retv = uint64(retval)
 	err = nil
 	return
+}
+
+func GetChildProcs(pid int) (retp *ChildProcs, err error) {
+	var outs string
+	var exitcode int
+	var cmds []string = []string{"wmic.exe", "process", "get", "ProcessId,ParentProcessId"}
+	var sarr []string
+	var carr []string
+	var pidx int = -1
+	var ppidx int = -1
+	var l string
+	var i int
+	var spreg *regexp.Regexp
+	var sps string
+	var vmap map[string][]int
+	var curpid, curppid int
+	var nv string
+	var ok bool
+	var headone bool = false
+	err = nil
+	outs, _, exitcode, err = GetOutputCmd(cmds)
+	if err != nil {
+		return
+	}
+	if exitcode != 0 {
+		err = dbgutil.FormatError("run %v exitcode %d", cmds, exitcode)
+		return
+	}
+	sps = fmt.Sprintf("\\s+")
+	spreg, err = regexp.Compile(sps)
+	if err != nil {
+		err = dbgutil.FormatError("compile [%s] error[%s]", sps, err.Error())
+		return
+	}
+
+	vmap = make(map[string][]int)
+
+	sarr = strings.Split(outs, "\n")
+	for i = 0; i < len(sarr); i++ {
+		l = sarr[i]
+		logutil.Debug("l[%s]", l)
+		l = strings.TrimRight(l, "\r")
+		logutil.Debug("[%d]=[%s]", i, l)
+		if !headone {
+			carr = spreg.Split(l, -1)
+			if len(carr) <= 1 {
+				continue
+			}
+			headone = true
+			logutil.Debug("carr[0] [%s]", carr[0])
+			if carr[0] == "ParentProcessId" {
+				ppidx = 0
+				pidx = 1
+			} else if carr[0] == "ProcessId" {
+				pidx = 0
+				ppidx = 1
+			} else {
+				err = dbgutil.FormatError("[%s] not header", l)
+				return
+			}
+		} else {
+			carr = spreg.Split(l, -1)
+			if len(carr) >= 2 {
+				curppid, err = strconv.Atoi(carr[ppidx])
+				if err == nil {
+					curpid, err = strconv.Atoi(carr[pidx])
+					if err == nil {
+						nv = fmt.Sprintf("%d", curppid)
+						_, ok = vmap[nv]
+						if ok {
+							vmap[nv] = append(vmap[nv], curpid)
+						} else {
+							vmap[nv] = []int{curpid}
+						}
+						logutil.Debug("add [%s] = %v", nv, vmap[nv])
+					}
+				}
+			}
+		}
+	}
+	return find_childs(pid, vmap)
 }
