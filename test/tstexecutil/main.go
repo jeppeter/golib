@@ -7,6 +7,7 @@ import (
 	"logutil"
 	"os"
 	"strconv"
+	"time"
 )
 
 func init() {
@@ -14,6 +15,7 @@ func init() {
 	Getexec_handler(nil, nil, nil)
 	Getbootticks_handler(nil, nil, nil)
 	Childpid_handler(nil, nil, nil)
+	Childfork_handler(nil, nil, nil)
 }
 
 func Runtimeout_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -113,6 +115,51 @@ func Childpid_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	return
 }
 
+func Childfork_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var recursvnum int = 0
+	err = nil
+	if ns == nil {
+		return
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) > 0 {
+		recursvnum, err = strconv.Atoi(sarr[0])
+		if err != nil {
+			return
+		}
+	}
+	if recursvnum == 0 {
+		var cnt int = 0
+		for {
+			fmt.Printf("[%d] cnt [%d]\n", os.Getpid(), cnt)
+			time.Sleep(time.Duration(1) * time.Second)
+			cnt += 1
+		}
+	} else {
+		fmt.Printf("[%d] os.Getpid [%d]\n", recursvnum, os.Getpid())
+		recursvnum -= 1
+		var execname string
+		var cmds []string
+		execname, err = executil.GetExeFile()
+		if err != nil {
+			return
+		}
+		cmds = []string{execname, "childfork", fmt.Sprintf("%d", recursvnum)}
+		_, _, _, err = executil.GetOutputCmdBytes(cmds)
+		if err != nil {
+			return
+		}
+	}
+
+	err = nil
+	return
+}
+
 func main() {
 	var parser *extargsparse.ExtArgsParse
 	var err error
@@ -132,6 +179,9 @@ func main() {
 		},
 		"childpid<Childpid_handler>##pid to list child##" : {
 			"$": "+"
+		},
+		"childfork<Childfork_handler>##[recursnum] default 0 to debug##" : {
+			"$" : "?"
 		}
 	}
 	`
