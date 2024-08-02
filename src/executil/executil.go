@@ -89,7 +89,7 @@ func GetOutputCmdBytes(cmds []string) (outbs []byte, errbs []byte, exitcode int,
 	if err != nil {
 		exiterr, ok = err.(*exec.ExitError)
 		if !ok {
-			err = dbgutil.FormatError("run [%v] error[%s]", cmds, err.Error())
+			err = dbgutil.FormatError("run %v error[%s]", cmds, err.Error())
 			return
 		}
 		exitcode = exiterr.ExitCode()
@@ -214,6 +214,7 @@ func find_childs(pid int, vmap map[string][]int) (retp *ChildProcs, err error) {
 		for i = 0; i < len(curfindpids); i++ {
 			bval = has_searched(curfindpids[i].Pid, searchpids)
 			if !bval {
+				searchpids = append(searchpids, curfindpids[i].Pid)
 				nv = fmt.Sprintf("%d", curfindpids[i].Pid)
 				cpids, ok = vmap[nv]
 				if ok {
@@ -223,7 +224,6 @@ func find_childs(pid int, vmap map[string][]int) (retp *ChildProcs, err error) {
 
 					for j = 0; j < len(cpids); j++ {
 						cch = NewChildProcs(cpids[j])
-						searchpids = append(searchpids, cpids[j])
 						insertpids.Children = append(insertpids.Children, cch)
 						nextfindpids = append(nextfindpids, cch)
 					}

@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"dbgutil"
 	"fileop"
+	"fmt"
 	"logutil"
 	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -115,6 +117,66 @@ func GetTicksFromBoot() (retv uint64, err error) {
 }
 
 func GetChildProcs(pid int) (retp *ChildProcs, err error) {
-	err = dbgutil.FormatError("not supported")
-	return
+	var outs string
+	var exitcode int
+	var cmds []string = []string{"/bin/ps", "-ef"}
+	var sarr []string
+	var l string
+	var i int
+	var pidx, ppidx int
+	var carr []string
+	var spreg *regexp.Regexp
+	var sps string
+	var vmap map[string][]int
+	var curpid, curppid int
+	var nv string
+	var ok bool
+
+	outs, _, exitcode, err = GetOutputCmd(cmds)
+	if err != nil {
+		return
+	}
+
+	if exitcode != 0 {
+		err = dbgutil.FormatError("%v exitcode %d", cmds, exitcode)
+		return
+	}
+	sps = fmt.Sprintf("\\s+")
+	spreg, err = regexp.Compile(sps)
+	if err != nil {
+		err = dbgutil.FormatError("compile [%s] error[%s]", sps, err.Error())
+		return
+	}
+
+	vmap = make(map[string][]int)
+
+	sarr = strings.Split(outs, "\n")
+	for i = 0; i < len(sarr); i++ {
+		l = sarr[i]
+		logutil.Debug("[%d]=[%s]", i, l)
+		if i == 0 {
+			pidx = 1
+			ppidx = 2
+		} else {
+			carr = spreg.Split(l, -1)
+			if len(carr) >= 2 {
+				curppid, err = strconv.Atoi(carr[ppidx])
+				if err == nil {
+					curpid, err = strconv.Atoi(carr[pidx])
+					if err == nil {
+						nv = fmt.Sprintf("%d", curppid)
+						_, ok = vmap[nv]
+						if ok {
+							vmap[nv] = append(vmap[nv], curpid)
+						} else {
+							vmap[nv] = []int{curpid}
+						}
+						logutil.Debug("add [%s] = %v", nv, vmap[nv])
+					}
+				}
+			}
+		}
+	}
+
+	return find_childs(pid, vmap)
 }

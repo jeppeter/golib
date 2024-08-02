@@ -155,20 +155,18 @@ func GetChildProcs(pid int) (retp *ChildProcs, err error) {
 	sarr = strings.Split(outs, "\n")
 	for i = 0; i < len(sarr); i++ {
 		l = sarr[i]
-		logutil.Debug("l[%s]", l)
 		l = strings.TrimRight(l, "\r")
-		logutil.Debug("[%d]=[%s]", i, l)
 		if !headone {
 			carr = spreg.Split(l, -1)
 			if len(carr) <= 1 {
 				continue
 			}
 			headone = true
-			logutil.Debug("carr[0] [%s]", carr[0])
-			if carr[0] == "ParentProcessId" {
+			//logutil.Debug("carr[0] [%s]", carr[0])
+			if strings.ToLower(carr[0]) == "parentprocessid" {
 				ppidx = 0
 				pidx = 1
-			} else if carr[0] == "ProcessId" {
+			} else if strings.ToLower(carr[0]) == "processid" {
 				pidx = 0
 				ppidx = 1
 			} else {
@@ -189,7 +187,7 @@ func GetChildProcs(pid int) (retp *ChildProcs, err error) {
 						} else {
 							vmap[nv] = []int{curpid}
 						}
-						logutil.Debug("add [%s] = %v", nv, vmap[nv])
+						//logutil.Debug("add [%s] = %v", nv, vmap[nv])
 					}
 				}
 			}
