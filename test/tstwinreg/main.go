@@ -5,9 +5,9 @@ import (
 	"executil"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
+	"github.com/tebeka/atexit"
+	"logutil"
 	"os"
-	"runtime"
-	"strconv"
 	"strings"
 	"winpriv"
 	"winreg"
@@ -21,6 +21,9 @@ func init() {
 	Deleteregvalue_handler(nil, nil, nil)
 	Clearroutetable_handler(nil, nil, nil)
 	Setpriv_handler(nil, nil, nil)
+	Loadhive_handler(nil, nil, nil)
+	Unloadhive_handler(nil, nil, nil)
+	Savehive_handler(nil, nil, nil)
 }
 
 func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
@@ -29,6 +32,7 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 	commandline_fmt = `{
 		"regsubkey" : "SYSTEM\\CurrentControlSet\\Control\\Idvtools\\BTVMTOOL",
 		"regpath" : "routetable",
+		"regkey" : "HKLM",
 		"ReadRegString<Readregstring_handler>## root path key to read registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
 			"$" : "+"
 		},
@@ -49,6 +53,15 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"setpriv<Setpriv_handler>##privname ... to set priv##" : {
 			"$" : "+"
+		},
+		"loadhive<Loadhive_handler>##file subkey to load hive ##" : {
+			"$" : 2
+		},
+		"unloadhive<Unloadhive_handler>##subkey to unload hive##" : {
+			"$" : 1
+		},
+		"savehive<Savehive_handler>##file subkey to save hive##" : {
+			"$" : 2
 		}
 	}`
 
@@ -262,47 +275,107 @@ func Setpriv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return nil
 }
 
-var (
-	global_verbose_mode int
-)
-
-func get_verbose_mode() int {
-	return global_verbose_mode
-}
-
-func Set_verbose_callback(ns *extargsparse.NameSpaceEx, validx int, keycls *extargsparse.ExtKeyParse, params []string) (step int, err error) {
+func Loadhive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var subkey string
+	var file string
+	var root string
+	err = nil
 	if ns == nil {
-		return 0, nil
+		err = nil
+		return
 	}
-	if (validx + 1) > len(params) {
-		return 0, dbgutil.FormatError("[%d+1] > len(%d) %v", validx, len(params), params)
-	}
-	global_verbose_mode, err = strconv.Atoi(params[validx])
+
+	err = logutil.InitLog(ns)
 	if err != nil {
-		err = dbgutil.FormatError("parse [%s] not valid number", params[validx])
-		return 0, err
+		return
 	}
-	return 1, nil
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need file subkey")
+		return
+	}
+
+	root = ns.GetString("regkey")
+	subkey = sarr[1]
+	file = sarr[0]
+
+	err = winreg.LoadHive(file, root, subkey)
+	if err != nil {
+		return
+	}
+	fmt.Printf("load [%s] => [%s].[%s] succ\n", file, root, subkey)
+
+	return nil
 }
 
-func VerboseLoadFlag(parser *extargsparse.ExtArgsParse) (err error) {
-	var commandline string
-	commandline = `
-	{
-		"verbose|V!optparse=Set_verbose_callback!##verbose mode set##" : 0
+func Unloadhive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var subkey string
+	var root string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
 	}
-	`
-	err = parser.LoadCommandLineString(commandline)
-	return
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("need subkey")
+		return
+	}
+
+	root = ns.GetString("regkey")
+	subkey = sarr[0]
+
+	err = winreg.UnLoadHive(root, subkey)
+	if err != nil {
+		return
+	}
+	fmt.Printf("unload [%s].[%s] succ\n", root, subkey)
+
+	return nil
 }
 
-func Error(format string, a ...interface{}) int {
-	_, f, l, _ := runtime.Caller(1)
-	s := fmt.Sprintf("[%s:%d]\t", f, l)
-	s += fmt.Sprintf(format, a...)
-	s += "\n"
-	fmt.Fprint(os.Stderr, s)
-	return len(s)
+func Savehive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var subkey string
+	var file string
+	var root string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need file subkey")
+		return
+	}
+
+	root = ns.GetString("regkey")
+	subkey = sarr[1]
+	file = sarr[0]
+
+	err = winreg.SaveHive(file, root, subkey)
+	if err != nil {
+		return
+	}
+	fmt.Printf("saves [%s].[%s] => [%s]  succ\n", root, subkey, file)
+
+	return nil
 }
 
 func main() {
@@ -310,25 +383,26 @@ func main() {
 	var err error
 	parser, err = extargsparse.NewExtArgsParse(nil, nil)
 	if err != nil {
-		Error("%s", err.Error())
-		os.Exit(5)
+		logutil.Error("%s", err.Error())
+		atexit.Exit(5)
 	}
 
-	err = VerboseLoadFlag(parser)
-	if err != nil {
-		Error("%s", err.Error())
-		os.Exit(5)
-	}
 	err = LoadRegCmdFlags(parser)
 	if err != nil {
-		Error("%s", err.Error())
-		os.Exit(5)
+		logutil.Error("%s", err.Error())
+		atexit.Exit(5)
+	}
+
+	err = logutil.PrepareLog(parser)
+	if err != nil {
+		logutil.Error("%s", err.Error())
+		atexit.Exit(5)
 	}
 
 	_, err = parser.ParseCommandLine(nil, nil)
 	if err != nil {
-		Error("%s", err.Error())
-		os.Exit(4)
+		logutil.Error("%s", err.Error())
+		atexit.Exit(4)
 	}
-	os.Exit(0)
+	atexit.Exit(0)
 }

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
+	"winpriv"
 )
 
 var st_RootKeyMap map[string]registry.Key
@@ -30,6 +31,7 @@ const (
 	HKU_ROOT      = "HKU"
 	HKCC_ROOT     = "HKCC"
 	HKCR_ROOT     = "HKCR"
+	USERS_ROOT    = "USERS"
 	REG_ALL       = "ALL"
 	REG_EXECUTE   = "EXECUTE"
 	REG_QUERY     = "QUERY_VALUE"
@@ -46,6 +48,7 @@ func init() {
 	st_RootKeyMap[HKCR_ROOT] = registry.CLASSES_ROOT
 	st_RootKeyMap[HKU_ROOT] = registry.USERS
 	st_RootKeyMap[HKCC_ROOT] = registry.CURRENT_CONFIG
+	st_RootKeyMap[USERS_ROOT] = registry.USERS
 	st_AccessMap = make(map[string]uint32)
 	st_AccessMap[REG_ALL] = registry.ALL_ACCESS
 	st_AccessMap[REG_EXECUTE] = registry.EXECUTE
@@ -431,5 +434,119 @@ func EnumerateRegValueKeys(root, path string, maxnum int) (valkeys []string, err
 	if err != nil {
 		err = dbgutil.FormatError("valuekeys error(%s)", err.Error())
 	}
+	return
+}
+
+func LoadHive(file, root, subkey string) (err error) {
+	var hkey registry.Key
+	var ufile *uint16
+	var usubkey *uint16
+	var r0 uintptr
+	ufile, err = syscall.UTF16PtrFromString(file)
+	if err != nil {
+		err = dbgutil.FormatError("UTF16 from [%s] error[%s]", file, err.Error())
+		return
+	}
+	usubkey, err = syscall.UTF16PtrFromString(subkey)
+	if err != nil {
+		err = dbgutil.FormatError("UTF16 from [%s] error[%s]", subkey, err.Error())
+		return
+	}
+
+	hkey, err = getRootKey(root)
+	if err != nil {
+		return
+	}
+
+	err = winpriv.SetPrivLedge(winpriv.SE_RESTORE_NAME, true)
+	if err != nil {
+		return
+	}
+	defer winpriv.SetPrivLedge(winpriv.SE_RESTORE_NAME, false)
+	err = winpriv.SetPrivLedge(winpriv.SE_BACKUP_NAME, true)
+	if err != nil {
+		return
+	}
+	defer winpriv.SetPrivLedge(winpriv.SE_BACKUP_NAME, false)
+
+	r0, _, _ = syscall.Syscall6(procRegLoadKeyW.Addr(), 3, uintptr(syscall.Handle(hkey)), uintptr(unsafe.Pointer(usubkey)), uintptr(unsafe.Pointer(ufile)), 0, 0, 0)
+	if r0 != 0 {
+		err = dbgutil.FormatError("load [%s] => [%s].[%s] error[%d]", file, root, subkey, r0)
+		return
+	}
+	err = nil
+	return
+}
+
+func UnLoadHive(root, subkey string) (err error) {
+	var hkey registry.Key
+	var usubkey *uint16
+	var r0 uintptr
+	usubkey, err = syscall.UTF16PtrFromString(subkey)
+	if err != nil {
+		err = dbgutil.FormatError("UTF16 from [%s] error[%s]", subkey, err.Error())
+		return
+	}
+
+	hkey, err = getRootKey(root)
+	if err != nil {
+		return
+	}
+
+	err = winpriv.SetPrivLedge(winpriv.SE_RESTORE_NAME, true)
+	if err != nil {
+		return
+	}
+	defer winpriv.SetPrivLedge(winpriv.SE_RESTORE_NAME, false)
+	err = winpriv.SetPrivLedge(winpriv.SE_BACKUP_NAME, true)
+	if err != nil {
+		return
+	}
+	defer winpriv.SetPrivLedge(winpriv.SE_BACKUP_NAME, false)
+
+	r0, _, _ = syscall.Syscall6(procRegUnLoadKeyW.Addr(), 2, uintptr(syscall.Handle(hkey)), uintptr(unsafe.Pointer(usubkey)), 0, 0, 0, 0)
+	if r0 != 0 {
+		err = dbgutil.FormatError("unload [%s].[%s] error[%d]", root, subkey, r0)
+		return
+	}
+	err = nil
+	return
+}
+
+func SaveHive(file, root, subkey string) (err error) {
+	var hkey registry.Key
+	var ufile *uint16
+	var r0 uintptr
+	var k registry.Key
+	ufile, err = syscall.UTF16PtrFromString(file)
+	if err != nil {
+		err = dbgutil.FormatError("UTF16 from [%s] error[%s]", file, err.Error())
+		return
+	}
+
+	hkey, err = getRootKey(root)
+	if err != nil {
+		return
+	}
+
+	k, err = registry.OpenKey(hkey, subkey, registry.READ)
+	if err != nil {
+		err = dbgutil.FormatError("open [%s].[%s] error[%s]", root, subkey, err.Error())
+		return
+	}
+	defer k.Close()
+
+	err = winpriv.SetPrivLedge(winpriv.SE_BACKUP_NAME, true)
+	if err != nil {
+		return
+	}
+	defer winpriv.SetPrivLedge(winpriv.SE_BACKUP_NAME, false)
+
+	r0, _, _ = syscall.Syscall6(procRegSaveKeyW.Addr(), 3, uintptr(syscall.Handle(k)), uintptr(unsafe.Pointer(ufile)), 0, 0, 0, 0)
+	if r0 != 0 {
+		err = dbgutil.FormatError("save [%s].[%s] => [%s] error[%d]", root, subkey, file, r0)
+		return
+	}
+	err = nil
 	return
 }
