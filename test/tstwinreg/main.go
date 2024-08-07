@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"winpriv"
 	"winreg"
 )
 
@@ -19,6 +20,7 @@ func init() {
 	Deleteregkey_handler(nil, nil, nil)
 	Deleteregvalue_handler(nil, nil, nil)
 	Clearroutetable_handler(nil, nil, nil)
+	Setpriv_handler(nil, nil, nil)
 }
 
 func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
@@ -44,6 +46,9 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"Clearroutetable<Clearroutetable_handler>## to clear root table default for regsubkey regpath ##"  : {
 			"$" : 0
+		},
+		"setpriv<Setpriv_handler>##privname ... to set priv##" : {
+			"$" : "+"
 		}
 	}`
 
@@ -225,6 +230,33 @@ func Clearroutetable_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, 
 	err = winreg.DeleteRegValue(root, path, key)
 	if err != nil {
 		return
+	}
+
+	return nil
+}
+
+func Setpriv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var i int
+	var priv string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	for i = 0; i < len(sarr); i++ {
+		priv = sarr[i]
+		err = winpriv.SetPrivLedge(priv, true)
+		if err != nil {
+			return
+		}
+		err = winpriv.SetPrivLedge(priv, false)
+		if err != nil {
+			return
+		}
+		fmt.Printf("set/unset [%s] succ\n", priv)
 	}
 
 	return nil

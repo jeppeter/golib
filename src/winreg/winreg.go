@@ -3,6 +3,7 @@ package winreg
 import (
 	"dbgutil"
 	"fmt"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 	"reflect"
 	"strconv"
@@ -14,6 +15,14 @@ import (
 
 var st_RootKeyMap map[string]registry.Key
 var st_AccessMap map[string]uint32
+var (
+	modadvapi32 = windows.NewLazySystemDLL("advapi32.dll")
+	modkernel32 = windows.NewLazySystemDLL("kernel32.dll")
+
+	procRegLoadKeyW   = modadvapi32.NewProc("RegLoadKeyW")
+	procRegUnLoadKeyW = modadvapi32.NewProc("RegUnLoadKeyW")
+	procRegSaveKeyW   = modadvapi32.NewProc("RegSaveKeyW")
+)
 
 const (
 	HKLM_ROOT     = "HKLM"
