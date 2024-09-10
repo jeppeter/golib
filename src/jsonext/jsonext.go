@@ -923,6 +923,41 @@ func GetJsonValueInt(path string, vmap map[string]interface{}) (val int, err err
 	return
 }
 
+func GetJsonValueUint64(path string, vmap map[string]interface{}) (val uint64, err error) {
+	var types string
+	var vinter interface{}
+	var v32 uint32
+	var f32 float32
+	var f64 float64
+	var ival int
+
+	vinter, types, err = __GetJsonValueInterface(path, vmap)
+	if err != nil {
+		return
+	}
+	switch types {
+	case "int":
+		ival = vinter.(int)
+		val = uint64(ival)
+	case "uint32":
+		v32 = vinter.(uint32)
+		val = uint64(v32)
+	case "uint64":
+		val = vinter.(uint64)
+	case "float32":
+		f32 = vinter.(float32)
+		val = uint64(f32)
+	case "float64":
+		f64 = vinter.(float64)
+		val = uint64(f64)
+	default:
+		err = dbgutil.FormatError("[%s] type %s", path, types)
+		return
+	}
+	err = nil
+	return
+}
+
 func GetJsonValueFloat(path string, vmap map[string]interface{}) (val float64, err error) {
 	var types string
 	var vinter interface{}
