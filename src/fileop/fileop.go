@@ -87,6 +87,22 @@ func DeleteFile(fname string) (err error) {
 	return
 }
 
+func ExistFile(fname string) (bval bool) {
+	var err error
+	bval = false
+	_, err = os.Stat(fname)
+	if err == nil {
+		bval = true
+	} else {
+		if os.IsNotExist(err) {
+			bval = false
+		} else {
+			bval = true
+		}
+	}
+	return bval
+}
+
 func GetExeDir() (dirname string, err error) {
 	var paths []string
 	var envpath string

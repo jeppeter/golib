@@ -630,6 +630,7 @@ func init() {
 	Normpath_handler(nil, nil, nil)
 	Cmprtver_handler(nil, nil, nil)
 	Logtest_handler(nil, nil, nil)
+	Existfile_handler(nil, nil, nil)
 }
 
 func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -801,6 +802,34 @@ func Logtest_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
+func Existfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var bstr string
+	var bval bool
+	var f string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	logutil.InitLog(ns)
+
+	sarr = ns.GetArray("subnargs")
+	for _, f = range sarr {
+		bval = fileop.ExistFile(f)
+		if bval {
+			bstr = "Exist"
+		} else {
+			bstr = "Not Exist"
+		}
+		fmt.Printf("%s %s\n", f, bstr)
+	}
+
+	err = nil
+	return
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -861,6 +890,9 @@ func main() {
 		},
 		"logtest<Logtest_handler>##[num] to debug loglines default 10##" : {
 			"$" : "?"
+		},
+		"existfile<Existfile_handler>##file ... to test file exist##" : {
+			"$" : "+"
 		}
 
 	}`
