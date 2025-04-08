@@ -5,13 +5,31 @@ import (
 	"dbgutil"
 	"fmt"
 	"logutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
 )
+
+func _exist_file(fname string) (bval bool) {
+	var err error
+	bval = false
+	_, err = os.Stat(fname)
+	if err == nil {
+		bval = true
+	} else {
+		if os.IsNotExist(err) {
+			bval = false
+		} else {
+			bval = true
+		}
+	}
+	return bval
+}
 
 func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, exitcode int, err error) {
 	var stime time.Time
@@ -24,7 +42,26 @@ func RunCmdTimeout(cmds []string, timeout int) (outstr string, errstr string, ex
 	var cmd *exec.Cmd
 	var waiting int = 1
 	const da = syscall.STANDARD_RIGHTS_READ | syscall.PROCESS_QUERY_INFORMATION | syscall.SYNCHRONIZE
+
 	logutil.Trace("cmds %v", cmds)
+	if len(cmds) > 0 && !filepath.IsAbs(cmds[0]) {
+		var pathenv string
+		pathenv = os.Getenv("PATH")
+		if len(pathenv) > 0 {
+			var nsarr []string
+			var curdir string
+			nsarr = strings.Split(pathenv, ";")
+			for _, curdir = range nsarr {
+				var curexe string
+				curexe = fmt.Sprintf("%s\\%s", curdir, cmds[0])
+				if _exist_file(curexe) {
+					cmds[0] = curexe
+					break
+				}
+			}
+		}
+	}
+
 	cmd = &exec.Cmd{}
 	cmd.Path = cmds[0]
 	cmd.Args = cmds
