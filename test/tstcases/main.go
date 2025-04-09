@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"strop"
 	"time"
 	"unicode/utf8"
 )
@@ -631,6 +632,8 @@ func init() {
 	Cmprtver_handler(nil, nil, nil)
 	Logtest_handler(nil, nil, nil)
 	Existfile_handler(nil, nil, nil)
+	Encbase64_handler(nil, nil, nil)
+	Decbase64_handler(nil, nil, nil)
 }
 
 func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -830,6 +833,88 @@ func Existfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+func Encbase64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var infile string
+	var outfile string
+	var inbytes []byte
+	var base64str string
+	var outs string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	logutil.InitLog(ns)
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need infile outfile")
+		return
+	}
+	infile = sarr[0]
+	outfile = sarr[1]
+
+	inbytes, err = fileop.ReadFileBytes(infile)
+	if err != nil {
+		return
+	}
+
+	base64str = strop.EncodeBase64(inbytes)
+	outs = strop.Base64SplitLines(base64str, 76)
+	_, err = fileop.WriteFile(outfile, outs)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("encode base64 [%s] => [%s] succ\n", infile, outfile)
+	return
+}
+
+func Decbase64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var infile string
+	var outfile string
+	var outb []byte
+	var base64str string
+	var ins string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	logutil.InitLog(ns)
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need infile outfile")
+		return
+	}
+	infile = sarr[0]
+	outfile = sarr[1]
+
+	ins, err = fileop.ReadFile(infile)
+	if err != nil {
+		return
+	}
+
+	base64str = strop.Base64CompactLine(ins)
+	outb, err = strop.DecodeBase64(base64str)
+	if err != nil {
+		return
+	}
+
+	_, err = fileop.WriteFileBytes(outfile, outb)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("decode base64 [%s] => [%s] succ\n", infile, outfile)
+	return
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -893,6 +978,12 @@ func main() {
 		},
 		"existfile<Existfile_handler>##file ... to test file exist##" : {
 			"$" : "+"
+		},
+		"encbase64<Encbase64_handler>##infile outfile to encode base64##" : {
+			"$" : 2
+		},
+		"decbase64<Decbase64_handler>##infile outfile to decode base64##" : {
+			"$" : 2
 		}
 
 	}`
@@ -923,7 +1014,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "can not get subcommand\n")
 		atexit.Exit(5)
 	}
-	fmt.Fprintf(os.Stdout, "subcommand [%s] succ\n", ns.GetString("subcommand"))
+	//fmt.Fprintf(os.Stdout, "subcommand [%s] succ\n", ns.GetString("subcommand"))
 	atexit.Exit(0)
 	return
 }

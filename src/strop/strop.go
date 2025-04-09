@@ -1,6 +1,7 @@
 package strop
 
 import (
+	"encoding/base64"
 	"strings"
 )
 
@@ -31,5 +32,52 @@ func QuoteString(s string) (rets string) {
 	retb = append(retb, byte('"'))
 
 	rets = string(retb)
+	return
+}
+
+func EncodeBase64(inb []byte) (rets string) {
+	rets = base64.StdEncoding.EncodeToString(inb)
+	return
+}
+
+func DecodeBase64(ins string) (retb []byte, err error) {
+	retb, err = base64.StdEncoding.DecodeString(ins)
+	return
+}
+
+func Base64SplitLines(ins string, linelen int) (outs string) {
+	/*all are ascii so make bytes*/
+	var inb []byte
+	var ridx int
+	var cursize int
+	var curs string
+	inb = []byte(ins)
+	outs = ""
+	ridx = 0
+	for ridx < len(inb) {
+		if ridx > 0 {
+			outs += "\n"
+		}
+		cursize = linelen
+		if (cursize + ridx) > len(inb) {
+			cursize = len(inb) - ridx
+		}
+		curs = string(inb[ridx:(ridx + cursize)])
+		outs += curs
+		ridx += cursize
+	}
+	return
+}
+
+func Base64CompactLine(ins string) (outs string) {
+	var sarr []string
+	var idx int
+	var curs string
+	outs = ""
+	sarr = strings.Split(ins, "\n")
+	for idx = 0; idx < len(sarr); idx += 1 {
+		curs = strings.TrimRight(sarr[idx], "\r")
+		outs += curs
+	}
 	return
 }
