@@ -1,8 +1,12 @@
 package strop
 
 import (
+	"dbgutil"
 	"encoding/base64"
+	"fmt"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 func SplitLines(ins string) (retsarr []string) {
@@ -79,5 +83,70 @@ func Base64CompactLine(ins string) (outs string) {
 		curs = strings.TrimRight(sarr[idx], "\r")
 		outs += curs
 	}
+	return
+}
+
+func StringToUnicode(ins string) (outb []byte) {
+	var inb []byte
+	var idx int
+	var r rune
+	var retn int
+	var i int
+	var curval int
+	inb = []byte(ins)
+	outb = []byte{}
+
+	idx = 0
+	for idx < len(inb) {
+		r, retn = utf8.DecodeRune(inb[idx:])
+		for i = 0; i < 2; i++ {
+			curval = int(r)
+			curval = (curval >> (i * 8)) & 0xff
+			outb = append(outb, byte(curval))
+		}
+		idx += retn
+	}
+	return
+}
+
+func UnicodeToString(inbytes []byte) (outs string, err error) {
+	var s string
+	var idx, j, retn int
+	var r rune
+	var rs []rune
+	var ps string
+	var buf []byte
+	var curval int
+	var outbytes []byte
+	outbytes = []byte{}
+	err = nil
+
+	ps = "\""
+	for idx = 0; idx < (len(inbytes) - 1); idx += 2 {
+		curval = 0
+		curval += int(inbytes[idx])
+		curval += (int(inbytes[idx+1]) << 8)
+		ps += fmt.Sprintf("\\u%04x", curval)
+	}
+	ps += "\""
+	s, err = strconv.Unquote(ps)
+	if err != nil {
+		err = dbgutil.FormatError("[%s] error [%s]", ps, err.Error())
+		return
+	}
+
+	buf = make([]byte, 10)
+
+	idx = 0
+	rs = []rune(s)
+	for idx = 0; idx < len(rs); idx++ {
+		r = rs[idx]
+		retn = utf8.EncodeRune(buf, r)
+		for j = 0; j < retn; j++ {
+			outbytes = append(outbytes, buf[j])
+		}
+	}
+	outs = string(outbytes)
+	err = nil
 	return
 }

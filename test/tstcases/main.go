@@ -634,6 +634,7 @@ func init() {
 	Existfile_handler(nil, nil, nil)
 	Encbase64_handler(nil, nil, nil)
 	Decbase64_handler(nil, nil, nil)
+	Printbytes_handler(nil, nil, nil)
 }
 
 func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -915,6 +916,39 @@ func Decbase64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+func Printbytes_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var outb []byte
+	var uni []byte
+	var idx int
+	var outs string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	logutil.InitLog(ns)
+
+	sarr = ns.GetArray("subnargs")
+
+	for idx = 0; idx < len(sarr); idx += 1 {
+		outb = []byte(sarr[idx])
+		fmt.Printf("[%d]=[%s]\n", idx, sarr[idx])
+		uni = strop.StringToUnicode(sarr[idx])
+		fmt.Fprintf(os.Stdout, "%s", out_bytes(outb, "bytes"))
+		fmt.Fprintf(os.Stdout, "%s", out_bytes(uni, "unicode"))
+		outs, err = strop.UnicodeToString(uni)
+		if err != nil {
+			return
+		}
+		fmt.Printf("from uni [%s]\n", outs)
+	}
+	err = nil
+	return
+
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -984,6 +1018,9 @@ func main() {
 		},
 		"decbase64<Decbase64_handler>##infile outfile to decode base64##" : {
 			"$" : 2
+		},
+		"printbytes<Printbytes_handler>##args ... to print byte##" : {
+			"$" : "+"
 		}
 
 	}`
