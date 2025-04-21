@@ -3,10 +3,12 @@ package main
 import (
 	"dbgutil"
 	"executil"
+	"fileop"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"github.com/tebeka/atexit"
 	"logutil"
+	"npipepack"
 	"os"
 	"strings"
 	"winpriv"
@@ -24,6 +26,8 @@ func init() {
 	Loadhive_handler(nil, nil, nil)
 	Unloadhive_handler(nil, nil, nil)
 	Savehive_handler(nil, nil, nil)
+	Npsvr_handler(nil, nil, nil)
+	Npcli_handler(nil, nil, nil)
 }
 
 func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
@@ -62,6 +66,12 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"savehive<Savehive_handler>##file subkey to save hive##" : {
 			"$" : 2
+		},
+		"npsvr<Npsvr_handler>##pipename to listen on pipe##" : {
+			"$" : 1
+		},
+		"npcli<Npcli_handler>##pipename jsonfile ... to write json and wait##" : {
+			"$" : "+"
 		}
 	}`
 
@@ -376,6 +386,141 @@ func Savehive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	fmt.Printf("saves [%s].[%s] => [%s]  succ\n", root, subkey, file)
 
 	return nil
+}
+
+func Npsvr_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var npsvr *npipepack.NpipeSock = nil
+	var npacc *npipepack.NpipeSock = nil
+	var ndata *npipepack.NpipeData = nil
+	var pipename string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	pipename = sarr[0]
+
+try_bind_again:
+	if npacc != nil {
+		npacc.Close()
+		npacc = nil
+	}
+
+	if npsvr != nil {
+		npsvr.Close()
+		npsvr = nil
+	}
+
+	npsvr, err = npipepack.BindPipe(pipename, 500)
+	if err != nil {
+		logutil.Error("can not bind [%s] error [%s]", pipename, err.Error())
+		goto try_bind_again
+	}
+
+	logutil.Debug("listen on [%s]", pipename)
+try_accept:
+	npacc, err = npsvr.AcceptTimeout()
+	if err != nil {
+		logutil.Error("can not accept [%s] error [%s]", pipename, err.Error())
+		goto try_bind_again
+	}
+
+	if npacc == nil {
+		goto try_accept
+	}
+
+	logutil.Debug("accept [%s]", pipename)
+
+	for {
+		ndata, err = npacc.ReadpacketTimeout()
+		if err != nil {
+			logutil.Error("read [%s] error [%s]", pipename, err.Error())
+			goto try_bind_again
+		}
+
+		if ndata == nil {
+			continue
+		}
+
+		logutil.Debug("read [%s]\n%s", pipename, ndata.GetStr())
+		err = npacc.WritePacket(ndata)
+		if err != nil {
+			logutil.Error("write [%s] error [%s]\n%s", pipename, err.Error(), ndata.GetStr())
+			goto try_bind_again
+		}
+	}
+
+	return
+}
+
+func Npcli_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var npcli *npipepack.NpipeSock = nil
+	var ndata *npipepack.NpipeData
+	var pipename string
+	var f string
+	var idx int
+	var s string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	pipename = sarr[0]
+
+	npcli, err = npipepack.ConnPipe(pipename, 500, 500)
+	if err != nil {
+		return
+	}
+
+	defer npcli.Close()
+
+	for idx = 1; idx < len(sarr); idx += 1 {
+		f = sarr[idx]
+		ndata = npipepack.NewNpipeData()
+		s, err = fileop.ReadFile(f)
+		if err != nil {
+			return
+		}
+		ndata.SetStr(s)
+		err = npcli.WritePacket(ndata)
+		if err != nil {
+			logutil.Error("[%s] write [%s]\n%s", pipename, err.Error(), s)
+			return
+		}
+
+		for {
+			ndata, err = npcli.ReadpacketTimeout()
+			if err != nil {
+				return
+			}
+			if ndata == nil {
+				continue
+			}
+
+			logutil.Debug("read [%s]\n%s", pipename, ndata.GetStr())
+			break
+		}
+	}
+
+	err = nil
+
+	return
 }
 
 func main() {
