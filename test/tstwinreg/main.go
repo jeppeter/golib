@@ -410,11 +410,13 @@ func Npsvr_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 
 try_bind_again:
 	if npacc != nil {
+		logutil.Debug("close acc [%s]", pipename)
 		npacc.Close()
 		npacc = nil
 	}
 
 	if npsvr != nil {
+		logutil.Debug("close svr [%s]", pipename)
 		npsvr.Close()
 		npsvr = nil
 	}
