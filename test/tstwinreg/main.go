@@ -489,6 +489,7 @@ func Npcli_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 	if err != nil {
 		return
 	}
+	logutil.Debug("connnect [%s]", pipename)
 
 	defer npcli.Close()
 
@@ -500,6 +501,7 @@ func Npcli_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 			return
 		}
 		ndata.SetStr(s)
+		logutil.Debug("send [%s]\n%s", pipename, s)
 		err = npcli.WritePacket(ndata)
 		if err != nil {
 			logutil.Error("[%s] write [%s]\n%s", pipename, err.Error(), s)
