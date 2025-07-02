@@ -411,3 +411,12 @@ func (retv *XmlExt) GetChilds(path string) (retn []string, err error) {
 	retn, err = retv.inner.getchilds(path)
 	return
 }
+
+func (retv *XmlExt) GetChildsMust(path string) (retn []string) {
+	var err error
+	retn, err = retv.inner.getchilds(path)
+	if err != nil {
+		panic(err.Error())
+	}
+	return
+}
