@@ -294,6 +294,15 @@ func (retv *XmlExt) GetAttrs(path string) (map[string]string, error) {
 	return retv.inner.getattrs(path)
 }
 
+func (retv *XmlExt) GetAttrsMust(path string) (retn map[string]string) {
+	var err error
+	retn, err = retv.GetAttrs(path)
+	if err != nil {
+		panic(err.Error())
+	}
+	return
+}
+
 func (cmap *xmlmap) getvalue(path string) (retv string, err error) {
 	var sarr []string
 	var k string
@@ -333,10 +342,72 @@ func (cmap *xmlmap) getvalue(path string) (retv string, err error) {
 	retv = cmap.val
 	err = nil
 	return
-
 }
 
 func (retv *XmlExt) GetValue(path string) (retn string, err error) {
 	retn, err = retv.inner.getvalue(path)
+	return
+}
+
+func (retv *XmlExt) GetValueMust(path string) (retn string) {
+	var err error
+	retn, err = retv.inner.getvalue(path)
+	if err != nil {
+		panic(err.Error())
+	}
+	return
+}
+
+func (cmap *xmlmap) _inner_chld_keys() []string {
+	var retv []string = []string{}
+	for k, _ := range cmap.chlds {
+		retv = append(retv, k)
+	}
+	return retv
+}
+
+func (cmap *xmlmap) getchilds(path string) (retv []string, err error) {
+	var sarr []string
+	var k string
+	var nk string
+	var nextchld *xmlmap
+	var ok bool
+	var idx int
+
+	if path == "" {
+		retv = cmap._inner_chld_keys()
+		err = nil
+		return
+	}
+	sarr = strings.Split(path, "/")
+	if len(sarr) < 1 {
+		return
+	}
+
+	for idx = 0; idx < len(sarr); idx += 1 {
+		if len(sarr[idx]) == 0 {
+			continue
+		}
+		k = sarr[idx]
+		nextchld, ok = cmap.chlds[k]
+		if !ok {
+			err = dbgutil.FormatError("can not get [%s]", k)
+			return
+		}
+		if len(sarr) > idx {
+			nk = strings.Join(sarr[idx+1:], "/")
+		} else {
+			nk = ""
+		}
+
+		return nextchld.getchilds(nk)
+	}
+	retv = cmap._inner_chld_keys()
+	err = nil
+	return
+}
+
+func (retv *XmlExt) GetChilds(path string) (retn []string, err error) {
+	retn, err = retv.inner.getchilds(path)
 	return
 }
