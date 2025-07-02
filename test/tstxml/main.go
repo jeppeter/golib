@@ -15,6 +15,7 @@ func Xmlparse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	var f string
 	var ins string
 	var xext *xmlext.XmlExt
+	var attrs map[string]string
 	err = nil
 	if ns == nil {
 		return
@@ -34,7 +35,14 @@ func Xmlparse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 		if err != nil {
 			return
 		}
-		fmt.Printf("[%s] format\n%s", xext.String())
+		attrs, err = xext.GetAttrs("")
+		if err != nil {
+			return
+		}
+		fmt.Printf("format\n%s\nindent\n%s\n", xext.String(), xext.Ident(0))
+		for k, v := range attrs {
+			fmt.Printf("[%s]=[%s]\n", k, v)
+		}
 	}
 
 	return
