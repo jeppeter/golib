@@ -293,3 +293,50 @@ func (cmap *xmlmap) getattrs(path string) (retv map[string]string, err error) {
 func (retv *XmlExt) GetAttrs(path string) (map[string]string, error) {
 	return retv.inner.getattrs(path)
 }
+
+func (cmap *xmlmap) getvalue(path string) (retv string, err error) {
+	var sarr []string
+	var k string
+	var nk string
+	var nextchld *xmlmap
+	var ok bool
+	var idx int
+
+	if path == "" {
+		retv = cmap.val
+		err = nil
+		return
+	}
+	sarr = strings.Split(path, "/")
+	if len(sarr) < 1 {
+		return
+	}
+
+	for idx = 0; idx < len(sarr); idx += 1 {
+		if len(sarr[idx]) == 0 {
+			continue
+		}
+		k = sarr[idx]
+		nextchld, ok = cmap.chlds[k]
+		if !ok {
+			err = dbgutil.FormatError("can not get [%s]", k)
+			return
+		}
+		if len(sarr) > idx {
+			nk = strings.Join(sarr[idx+1:], "/")
+		} else {
+			nk = ""
+		}
+
+		return nextchld.getvalue(nk)
+	}
+	retv = cmap.val
+	err = nil
+	return
+
+}
+
+func (retv *XmlExt) GetValue(path string) (retn string, err error) {
+	retn, err = retv.inner.getvalue(path)
+	return
+}
