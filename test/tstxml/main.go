@@ -82,42 +82,65 @@ func Getset_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	}
 
 	for _, f = range sarr {
-		kvarr = strings.SplitN(f, "=", 2)
-		if len(kvarr) == 1 {
-			pattr = strings.SplitN(kvarr[0], ".", 2)
-			if len(pattr) == 2 {
-				val, err = xext.GetAttrValue(pattr[0], pattr[1])
+		if strings.HasPrefix(f, "#") {
+			val = strings.Replace(f, "#", "", -1)
+			kvarr = strings.SplitN(val, ".", 2)
+			if len(kvarr) == 1 {
+				err = xext.DelElem(kvarr[0])
 				if err != nil {
-					logutil.Error("can not get [%s].[%s] error %s", pattr[0], pattr[1], err.Error())
+					logutil.Error("del [%s] error %s", kvarr[0], err.Error())
 				} else {
-					fmt.Printf("[%s].[%s] value [%s]\n", pattr[0], pattr[1], val)
+					fmt.Printf("del [%s] succ\n", kvarr[0])
 				}
 			} else {
-				val, err = xext.GetValue(pattr[0])
+				err = xext.DelAttr(kvarr[0], kvarr[1])
 				if err != nil {
-					logutil.Error("can not get [%s] error %s", pattr[0], err.Error())
+					logutil.Error("delattr [%s].[%s] error %s", kvarr[0], kvarr[1], err.Error())
 				} else {
-					fmt.Printf("[%s] value [%s]\n", pattr[0], val)
+					fmt.Printf("del [%s].[%s] succ\n", kvarr[0], kvarr[1])
 				}
 			}
+
 		} else {
-			pattr = strings.SplitN(kvarr[0], ".", 2)
-			if len(pattr) == 2 {
-				val, err = xext.SetAttr(pattr[0], pattr[1], kvarr[1])
-				if err != nil {
-					logutil.Error("can not set [%s].[%s] = [%s] error %s", pattr[0], pattr[1], kvarr[1], err.Error())
+			kvarr = strings.SplitN(f, "=", 2)
+			if len(kvarr) == 1 {
+				pattr = strings.SplitN(kvarr[0], ".", 2)
+				if len(pattr) == 2 {
+					val, err = xext.GetAttrValue(pattr[0], pattr[1])
+					if err != nil {
+						logutil.Error("can not get [%s].[%s] error %s", pattr[0], pattr[1], err.Error())
+					} else {
+						fmt.Printf("[%s].[%s] value [%s]\n", pattr[0], pattr[1], val)
+					}
 				} else {
-					fmt.Printf("[%s].[%s] = [%s] retval [%s]\n", pattr[0], pattr[1], kvarr[1], val)
+					val, err = xext.GetValue(pattr[0])
+					if err != nil {
+						logutil.Error("can not get [%s] error %s", pattr[0], err.Error())
+					} else {
+						fmt.Printf("[%s] value [%s]\n", pattr[0], val)
+					}
 				}
 			} else {
-				val, err = xext.SetValue(pattr[0], kvarr[1])
-				if err != nil {
-					logutil.Error("can not set [%s] = [%s] error %s", pattr[0], kvarr[1], err.Error())
+				pattr = strings.SplitN(kvarr[0], ".", 2)
+				if len(pattr) == 2 {
+					val, err = xext.SetAttr(pattr[0], pattr[1], kvarr[1])
+					if err != nil {
+						logutil.Error("can not set [%s].[%s] = [%s] error %s", pattr[0], pattr[1], kvarr[1], err.Error())
+					} else {
+						fmt.Printf("[%s].[%s] = [%s] retval [%s]\n", pattr[0], pattr[1], kvarr[1], val)
+					}
 				} else {
-					fmt.Printf("[%s] = [%s] retval [%s]\n", pattr[0], kvarr[1], val)
+					val, err = xext.SetValue(pattr[0], kvarr[1])
+					if err != nil {
+						logutil.Error("can not set [%s] = [%s] error %s", pattr[0], kvarr[1], err.Error())
+					} else {
+						fmt.Printf("[%s] = [%s] retval [%s]\n", pattr[0], kvarr[1], val)
+					}
 				}
 			}
+
 		}
+
 	}
 	outs = xext.String()
 

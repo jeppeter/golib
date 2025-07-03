@@ -336,6 +336,27 @@ func (cmap *xmlmap) call_func_set(methname string, a ...interface{}) (retv []ref
 	return
 }
 
+func (cmap *xmlmap) call_func_del(methname string, parent *xmlmap, a ...interface{}) (retv []reflect.Value, err error) {
+	var curval reflect.Value
+	var methval reflect.Value
+	var args []reflect.Value
+	var idx int
+	curval = reflect.ValueOf(cmap)
+	methval = curval.MethodByName(methname)
+	retv = []reflect.Value{}
+	if !methval.IsValid() {
+		err = dbgutil.FormatError("can not find [%s]", methname)
+		return
+	}
+	args = []reflect.Value{reflect.ValueOf(parent)}
+	for idx = 0; idx < len(a); idx += 1 {
+		args = append(args, reflect.ValueOf(a[idx]))
+	}
+	retv = methval.Call(args)
+	err = nil
+	return
+}
+
 func (cmap *xmlmap) find_function_callback_set(methname string, path string, a ...interface{}) (retv []reflect.Value, err error) {
 	var sarr []string
 	var k string
@@ -373,6 +394,43 @@ func (cmap *xmlmap) find_function_callback_set(methname string, path string, a .
 		return nextchld.find_function_callback_set(methname, nk, a...)
 	}
 	return cmap.call_func_set(methname, a...)
+}
+
+func (cmap *xmlmap) find_function_callback_del(methname string, path string, parent *xmlmap, a ...interface{}) (retv []reflect.Value, err error) {
+	var sarr []string
+	var k string
+	var nk string
+	var nextchld *xmlmap
+	var ok bool
+	var idx int
+	retv = []reflect.Value{}
+
+	if path == "" {
+		return cmap.call_func_del(methname, parent, a...)
+	}
+	sarr = strings.Split(path, "/")
+
+	for idx = 0; idx < len(sarr); idx += 1 {
+		if len(sarr[idx]) == 0 {
+			continue
+		}
+		k = sarr[idx]
+		nextchld, ok = cmap.chlds[k]
+		if !ok {
+			retv = []reflect.Value{}
+			err = nil
+			logutil.Debug("del [%s] not exist", path)
+			return
+		}
+		if len(sarr) > idx {
+			nk = strings.Join(sarr[idx+1:], "/")
+		} else {
+			nk = ""
+		}
+
+		return nextchld.find_function_callback_del(methname, nk, parent, a...)
+	}
+	return cmap.call_func_del(methname, parent, a...)
 }
 
 func (cmap *xmlmap) GetAttrs() (retv map[string]string) {
@@ -706,6 +764,67 @@ func (retv *XmlExt) SetValueMust(path, v string) (retn string) {
 	retn, err = retv.SetValue(path, v)
 	if err != nil {
 		panic(err.Error())
+	}
+	return
+}
+
+func (retv *xmlmap) DelAttr(_parent *xmlmap, k string) {
+	var ok bool
+	_, ok = retv.attrs[k]
+	if ok {
+		delete(retv.attrs, k)
+	}
+	return
+}
+
+func (ptr *XmlExt) DelAttr(path string, k string) (err error) {
+	var leftpath string
+	var curmap *xmlmap = nil
+	var cretv []reflect.Value
+	curmap, leftpath = ptr.get_root_xmlmap(path)
+	if curmap == nil {
+		err = nil
+		return
+	}
+
+	cretv, err = curmap.find_function_callback_del("DelAttr", leftpath, ptr.inner, k)
+	if err != nil {
+		return
+	}
+	if len(cretv) != 0 {
+		err = dbgutil.FormatError("can not len %d", len(cretv))
+		return
+	}
+	return
+
+}
+
+func (retv *xmlmap) DelElem(parent *xmlmap) {
+	var ok bool
+	_, ok = parent.chlds[retv.key]
+	if ok {
+		delete(parent.chlds, retv.key)
+	}
+	return
+}
+
+func (ptr *XmlExt) DelElem(path string) (err error) {
+	var leftpath string
+	var curmap *xmlmap = nil
+	var cretv []reflect.Value
+	curmap, leftpath = ptr.get_root_xmlmap(path)
+	if curmap == nil {
+		err = nil
+		return
+	}
+
+	cretv, err = curmap.find_function_callback_del("DelElem", leftpath, ptr.inner)
+	if err != nil {
+		return
+	}
+	if len(cretv) != 0 {
+		err = dbgutil.FormatError("can not len %d", len(cretv))
+		return
 	}
 	return
 }
