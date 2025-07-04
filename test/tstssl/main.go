@@ -252,19 +252,14 @@ func Dertopem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	return
 }
 
-func rsa_sign_sha256(keyfile string, indata []byte) (signdata []byte, err error) {
-	var keydata []byte
+func rsa_sign_sha256(keydata []byte, indata []byte) (signdata []byte, err error) {
 	var hashed []byte
 	var pkany any
 	var rsakey *rsa.PrivateKey
-	keydata, err = read_pem_or_der(keyfile)
-	if err != nil {
-		return
-	}
 
 	pkany, err = x509.ParsePKCS8PrivateKey(keydata)
 	if err != nil {
-		err = dbgutil.FormatError("[%s] not valid rsa %s", keyfile, err.Error())
+		err = dbgutil.FormatError("keydata not valid rsa %s", err.Error())
 		return
 	}
 	switch pkany.(type) {
@@ -293,6 +288,7 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var signfile string
 	var signdata []byte
 	var indata []byte
+	var keydata []byte
 	err = nil
 	if ns == nil {
 		return nil
@@ -312,12 +308,22 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	keyfile = sarr[0]
 	input = sarr[1]
 	signfile = sarr[2]
+
+	keydata, err = read_pem_or_der(keyfile)
+	if err != nil {
+		return
+	}
+
+	if err != nil {
+		return
+	}
+
 	indata, err = fileop.ReadFileBytes(input)
 	if err != nil {
 		return
 	}
 
-	signdata, err = rsa_sign_sha256(keyfile, indata)
+	signdata, err = rsa_sign_sha256(keydata, indata)
 	if err != nil {
 		return
 	}
@@ -330,14 +336,10 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
-func rsa_verify_sha256(certfile string, indata []byte, signdata []byte) (err error) {
-	var certdata, hashed []byte
+func rsa_verify_sha256(certdata []byte, indata []byte, signdata []byte) (err error) {
+	var hashed []byte
 	var pubkey *rsa.PublicKey
 	var cert *x509.Certificate
-	certdata, err = read_pem_or_der(certfile)
-	if err != nil {
-		return
-	}
 
 	cert, err = x509.ParseCertificate(certdata)
 	if err != nil {
@@ -371,6 +373,7 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	var sarr []string
 	var certfile string
 	var signfile string
+	var certdata []byte
 
 	err = nil
 	if ns == nil {
@@ -392,6 +395,11 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	input = sarr[1]
 	signfile = sarr[2]
 
+	certdata, err = read_pem_or_der(certfile)
+	if err != nil {
+		return
+	}
+
 	indata, err = fileop.ReadFileBytes(input)
 	if err != nil {
 		return
@@ -402,7 +410,7 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 		return
 	}
 
-	err = rsa_verify_sha256(certfile, indata, signdata)
+	err = rsa_verify_sha256(certdata, indata, signdata)
 	if err != nil {
 		return
 	}
