@@ -348,25 +348,64 @@ func CreateRegKey(root, path string, accesstype string, existok bool) error {
 	return nil
 }
 
-func DeleteRegKey(root, path string) error {
-	rk, err := getRootKey(root)
+func _check_err_is_not_found(err error) bool {
+	if err != nil {
+		errtype := reflect.TypeOf(err)
+		if strings.Compare(errtype.Name(), "Errno") == 0 {
+			if err.(syscall.Errno) == syscall.ERROR_FILE_NOT_FOUND {
+				/*that means not find ,so ok*/
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func _inner_del_key(root, path string) (err error) {
+	var rk registry.Key
+	var nerr error
+	var curkey string
+	var keys []string
+	var idx int
+	rk, err = getRootKey(root)
 	if err != nil {
 		return err
 	}
 
 	err = registry.DeleteKey(rk, path)
 	if err != nil {
-		errtype := reflect.TypeOf(err)
-		if strings.Compare(errtype.Name(), "Errno") == 0 {
-			if err.(syscall.Errno) == syscall.ERROR_FILE_NOT_FOUND {
-				/*that means not find ,so ok*/
-				return nil
-			}
-			err = dbgutil.FormatError("errno (%d)", (int)(err.(syscall.Errno)))
+		if _check_err_is_not_found(err) {
+			err = nil
+			return
 		}
-		return err
+		keys, nerr = EnumerateRegKeys(root, path)
+		if nerr == nil {
+			for idx = 0; idx < len(keys); idx += 1 {
+				curkey = fmt.Sprintf("%s\\%s", path, keys[idx])
+				nerr = _inner_del_key(root, curkey)
+				if nerr != nil {
+					err = nerr
+					return
+				}
+			}
+		}
+
+		err = registry.DeleteKey(rk, path)
+		if err == nil || _check_err_is_not_found(err) {
+			err = nil
+			return
+		}
+
+		err = dbgutil.FormatError("[%s]errno (%d)", path, err.Error())
 	}
-	return nil
+
+	return
+
+}
+
+func DeleteRegKey(root, path string) error {
+	return _inner_del_key(root, path)
 }
 
 func DeleteRegValue(root, path, value string) error {
