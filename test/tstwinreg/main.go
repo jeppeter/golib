@@ -28,6 +28,8 @@ func init() {
 	Savehive_handler(nil, nil, nil)
 	Npsvr_handler(nil, nil, nil)
 	Npcli_handler(nil, nil, nil)
+	Enumkeys_handler(nil, nil, nil)
+	Enumvals_handler(nil, nil, nil)
 }
 
 func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
@@ -72,7 +74,14 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"npcli<Npcli_handler>##pipename jsonfile ... to write json and wait##" : {
 			"$" : "+"
+		},
+		"enumkeys<Enumkeys_handler>##root path to enumerate keys name##" : {
+			"$" : 2
+		},
+		"enumvals<Enumvals_handler>##root path to enumerate values##" : {
+			"$" : 2
 		}
+
 	}`
 
 	commandline = fmt.Sprintf(commandline_fmt)
@@ -524,6 +533,91 @@ func Npcli_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 
 	err = nil
 
+	return
+}
+
+func Enumkeys_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var maxnum int = 32
+	var keys []string
+	var idx int
+	var root string
+	var path string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need root path")
+		return
+	}
+	root = sarr[0]
+	path = sarr[1]
+	for {
+		keys, err = winreg.EnumerateRegKeys(root, path, maxnum)
+		if err != nil {
+			return
+		}
+		if len(keys) < maxnum {
+			break
+		}
+		maxnum <<= 1
+	}
+
+	for idx = 0; idx < len(keys); idx += 1 {
+		fmt.Printf("[%s].[%s].[%d] = [%s]\n", root, path, idx, keys[idx])
+	}
+	err = nil
+
+	return
+}
+
+func Enumvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var maxnum int = 32
+	var keys []string
+	var idx int
+	var root string
+	var path string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need root path")
+		return
+	}
+	root = sarr[0]
+	path = sarr[1]
+	for {
+		keys, err = winreg.EnumerateRegValueKeys(root, path, maxnum)
+		if err != nil {
+			return
+		}
+		if len(keys) < maxnum {
+			break
+		}
+		maxnum <<= 1
+	}
+
+	for idx = 0; idx < len(keys); idx += 1 {
+		fmt.Printf("[%s].[%s].[%d]value = [%s]\n", root, path, idx, keys[idx])
+	}
+	err = nil
 	return
 }
 

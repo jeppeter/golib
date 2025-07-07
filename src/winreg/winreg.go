@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
+	"io"
 	"reflect"
 	"strconv"
 	"strings"
@@ -414,7 +415,12 @@ func EnumerateRegKeys(root, path string, maxnum int) (keys []string, err error) 
 	defer k.Close()
 	keys, err = k.ReadSubKeyNames(maxnum)
 	if err != nil {
-		err = dbgutil.FormatError("subkeys error(%s)", err.Error())
+		if err != io.EOF {
+			err = dbgutil.FormatError("subkeys error(%s)", err.Error())
+		} else {
+			err = nil
+		}
+
 	}
 	return
 }
@@ -432,7 +438,12 @@ func EnumerateRegValueKeys(root, path string, maxnum int) (valkeys []string, err
 	defer k.Close()
 	valkeys, err = k.ReadValueNames(maxnum)
 	if err != nil {
-		err = dbgutil.FormatError("valuekeys error(%s)", err.Error())
+		if err != io.EOF {
+			err = dbgutil.FormatError("valuekeys error(%s)", err.Error())
+		} else {
+			err = nil
+		}
+
 	}
 	return
 }
