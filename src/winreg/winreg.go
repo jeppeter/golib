@@ -402,7 +402,8 @@ func DeleteRegValue(root, path, value string) error {
 	return nil
 }
 
-func EnumerateRegKeys(root, path string, maxnum int) (keys []string, err error) {
+func EnumerateRegKeys(root, path string) (retkeys []string, err error) {
+	var maxnum int = 16
 	rk, err := getRootKey(root)
 	if err != nil {
 		return
@@ -413,19 +414,32 @@ func EnumerateRegKeys(root, path string, maxnum int) (keys []string, err error) 
 		return
 	}
 	defer k.Close()
-	keys, err = k.ReadSubKeyNames(maxnum)
-	if err != nil {
-		if err != io.EOF {
-			err = dbgutil.FormatError("subkeys error(%s)", err.Error())
-		} else {
-			err = nil
+
+	for {
+		retkeys, err = k.ReadSubKeyNames(maxnum)
+		if err != nil {
+			if err != io.EOF {
+				err = dbgutil.FormatError("subkeys error(%s)", err.Error())
+			} else {
+				err = nil
+			}
 		}
 
+		if err != nil {
+			return
+		}
+
+		if len(retkeys) < maxnum {
+			return
+		}
+		maxnum <<= 1
 	}
+
 	return
 }
 
-func EnumerateRegValueKeys(root, path string, maxnum int) (valkeys []string, err error) {
+func EnumerateRegValueKeys(root, path string) (valkeys []string, err error) {
+	var maxnum int = 4
 	rk, err := getRootKey(root)
 	if err != nil {
 		return
@@ -436,15 +450,27 @@ func EnumerateRegValueKeys(root, path string, maxnum int) (valkeys []string, err
 		return
 	}
 	defer k.Close()
-	valkeys, err = k.ReadValueNames(maxnum)
-	if err != nil {
-		if err != io.EOF {
-			err = dbgutil.FormatError("valuekeys error(%s)", err.Error())
-		} else {
-			err = nil
+	for {
+		valkeys = []string{}
+		valkeys, err = k.ReadValueNames(maxnum)
+		if err != nil {
+			if err != io.EOF {
+				err = dbgutil.FormatError("valuekeys error(%s)", err.Error())
+			} else {
+				err = nil
+			}
 		}
 
+		if err != nil {
+			return
+		}
+
+		if len(valkeys) < maxnum {
+			return
+		}
+		maxnum <<= 1
 	}
+
 	return
 }
 

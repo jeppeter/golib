@@ -538,7 +538,6 @@ func Npcli_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interf
 
 func Enumkeys_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
-	var maxnum int = 32
 	var keys []string
 	var idx int
 	var root string
@@ -560,15 +559,9 @@ func Enumkeys_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	}
 	root = sarr[0]
 	path = sarr[1]
-	for {
-		keys, err = winreg.EnumerateRegKeys(root, path, maxnum)
-		if err != nil {
-			return
-		}
-		if len(keys) < maxnum {
-			break
-		}
-		maxnum <<= 1
+	keys, err = winreg.EnumerateRegKeys(root, path)
+	if err != nil {
+		return
 	}
 
 	for idx = 0; idx < len(keys); idx += 1 {
@@ -581,7 +574,6 @@ func Enumkeys_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 
 func Enumvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
-	var maxnum int = 32
 	var keys []string
 	var idx int
 	var root string
@@ -603,15 +595,9 @@ func Enumvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	}
 	root = sarr[0]
 	path = sarr[1]
-	for {
-		keys, err = winreg.EnumerateRegValueKeys(root, path, maxnum)
-		if err != nil {
-			return
-		}
-		if len(keys) < maxnum {
-			break
-		}
-		maxnum <<= 1
+	keys, err = winreg.EnumerateRegValueKeys(root, path)
+	if err != nil {
+		return
 	}
 
 	for idx = 0; idx < len(keys); idx += 1 {
