@@ -1,1057 +1,637 @@
 package main
 
 import (
-	"bytes"
 	"dbgutil"
+	"executil"
 	"fileop"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"github.com/tebeka/atexit"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
-	"io/ioutil"
 	"logutil"
+	"npipepack"
 	"os"
-	"path/filepath"
-	"runtime"
-	"strconv"
 	"strings"
-	"strop"
-	"time"
-	"unicode/utf8"
+	"winpriv"
+	"winreg"
 )
 
-func go_chan(c chan string, e chan int, timeout int) {
-	var s string
-	var icnt int = 0
-	for s = range c {
-		fmt.Fprintf(os.Stdout, "%s\n", s)
-		icnt++
-		time.Sleep(time.Duration(timeout) * time.Millisecond)
-	}
-	e <- icnt
-	return
-}
-
-func Chan_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var s string
-	var i int
-	var schan chan string
-	var ichan chan int
-	err = nil
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	schan = make(chan string, 100)
-	ichan = make(chan int, 1)
-	go go_chan(schan, ichan, ns.GetInt("timeout"))
-
-	for _, s = range ns.GetArray("subnargs") {
-		schan <- s
-	}
-	close(schan)
-	schan = nil
-	i = <-ichan
-
-	fmt.Fprintf(os.Stdout, "end value [%d]\n", i)
-
-	return
-}
-
-func get_code(sarr []string) (retbyte []byte, err error) {
-	var s string
-	var v int64
-	var base int
-	retbyte = []byte{}
-	err = nil
-
-	for _, s = range sarr {
-		base = 10
-		if strings.HasPrefix(s, "0x") ||
-			strings.HasPrefix(s, "0X") {
-			base = 16
-			s = s[2:]
-		} else if strings.HasPrefix(s, "x") ||
-			strings.HasPrefix(s, "X") {
-			base = 16
-			s = s[1:]
-		}
-		v, err = strconv.ParseInt(s, base, 64)
-		if err != nil {
-			return
-		}
-		retbyte = append(retbyte, byte(v))
-	}
-
-	err = nil
-	return
-}
-
-func gbk_to_utf8(inbytes []byte) (outbytes []byte, err error) {
-	var rd *transform.Reader
-	rd = transform.NewReader(bytes.NewReader(inbytes), simplifiedchinese.GBK.NewDecoder())
-	outbytes, err = ioutil.ReadAll(rd)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func utf8_to_gbk(inbytes []byte) (outbytes []byte, err error) {
-	var rd *transform.Reader
-	rd = transform.NewReader(bytes.NewReader(inbytes), simplifiedchinese.GBK.NewEncoder())
-	outbytes, err = ioutil.ReadAll(rd)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func utf8_to_uni(inbytes []byte) (outbytes []byte, err error) {
-	var idx, retn, i, curval int
-	var r rune
-	outbytes = []byte{}
-	err = nil
-
-	idx = 0
-	for idx < len(inbytes) {
-		r, retn = utf8.DecodeRune(inbytes[idx:])
-		for i = 0; i < 2; i++ {
-			curval = int(r)
-			curval = (curval >> (i * 8)) & 0xff
-			outbytes = append(outbytes, byte(curval))
-		}
-		idx += retn
-	}
-	err = nil
-	return
-}
-
-func uni_to_utf8(inbytes []byte) (outbytes []byte, err error) {
-	var s string
-	var idx, j, retn int
-	var r rune
-	var rs []rune
-	var ps string
-	var buf []byte
-	var curval int
-	outbytes = []byte{}
-	err = nil
-
-	ps = "\""
-	for idx = 0; idx < (len(inbytes) - 1); idx += 2 {
-		curval = 0
-		curval += int(inbytes[idx])
-		curval += (int(inbytes[idx+1]) << 8)
-		ps += fmt.Sprintf("\\u%04x", curval)
-	}
-	ps += "\""
-	s, err = strconv.Unquote(ps)
-	if err != nil {
-		err = dbgutil.FormatError("[%s] error [%s]", ps, err.Error())
-		return
-	}
-
-	buf = make([]byte, 10)
-
-	idx = 0
-	rs = []rune(s)
-	for idx = 0; idx < len(rs); idx++ {
-		r = rs[idx]
-		retn = utf8.EncodeRune(buf, r)
-		for j = 0; j < retn; j++ {
-			outbytes = append(outbytes, buf[j])
-		}
-	}
-
-	err = nil
-	return
-}
-
-func out_bytes(inbytes []byte, fmtstr string, a ...interface{}) (outs string) {
-	var lasti, i int
-	var b byte
-	outs = ""
-	lasti = 0
-	i = 0
-	outs += fmt.Sprintf("bytes [%d:0x%x] ", len(inbytes), len(inbytes))
-	outs += fmt.Sprintf(fmtstr, a...)
-	for i, b = range inbytes {
-		if (i % 16) == 0 {
-			if i > 0 {
-				outs += "    "
-				for lasti != i {
-					if inbytes[lasti] >= byte(' ') &&
-						inbytes[lasti] <= byte('~') {
-						outs += fmt.Sprintf("%c", inbytes[lasti])
-					} else {
-						outs += "."
-					}
-					lasti++
-				}
-			}
-			outs += fmt.Sprintf("\n0x%08x:", i)
-		}
-		outs += fmt.Sprintf(" 0x%02x", b)
-	}
-
-	if lasti != i {
-		for (i % 16) != 0 {
-			outs += fmt.Sprintf("     ")
-			i++
-		}
-		outs += fmt.Sprintf("    ")
-
-		for lasti != len(inbytes) {
-			if inbytes[lasti] >= byte(' ') &&
-				inbytes[lasti] <= byte('~') {
-				outs += fmt.Sprintf("%c", inbytes[lasti])
-			} else {
-				outs += "."
-			}
-			lasti++
-		}
-
-		outs += fmt.Sprintf("\n")
-	}
-
-	return
-}
-
-func Gbktoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var inbytes, outbytes []byte
-	err = nil
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	inbytes, err = get_code(ns.GetArray("subnargs"))
-	if err != nil {
-		return
-	}
-
-	logutil.Debug("inbyte %v", inbytes)
-
-	outbytes, err = gbk_to_utf8(inbytes)
-	if err != nil {
-		return
-	}
-
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(inbytes, "input bytes"))
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(outbytes, "output bytes"))
-	err = nil
-
-	return
-}
-
-func Utf8togbk_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var inbytes, outbytes []byte
-	err = nil
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	inbytes, err = get_code(ns.GetArray("subnargs"))
-	if err != nil {
-		return
-	}
-
-	outbytes, err = utf8_to_gbk(inbytes)
-	if err != nil {
-		return
-	}
-
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(inbytes, "input bytes"))
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(outbytes, "output bytes"))
-	err = nil
-
-	return
-}
-
-func Utf8touni_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var inbytes, outbytes []byte
-	err = nil
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	inbytes, err = get_code(ns.GetArray("subnargs"))
-	if err != nil {
-		return
-	}
-
-	outbytes, err = utf8_to_uni(inbytes)
-	if err != nil {
-		return
-	}
-
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(inbytes, "input bytes"))
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(outbytes, "output bytes"))
-	err = nil
-
-	return
-}
-
-func Unitoutf8_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var inbytes, outbytes []byte
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	inbytes, err = get_code(ns.GetArray("subnargs"))
-	if err != nil {
-		return
-	}
-
-	outbytes, err = uni_to_utf8(inbytes)
-	if err != nil {
-		return
-	}
-
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(inbytes, "input bytes"))
-	fmt.Fprintf(os.Stdout, "%s", out_bytes(outbytes, "output bytes"))
-	err = nil
-
-	return
-}
-
-func Readfilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var outbytes []byte
-	var sarr []string
-	var i int
-	var s string
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	if len(sarr) == 0 {
-		outbytes, err = fileop.ReadFileBytes("")
-		if err != nil {
-			return
-		}
-		logutil.DebugBuffer(outbytes, "read stdin")
-	} else {
-		for i, s = range sarr {
-			outbytes, err = fileop.ReadFileBytes(s)
-			if err != nil {
-				return
-			}
-			logutil.DebugBuffer(outbytes, "read [%d][%s]", i, s)
-		}
-	}
-	err = nil
-	return
-}
-
-func Writefilebyte_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var output string = ""
-	var s string
-	var outs string
-	var nret int
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	output = ns.GetString("output")
-	outs = ""
-	for _, s = range sarr {
-		outs += fmt.Sprintf("%s\n", s)
-	}
-
-	nret, err = fileop.WriteFileBytes(output, []byte(outs))
-	if err != nil {
-		return
-	}
-	fmt.Fprintf(os.Stderr, "write [%s] nret [%d]\n", output, nret)
-	return
-}
-
-func Readfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var outs string
-	var sarr []string
-	var i int
-	var s string
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	if len(sarr) == 0 {
-		outs, err = fileop.ReadFile("")
-		if err != nil {
-			return
-		}
-		logutil.Debug("read file [stdin]\n%s", outs)
-	} else {
-		for i, s = range sarr {
-			outs, err = fileop.ReadFile(s)
-			if err != nil {
-				return
-			}
-			logutil.Debug("read [%d][%s]\n%s", i, s, outs)
-		}
-	}
-	err = nil
-	return
-}
-
-func Writefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var output string = ""
-	var s string
-	var outs string
-	var nret int
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	output = ns.GetString("output")
-	outs = ""
-	for _, s = range sarr {
-		outs += fmt.Sprintf("%s\n", s)
-	}
-
-	nret, err = fileop.WriteFile(output, outs)
-	if err != nil {
-		return
-	}
-	fmt.Fprintf(os.Stderr, "write [%s] nret [%d]\n", output, nret)
-	return
-}
-
-func Deletefile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var s string
-	var i int
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	for i, s = range sarr {
-		err = fileop.DeleteFile(s)
-		if err != nil {
-			err = fmt.Errorf("delete [%d].[%s] error[%s]", i, s, err.Error())
-			return
-		}
-		fmt.Printf("delete [%s] succ\n", s)
-	}
-
-	return
-}
-
-func Parseu64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var i int
-	var retv uint64
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	for i = 0; i < len(sarr); i++ {
-		retv, err = strconv.ParseUint(sarr[i], 10, 64)
-		if err != nil {
-			err = dbgutil.FormatError("parse [%s] error[%s]", sarr[i], err.Error())
-			return
-		}
-		fmt.Printf("[%s]=[%d]\n", sarr[i], retv)
-	}
-	err = nil
-	return
-}
-
-func Mkdirsafe_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var i int
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	err = logutil.InitLog(ns)
-	if err != nil {
-		return
-	}
-
-	sarr = ns.GetArray("subnargs")
-	for i = 0; i < len(sarr); i++ {
-		err = fileop.MkdirSafe(sarr[i], -1)
-		if err != nil {
-			return
-		}
-		fmt.Printf("create [%s] succ\n", sarr[i])
-	}
-	err = nil
-	return
-}
-
-func get_func_addr(name string, startaddr uintptr, endaddr uintptr) (findptr *runtime.Func, err error) {
-	//var names []string
-	//var searchaddr []uintptr
-	var curaddr uintptr
-	var stepaddr uintptr = (1 << 10)
-	var curfunc *runtime.Func = nil
-	findptr = nil
-	err = fmt.Errorf("not foud %s", name)
-	//names = strings.Split(name, ".")
-	for findptr == nil && stepaddr >= 32 {
-		curaddr = startaddr
-		for {
-			curfunc = runtime.FuncForPC(curaddr)
-			if curfunc != nil {
-				if curfunc.Name() == name {
-					findptr = curfunc
-					err = nil
-					break
-				}
-			}
-			curaddr += stepaddr
-			if curaddr > endaddr {
-				break
-			}
-		}
-		stepaddr = stepaddr >> 1
-	}
-	return
-}
-
-func Querymem_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var startaddr uintptr
-	var endaddr uintptr
-	var funcptr *runtime.Func
-	err = nil
-
-	if ns == nil {
-		return
-	}
-	startaddr, endaddr, err = get_current_process_exec_info()
-	if err != nil {
-		return
-	}
-	funcptr, err = get_func_addr("main.Querymem_handler", startaddr, endaddr)
-	if err != nil {
-		return
-	}
-	fmt.Printf("call main.Querymem_handler 0x%x\n", funcptr.Entry())
-
-	return
-}
-
 func init() {
-	Chan_handler(nil, nil, nil)
-	Utf8togbk_handler(nil, nil, nil)
-	Gbktoutf8_handler(nil, nil, nil)
-	Utf8touni_handler(nil, nil, nil)
-	Unitoutf8_handler(nil, nil, nil)
-	Readfilebyte_handler(nil, nil, nil)
-	Writefilebyte_handler(nil, nil, nil)
-	Readfile_handler(nil, nil, nil)
-	Writefile_handler(nil, nil, nil)
-	Deletefile_handler(nil, nil, nil)
-	Parseu64_handler(nil, nil, nil)
-	Mkdirsafe_handler(nil, nil, nil)
-	Goversioncheck_handler(nil, nil, nil)
-	Querymem_handler(nil, nil, nil)
-	Normpath_handler(nil, nil, nil)
-	Cmprtver_handler(nil, nil, nil)
-	Logtest_handler(nil, nil, nil)
-	Existfile_handler(nil, nil, nil)
-	Encbase64_handler(nil, nil, nil)
-	Decbase64_handler(nil, nil, nil)
-	Printbytes_handler(nil, nil, nil)
+	Readregstring_handler(nil, nil, nil)
+	Writeregstring_handler(nil, nil, nil)
+	Createregkey_handler(nil, nil, nil)
+	Deleteregkey_handler(nil, nil, nil)
+	Deleteregvalue_handler(nil, nil, nil)
+	Clearroutetable_handler(nil, nil, nil)
+	Setpriv_handler(nil, nil, nil)
+	Loadhive_handler(nil, nil, nil)
+	Unloadhive_handler(nil, nil, nil)
+	Savehive_handler(nil, nil, nil)
+	Npsvr_handler(nil, nil, nil)
+	Npcli_handler(nil, nil, nil)
+	Enumkeys_handler(nil, nil, nil)
+	Enumvals_handler(nil, nil, nil)
 }
 
-func Goversioncheck_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	err = nil
+func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
+	var commandline_fmt string
+	var commandline string
+	commandline_fmt = `{
+		"regsubkey" : "SYSTEM\\CurrentControlSet\\Control\\Idvtools\\BTVMTOOL",
+		"regpath" : "routetable",
+		"regkey" : "HKLM",
+		"ReadRegString<Readregstring_handler>## root path key to read registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
+			"$" : "+"
+		},
+		"WriteRegString<Writeregstring_handler>## root path key value to write registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
+			"$" : "+"
+		},
+		"CreateRegKey<Createregkey_handler>## root path key [accesstype] [existok] to create registry root can be(HKLM|HKCU|HKCR|HKU|HKCC) accesstype can be(ALL|EXECUTE|QUERY_VALUE|READ|SET_VALUE|WRITE|ENUMERATE_SUB_KEYS) default(ALL) existed ok default True##" : {
+			"$" : "+"
+		},
+		"DeleteRegKey<Deleteregkey_handler>## root path to delete registry key root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
+			"$" : "+"
+		},
+		"DeleteRegValue<Deleteregvalue_handler>## root path value to delete registry value root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
+			"$" : "+"
+		},
+		"Clearroutetable<Clearroutetable_handler>## to clear root table default for regsubkey regpath ##"  : {
+			"$" : 0
+		},
+		"setpriv<Setpriv_handler>##privname ... to set priv##" : {
+			"$" : "+"
+		},
+		"loadhive<Loadhive_handler>##file subkey to load hive ##" : {
+			"$" : 2
+		},
+		"unloadhive<Unloadhive_handler>##subkey to unload hive##" : {
+			"$" : 1
+		},
+		"savehive<Savehive_handler>##file subkey to save hive##" : {
+			"$" : 2
+		},
+		"npsvr<Npsvr_handler>##pipename to listen on pipe##" : {
+			"$" : 1
+		},
+		"npcli<Npcli_handler>##pipename jsonfile ... to write json and wait##" : {
+			"$" : "+"
+		},
+		"enumkeys<Enumkeys_handler>##root path to enumerate keys name##" : {
+			"$" : 2
+		},
+		"enumvals<Enumvals_handler>##root path to enumerate values##" : {
+			"$" : 2
+		}
 
-	if ns == nil {
-		return
-	}
+	}`
 
-	fmt.Printf("version %s\n", runtime.Version())
+	commandline = fmt.Sprintf(commandline_fmt)
+	err = parser.LoadCommandLineString(commandline)
 	return
 }
 
-func Normpath_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var a string
-	err = nil
-
+/*ReadRegString*/
+func Readregstring_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
 	if ns == nil {
+		err = nil
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 3 {
+		err = dbgutil.FormatError(" need root path key")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	key := args[2]
+	value, valtype, err := winreg.ReadRegString(root, path, key)
+	if err != nil {
+		err = dbgutil.FormatError("read %s %s\\%s error(%s)", root, path, key, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "[%s]%s\\%s=%s(%s)\n", root, path, key, value, valtype)
+	return nil
+}
+
+/*WriteRegString*/
+func Writeregstring_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
+	if ns == nil {
+		err = nil
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 4 {
+		err = dbgutil.FormatError("need root path key value")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	key := args[2]
+	value := args[3]
+	typestr := "SZ"
+	if len(args) > 4 {
+		typestr = args[4]
+	}
+	err = winreg.WriteRegString(root, path, key, value, typestr)
+	if err != nil {
+		err = dbgutil.FormatError("write %s %s\\%s %s(%s) error(%s)", root, path, key, value, typestr, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "write [%s]%s\\%s %s(%s) succ\n", root, path, key, value, typestr)
+	return nil
+}
+
+/*CreateRegKey*/
+func Createregkey_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
+	if ns == nil {
+		err = nil
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 2 {
+		err = dbgutil.FormatError("root path [accesstype] [existok]")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	accesstype := "ALL"
+	existok := true
+	if len(args) > 2 {
+		accesstype = args[2]
+	}
+	if len(args) > 3 {
+		existok = false
+	}
+	err = winreg.CreateRegKey(root, path, accesstype, existok)
+	if err != nil {
+		err = dbgutil.FormatError("createkey[%s] %s  accesstype(%s) existok(%v) error(%s)", root, path, accesstype, existok, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "createkey[%s] %s  accesstype(%s) existok(%v) succ\n", root, path, accesstype, existok)
+	return nil
+}
+
+/*DeleteRegKey*/
+func Deleteregkey_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
+	if ns == nil {
+		err = nil
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 2 {
+		err = dbgutil.FormatError("need root path ")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	err = winreg.DeleteRegKey(root, path)
+	if err != nil {
+		err = dbgutil.FormatError("deletekey[%s] %s  error(%s)", root, path, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "deletekey[%s] %s succ\n", root, path)
+	return nil
+}
+
+/*DeleteRegValue*/
+func Deleteregvalue_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
+	if ns == nil {
+		err = nil
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 3 {
+		err = dbgutil.FormatError("need root path value")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	val := args[2]
+	err = winreg.DeleteRegValue(root, path, val)
+	if err != nil {
+		err = dbgutil.FormatError("deletevalue[%s] %s\\%s  error(%s)", root, path, val, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "deletekey[%s] %s\\%s succ\n", root, path, val)
+	return nil
+}
+
+/*Clearroutetable*/
+func Clearroutetable_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var root string = "HKLM"
+	var path string
+	var key string
+	var sarr []string
+	var carr []string
+	var s string
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	path = ns.GetString("regsubkey")
+	key = ns.GetString("regpath")
+
+	/*now first to2 get value*/
+	value, valtype, err := winreg.ReadRegString(root, path, key)
+	if err != nil {
+		/*nothing to handle the value*/
+		err = nil
+		return
+	}
+
+	if valtype != "SZ" && valtype != "EXPAND_SZ" {
+		err = dbgutil.FormatError("[%s].[%s] value type [%s] not valid", path, key, valtype)
+		return
+	}
+
+	sarr = strings.Split(value, ";")
+	if len(sarr) > 0 {
+		for _, s = range sarr {
+			carr = strings.Split(s, ",")
+			if len(carr) >= 3 {
+				executil.GetOutputCmd([]string{"route.exe", "delete", carr[0]})
+			}
+		}
+	}
+
+	err = winreg.DeleteRegValue(root, path, key)
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func Setpriv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var i int
+	var priv string
+	err = nil
+	if ns == nil {
+		err = nil
 		return
 	}
 
 	sarr = ns.GetArray("subnargs")
-	for _, a = range sarr {
-		var np string
-		np, err = filepath.Abs(a)
-		if err == nil {
-			fmt.Printf("[%s] => [%s]\n", a, np)
-		} else {
-			fmt.Printf("[%s] error[%s]\n", a, err.Error())
-		}
-	}
-
-	err = nil
-	return
-}
-
-type CmpVer struct {
-	verstr string
-	verint []int
-}
-
-func NewCmpVer(s string) (retv *CmpVer, err error) {
-	retv = &CmpVer{}
-	retv.verstr = s
-	retv.verint = []int{}
-	var sarr []string
-	var ns string
-	ns = strings.ReplaceAll(s, "go", "")
-	sarr = strings.Split(ns, ".")
-	var idx int = 0
-	var v int
-	for idx < len(sarr) {
-		v, err = strconv.Atoi(sarr[idx])
+	for i = 0; i < len(sarr); i++ {
+		priv = sarr[i]
+		err = winpriv.SetPrivLedge(priv, true)
 		if err != nil {
-			v = 0
+			return
 		}
-		retv.verint = append(retv.verint, v)
-		idx += 1
+		err = winpriv.SetPrivLedge(priv, false)
+		if err != nil {
+			return
+		}
+		fmt.Printf("set/unset [%s] succ\n", priv)
 	}
-	err = nil
-	return
+
+	return nil
 }
 
-func (retp *CmpVer) Compare(other *CmpVer) (val int) {
-	val = 0
-	var idx int = 0
-	for {
-		if idx >= len(retp.verint) && idx >= len(other.verint) {
-			return
-		}
-
-		if idx >= len(retp.verint) {
-			val = -1
-			return
-		}
-
-		if idx >= len(other.verint) {
-			val = 1
-			return
-		}
-
-		if retp.verint[idx] > other.verint[idx] {
-			val = 1
-			return
-		} else if retp.verint[idx] < other.verint[idx] {
-			val = -1
-			return
-		}
-		idx += 1
-	}
-	return
-}
-
-func Cmprtver_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+func Loadhive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
+	var subkey string
+	var file string
+	var root string
 	err = nil
-	var rtver *CmpVer = nil
-	var cmpver *CmpVer = nil
-
 	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need file subkey")
+		return
+	}
+
+	root = ns.GetString("regkey")
+	subkey = sarr[1]
+	file = sarr[0]
+
+	err = winreg.LoadHive(file, root, subkey)
+	if err != nil {
+		return
+	}
+	fmt.Printf("load [%s] => [%s].[%s] succ\n", file, root, subkey)
+
+	return nil
+}
+
+func Unloadhive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var subkey string
+	var root string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
 		return
 	}
 
 	sarr = ns.GetArray("subnargs")
 	if len(sarr) < 1 {
-		err = fmt.Errorf("need cmpver")
+		err = dbgutil.FormatError("need subkey")
 		return
 	}
 
-	var rts string
-	var cmps string
+	root = ns.GetString("regkey")
+	subkey = sarr[0]
 
-	rts = runtime.Version()
-	cmps = sarr[0]
-
-	rtver, err = NewCmpVer(rts)
+	err = winreg.UnLoadHive(root, subkey)
 	if err != nil {
 		return
 	}
-	cmpver, err = NewCmpVer(cmps)
-	if err != nil {
-		return
-	}
+	fmt.Printf("unload [%s].[%s] succ\n", root, subkey)
 
-	val := rtver.Compare(cmpver)
-	if val > 0 {
-		fmt.Printf("[%s] > [%s]\n", rts, cmps)
-	} else if val < 0 {
-		fmt.Printf("[%s] < [%s]\n", rts, cmps)
-	} else {
-		fmt.Printf("[%s] == [%s]\n", rts, cmps)
-	}
-
-	err = nil
-	return
+	return nil
 }
 
-func Logtest_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+func Savehive_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
-	var maxlines int = 10
-	var i int
+	var subkey string
+	var file string
+	var root string
 	err = nil
-
 	if ns == nil {
+		err = nil
 		return
 	}
 
-	logutil.InitLog(ns)
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
 
 	sarr = ns.GetArray("subnargs")
-	if len(sarr) > 0 {
-		maxlines, err = strconv.Atoi(sarr[0])
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need file subkey")
+		return
+	}
+
+	root = ns.GetString("regkey")
+	subkey = sarr[1]
+	file = sarr[0]
+
+	err = winreg.SaveHive(file, root, subkey)
+	if err != nil {
+		return
+	}
+	fmt.Printf("saves [%s].[%s] => [%s]  succ\n", root, subkey, file)
+
+	return nil
+}
+
+func Npsvr_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var npsvr *npipepack.NpipeSock = nil
+	var npacc *npipepack.NpipeSock = nil
+	var ndata *npipepack.NpipeData = nil
+	var pipename string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	pipename = sarr[0]
+
+try_bind_again:
+	if npacc != nil {
+		logutil.Debug("close acc [%s]", pipename)
+		npacc.Close()
+		npacc = nil
+	}
+
+	if npsvr != nil {
+		logutil.Debug("close svr [%s]", pipename)
+		npsvr.Close()
+		npsvr = nil
+	}
+
+	npsvr, err = npipepack.BindPipe(pipename, 500)
+	if err != nil {
+		logutil.Error("can not bind [%s] error [%s]", pipename, err.Error())
+		goto try_bind_again
+	}
+
+	logutil.Debug("listen on [%s]", pipename)
+try_accept:
+	npacc, err = npsvr.AcceptTimeout()
+	if err != nil {
+		logutil.Error("can not accept [%s] error [%s]", pipename, err.Error())
+		goto try_bind_again
+	}
+
+	if npacc == nil {
+		goto try_accept
+	}
+
+	logutil.Debug("accept [%s]", pipename)
+
+	for {
+		ndata, err = npacc.ReadpacketTimeout()
 		if err != nil {
-			err = dbgutil.FormatError("[%s] not valid", sarr[0])
-			return
+			logutil.Error("read [%s] error [%s]", pipename, err.Error())
+			goto try_bind_again
+		}
+
+		if ndata == nil {
+			continue
+		}
+
+		logutil.Debug("read [%s]\n%s", pipename, ndata.GetStr())
+		err = npacc.WritePacket(ndata)
+		if err != nil {
+			logutil.Error("write [%s] error [%s]\n%s", pipename, err.Error(), ndata.GetStr())
+			goto try_bind_again
 		}
 	}
 
-	for i = 0; i < maxlines; i++ {
-		logutil.Warn("[%d] lines", i)
-		logutil.Error("[%d] lines", i)
-		logutil.Debug("[%d] lines", i)
-		logutil.Info("[%d] lines", i)
-		logutil.Trace("[%d] lines", i)
-	}
-
-	err = nil
 	return
 }
 
-func Existfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+func Npcli_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
-	var bstr string
-	var bval bool
+	var npcli *npipepack.NpipeSock = nil
+	var ndata *npipepack.NpipeData
+	var pipename string
 	var f string
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	logutil.InitLog(ns)
-
-	sarr = ns.GetArray("subnargs")
-	for _, f = range sarr {
-		bval = fileop.ExistFile(f)
-		if bval {
-			bstr = "Exist"
-		} else {
-			bstr = "Not Exist"
-		}
-		fmt.Printf("%s %s\n", f, bstr)
-	}
-
-	err = nil
-	return
-}
-
-func Encbase64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var infile string
-	var outfile string
-	var inbytes []byte
-	var base64str string
-	var outs string
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	logutil.InitLog(ns)
-
-	sarr = ns.GetArray("subnargs")
-	if len(sarr) < 2 {
-		err = dbgutil.FormatError("need infile outfile")
-		return
-	}
-	infile = sarr[0]
-	outfile = sarr[1]
-
-	inbytes, err = fileop.ReadFileBytes(infile)
-	if err != nil {
-		return
-	}
-
-	base64str = strop.EncodeBase64(inbytes)
-	outs = strop.Base64SplitLines(base64str, 76)
-	_, err = fileop.WriteFile(outfile, outs)
-	if err != nil {
-		return
-	}
-
-	fmt.Printf("encode base64 [%s] => [%s] succ\n", infile, outfile)
-	return
-}
-
-func Decbase64_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var infile string
-	var outfile string
-	var outb []byte
-	var base64str string
-	var ins string
-	err = nil
-
-	if ns == nil {
-		return
-	}
-
-	logutil.InitLog(ns)
-
-	sarr = ns.GetArray("subnargs")
-	if len(sarr) < 2 {
-		err = dbgutil.FormatError("need infile outfile")
-		return
-	}
-	infile = sarr[0]
-	outfile = sarr[1]
-
-	ins, err = fileop.ReadFile(infile)
-	if err != nil {
-		return
-	}
-
-	base64str = strop.Base64CompactLine(ins)
-	outb, err = strop.DecodeBase64(base64str)
-	if err != nil {
-		return
-	}
-
-	_, err = fileop.WriteFileBytes(outfile, outb)
-	if err != nil {
-		return
-	}
-
-	fmt.Printf("decode base64 [%s] => [%s] succ\n", infile, outfile)
-	return
-}
-
-func Printbytes_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
-	var sarr []string
-	var outb []byte
-	var uni []byte
 	var idx int
-	var outs string
+	var s string
 	err = nil
-
 	if ns == nil {
+		err = nil
 		return
 	}
 
-	logutil.InitLog(ns)
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
 
 	sarr = ns.GetArray("subnargs")
+	pipename = sarr[0]
 
-	for idx = 0; idx < len(sarr); idx += 1 {
-		outb = []byte(sarr[idx])
-		fmt.Printf("[%d]=[%s]\n", idx, sarr[idx])
-		uni = strop.StringToUnicode(sarr[idx])
-		fmt.Fprintf(os.Stdout, "%s", out_bytes(outb, "bytes"))
-		fmt.Fprintf(os.Stdout, "%s", out_bytes(uni, "unicode"))
-		outs, err = strop.UnicodeToString(uni)
+	npcli, err = npipepack.ConnPipe(pipename, 500, 500)
+	if err != nil {
+		return
+	}
+	logutil.Debug("connnect [%s]", pipename)
+
+	defer npcli.Close()
+
+	for idx = 1; idx < len(sarr); idx += 1 {
+		f = sarr[idx]
+		ndata = npipepack.NewNpipeData()
+		s, err = fileop.ReadFile(f)
 		if err != nil {
 			return
 		}
-		fmt.Printf("from uni [%s]\n", outs)
+		ndata.SetStr(s)
+		logutil.Debug("send [%s]\n%s", pipename, s)
+		err = npcli.WritePacket(ndata)
+		if err != nil {
+			logutil.Error("[%s] write [%s]\n%s", pipename, err.Error(), s)
+			return
+		}
+
+		for {
+			ndata, err = npcli.ReadpacketTimeout()
+			if err != nil {
+				return
+			}
+			if ndata == nil {
+				continue
+			}
+
+			logutil.Debug("read [%s]\n%s", pipename, ndata.GetStr())
+			break
+		}
+	}
+
+	err = nil
+
+	return
+}
+
+func Enumkeys_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var keys []string
+	var idx int
+	var root string
+	var path string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need root path")
+		return
+	}
+	root = sarr[0]
+	path = sarr[1]
+	keys, err = winreg.EnumerateRegKeys(root, path)
+	if err != nil {
+		return
+	}
+
+	for idx = 0; idx < len(keys); idx += 1 {
+		fmt.Printf("[%s].[%s].[%d] = [%s]\n", root, path, idx, keys[idx])
+	}
+	err = nil
+
+	return
+}
+
+func Enumvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var keys []string
+	var idx int
+	var root string
+	var path string
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need root path")
+		return
+	}
+	root = sarr[0]
+	path = sarr[1]
+	keys, err = winreg.EnumerateRegValueKeys(root, path)
+	if err != nil {
+		return
+	}
+
+	for idx = 0; idx < len(keys); idx += 1 {
+		fmt.Printf("[%s].[%s].[%d]value = [%s]\n", root, path, idx, keys[idx])
 	}
 	err = nil
 	return
-
 }
 
 func main() {
-	var commandline string
-	var err error
 	var parser *extargsparse.ExtArgsParse
-	var ns *extargsparse.NameSpaceEx
-
-	commandline = `{
-		"timeout|t" : 500,
-		"input|i" : null,
-		"output|o" : null,
-		"chan<Chan_handler>##outstr ... to set out string##" : {
-			"$" : "+"
-		},
-		"utf8togbk<Utf8togbk_handler>## codes ... to get codes from utf-8 to ansi##"  : {
-			"$" : "+"
-		},
-		"gbktoutf8<Gbktoutf8_handler>## codes ... to get codes from ansi to utf-8##" : {
-			"$" : "+"
-		},
-		"utf8touni<Utf8touni_handler>## codes ... to get codes from utf-8 to unicode##" : {
-			"$" : "+"
-		},
-		"unitoutf8<Unitoutf8_handler>## codes ... to get codes from utf-8 to unicode##" : {
-			"$" : "+"
-		},
-		"readfilebyte<Readfilebyte_handler>## [fname] ... to read file default stdin ##" : {
-			"$" : "*"
-		},
-		"writefilebyte<Writefilebyte_handler>## strs ... to write file output default stdout##" : {
-			"$" : "+"
-		},
-		"readfile<Readfile_handler>## [fname] ... to read file default stdin ##" : {
-			"$" : "*"
-		},
-		"writefile<Writefile_handler>## strs ... to write file output default stdout##" : {
-			"$" : "+"
-		},
-		"deletefile<Deletefile_handler>## fname ... to delete file##" : {
-			"$" : "+"
-		},
-		"parseu64<Parseu64_handler>##val ... to parse u64##" : {
-			"$" : "+"
-		},
-		"mkdirsafe<Mkdirsafe_handler>##dir ... to make dir safe##" : {
-			"$" : "+"
-		},
-		"goversioncheck<Goversioncheck_handler>##to check go compiler version##" : {
-			"$" : 0
-		},
-		"querymem<Querymem_handler>##to list current process memory##" : {
-			"$" : 0
-		},
-		"normpath<Normpath_handler>##path ... to normal like path##" : {
-			"$" : "+"
-		},
-		"cmprtver<Cmprtver_handler>##version to compare with runtime##" : {
-			"$" : 1
-		},
-		"logtest<Logtest_handler>##[num] to debug loglines default 10##" : {
-			"$" : "?"
-		},
-		"existfile<Existfile_handler>##file ... to test file exist##" : {
-			"$" : "+"
-		},
-		"encbase64<Encbase64_handler>##infile outfile to encode base64##" : {
-			"$" : 2
-		},
-		"decbase64<Decbase64_handler>##infile outfile to decode base64##" : {
-			"$" : 2
-		},
-		"printbytes<Printbytes_handler>##args ... to print byte##" : {
-			"$" : "+"
-		}
-
-	}`
-
+	var err error
 	parser, err = extargsparse.NewExtArgsParse(nil, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "can not make parser err[%s]\n", err.Error())
+		logutil.Error("%s", err.Error())
+		atexit.Exit(5)
+	}
+
+	err = LoadRegCmdFlags(parser)
+	if err != nil {
+		logutil.Error("%s", err.Error())
 		atexit.Exit(5)
 	}
 
 	err = logutil.PrepareLog(parser)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "can not set [%s]\n", err.Error())
-		atexit.Exit(5)
-	}
-	err = parser.LoadCommandLineString(commandline)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "can not parse %s\n", commandline)
+		logutil.Error("%s", err.Error())
 		atexit.Exit(5)
 	}
 
-	ns, err = parser.ParseCommandLineEx(nil, nil, nil, nil)
+	_, err = parser.ParseCommandLine(nil, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "can not use parse command line [%s]\n", err.Error())
+		logutil.Error("%s", err.Error())
 		atexit.Exit(4)
 	}
-	if len(ns.GetString("subcommand")) == 0 {
-		fmt.Fprintf(os.Stderr, "can not get subcommand\n")
-		atexit.Exit(5)
-	}
-	//fmt.Fprintf(os.Stdout, "subcommand [%s] succ\n", ns.GetString("subcommand"))
 	atexit.Exit(0)
-	return
 }

@@ -212,3 +212,23 @@ func MkdirSafe(dname string, mask int) (err error) {
 	return
 
 }
+
+func Mktempfile(dirn, pattern string) (fname string, err error) {
+	var fp *os.File
+	fp, err = ioutil.TempFile(dirn, pattern)
+	if err != nil {
+		err = dbgutil.FormatError("Tempfile dir [%s] pattern [%s] error %s", dirn, pattern, err.Error())
+		return
+	}
+	defer fp.Close()
+	fname = fp.Name()
+	return
+}
+
+func Mktempdir(dirn, pattern string) (dname string, err error) {
+	dname, err = ioutil.TempDir(dirn, pattern)
+	if err != nil {
+		err = dbgutil.FormatError("Tempdir dir [%s] pattern [%s] error %s", dirn, pattern, err.Error())
+	}
+	return
+}
