@@ -6,6 +6,7 @@ import (
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 	"io"
+	"logutil"
 	"reflect"
 	"strconv"
 	"strings"
@@ -21,9 +22,10 @@ var (
 	modadvapi32 = windows.NewLazySystemDLL("advapi32.dll")
 	modkernel32 = windows.NewLazySystemDLL("kernel32.dll")
 
-	procRegLoadKeyW   = modadvapi32.NewProc("RegLoadKeyW")
-	procRegUnLoadKeyW = modadvapi32.NewProc("RegUnLoadKeyW")
-	procRegSaveKeyW   = modadvapi32.NewProc("RegSaveKeyW")
+	procRegLoadKeyW    = modadvapi32.NewProc("RegLoadKeyW")
+	procRegUnLoadKeyW  = modadvapi32.NewProc("RegUnLoadKeyW")
+	procRegSaveKeyW    = modadvapi32.NewProc("RegSaveKeyW")
+	procRegSetValueExW = modadvapi32.NewProc("RegSetValueExW")
 )
 
 const (
@@ -85,6 +87,81 @@ func getRegAccess(accesstype string) (access uint32, err error) {
 	return
 }
 
+func ReadRegBytes(root, path, key string) (valueb []byte, typestr string, err error) {
+	var rbuf []byte
+	var rbufsize int
+	var valtype uint32
+	var retn int
+	rk, err := getRootKey(root)
+	if err != nil {
+		return
+	}
+	k, err := registry.OpenKey(rk, path, registry.QUERY_VALUE)
+	if err != nil {
+		err = dbgutil.FormatError("open [%s].[%s] error[%s]", root, path, err.Error())
+		return
+	}
+	defer k.Close()
+
+	rbuf = nil
+	rbufsize = 32
+	for {
+		rbuf = make([]byte, rbufsize, rbufsize)
+		retn, valtype, err = k.GetValue(key, rbuf)
+		if err != nil {
+			errtype := reflect.TypeOf(err)
+			if strings.Compare(errtype.Name(), "Errno") == 0 {
+				if err.(syscall.Errno) == syscall.ERROR_MORE_DATA {
+					rbufsize <<= 1
+					continue
+				}
+			}
+			err = dbgutil.FormatError("read [%s].[%s].[%s] error [%s]", root, path, key, err.Error())
+			return
+		}
+		if rbufsize > retn {
+			logutil.DebugBuffer(rbuf[:retn], "rbuf")
+			break
+		}
+		rbufsize <<= 1
+	}
+
+	typestr = ""
+	err = nil
+	valueb = rbuf[:retn]
+	if valtype == registry.NONE {
+		typestr = "NONE"
+	} else if valtype == registry.SZ || valtype == registry.EXPAND_SZ {
+		typestr = "SZ"
+		if valtype == registry.EXPAND_SZ {
+			typestr = "EXPAND_SZ"
+		}
+	} else if valtype == registry.BINARY || valtype == registry.FULL_RESOURCE_DESCRIPTOR ||
+		valtype == registry.RESOURCE_LIST {
+		typestr = "BINARY"
+		if valtype == registry.FULL_RESOURCE_DESCRIPTOR {
+			typestr = "FULL_RESOURCE_DESCRIPTOR"
+		}
+		if valtype == registry.RESOURCE_LIST {
+			typestr = "RESOURCE_LIST"
+		}
+	} else if valtype == registry.DWORD {
+		typestr = "DWORD"
+	} else if valtype == registry.DWORD_BIG_ENDIAN {
+		typestr = "DWORD_BIG_ENDIAN"
+	} else if valtype == registry.LINK {
+		typestr = "LINK"
+	} else if valtype == registry.MULTI_SZ {
+		typestr = "MULTI_SZ"
+	} else if valtype == registry.QWORD {
+		typestr = "QWORD"
+	} else {
+		err = dbgutil.FormatError("can not find type %d (%s\\%s)", valtype, path, key)
+	}
+	return
+
+}
+
 func ReadRegString(root, path, key string) (value string, typestr string, err error) {
 	var rbuf []byte
 	var rbufsize int
@@ -122,6 +199,7 @@ func ReadRegString(root, path, key string) (value string, typestr string, err er
 			return
 		}
 		if rbufsize > retn {
+			logutil.DebugBuffer(rbuf[:retn], "rbuf")
 			break
 		}
 		rbufsize <<= 1
@@ -238,6 +316,62 @@ func parserXNumber(value string) (ival64 int64, err error) {
 	}
 
 	return
+}
+
+func WriteRegBytes(root, path, key string, valueb []byte, typestr string) (err error) {
+	var p *uint16
+	var rk registry.Key
+	var k registry.Key
+	var valtype uint32
+	rk, err = getRootKey(root)
+	if err != nil {
+		return err
+	}
+	k, err = registry.OpenKey(rk, path, registry.WRITE)
+	if err != nil {
+		return err
+	}
+
+	defer k.Close()
+
+	p, err = syscall.UTF16PtrFromString(key)
+	if err != nil {
+		err = dbgutil.FormatError("can not format type [%s] error %s", typestr, err.Error())
+		return
+	}
+	if strings.Compare(typestr, "SZ") == 0 {
+		valtype = registry.SZ
+	} else if strings.Compare(typestr, "EXPAND_SZ") == 0 {
+		valtype = registry.EXPAND_SZ
+	} else if strings.Compare(typestr, "MULTI_SZ") == 0 {
+		valtype = registry.MULTI_SZ
+	} else if strings.Compare(typestr, "BINARY") == 0 {
+		valtype = registry.BINARY
+	} else if strings.Compare(typestr, "DWORD") == 0 {
+		valtype = registry.DWORD
+	} else if strings.Compare(typestr, "DWORD_BIG_ENDIAN") == 0 {
+		valtype = registry.DWORD_BIG_ENDIAN
+	} else if strings.Compare(typestr, "QWORD") == 0 {
+		valtype = registry.QWORD
+	} else {
+		err = dbgutil.FormatError("unknown type (%s)", typestr)
+		return
+	}
+
+	var r0 uintptr
+	if len(valueb) == 0 {
+		r0, _, _ = syscall.Syscall6(procRegSetValueExW.Addr(), 6, uintptr(syscall.Handle(k)), uintptr(unsafe.Pointer(p)), uintptr(0), uintptr(valtype), uintptr(0), uintptr(0))
+	} else {
+		r0, _, _ = syscall.Syscall6(procRegSetValueExW.Addr(), 6, uintptr(syscall.Handle(k)), uintptr(unsafe.Pointer(p)), uintptr(0), uintptr(valtype), uintptr(unsafe.Pointer(&valueb[0])), uintptr(uint32(len(valueb))))
+	}
+
+	if r0 != 0 {
+		err = dbgutil.FormatError("Set [%s].[%s].[%s] type [%s] value error [%d]", root, path, key, typestr, r0)
+	} else {
+		err = nil
+	}
+
+	return err
 }
 
 func WriteRegString(root, path, key, value, typestr string) error {

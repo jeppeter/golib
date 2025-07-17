@@ -11,6 +11,7 @@ import (
 	"npipepack"
 	"os"
 	"strings"
+	"strop"
 	"winpriv"
 	"winreg"
 )
@@ -18,6 +19,8 @@ import (
 func init() {
 	Readregstring_handler(nil, nil, nil)
 	Writeregstring_handler(nil, nil, nil)
+	Readregbytes_handler(nil, nil, nil)
+	Writeregbytes_handler(nil, nil, nil)
 	Createregkey_handler(nil, nil, nil)
 	Deleteregkey_handler(nil, nil, nil)
 	Deleteregvalue_handler(nil, nil, nil)
@@ -43,6 +46,12 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 			"$" : "+"
 		},
 		"WriteRegString<Writeregstring_handler>## root path key value to write registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
+			"$" : "+"
+		},
+		"ReadRegBytes<Readregbytes_handler>## root path key to read registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
+			"$" : "+"
+		},
+		"WriteRegBytes<Writeregbytes_handler>## root path key typestr val... to write registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
 			"$" : "+"
 		},
 		"CreateRegKey<Createregkey_handler>## root path key [accesstype] [existok] to create registry root can be(HKLM|HKCU|HKCR|HKU|HKCC) accesstype can be(ALL|EXECUTE|QUERY_VALUE|READ|SET_VALUE|WRITE|ENUMERATE_SUB_KEYS) default(ALL) existed ok default True##" : {
@@ -92,8 +101,14 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 /*ReadRegString*/
 func Readregstring_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var args []string
+	var valb []byte
 	if ns == nil {
 		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
 		return
 	}
 	args = ns.GetArray("subnargs")
@@ -110,6 +125,8 @@ func Readregstring_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ct
 		return
 	}
 	fmt.Fprintf(os.Stdout, "[%s]%s\\%s=%s(%s)\n", root, path, key, value, valtype)
+	valb = []byte(value)
+	logutil.DebugBuffer(valb, "value byte")
 	return nil
 }
 
@@ -139,6 +156,120 @@ func Writeregstring_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, c
 		return
 	}
 	fmt.Fprintf(os.Stdout, "write [%s]%s\\%s %s(%s) succ\n", root, path, key, value, typestr)
+	return nil
+}
+
+/*ReadRegBytes*/
+func Readregbytes_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
+	var valb []byte
+	var i, lasti int
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 3 {
+		err = dbgutil.FormatError(" need root path key")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	key := args[2]
+	valb, valtype, err := winreg.ReadRegBytes(root, path, key)
+	if err != nil {
+		err = dbgutil.FormatError("read %s %s\\%s error(%s)", root, path, key, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "read %s %s\\%s type [%s]", root, path, key, valtype)
+	lasti = 0
+	for i, _ = range valb {
+		if (i % 16) == 0 {
+			if i > 0 {
+				fmt.Fprintf(os.Stdout, "   ")
+				for lasti < i {
+					if valb[lasti] >= byte(' ') && valb[lasti] <= byte('~') {
+						fmt.Fprintf(os.Stdout, "%c", valb[lasti])
+					} else {
+						fmt.Fprintf(os.Stdout, ".")
+					}
+					lasti += 1
+				}
+			}
+			fmt.Fprintf(os.Stdout, "\n0x%08x", i)
+		}
+		fmt.Fprintf(os.Stdout, " 0x%02x", valb[i])
+	}
+
+	if lasti != i {
+		for (i % 16) != 0 {
+			fmt.Fprintf(os.Stdout, "     ")
+			i += 1
+		}
+
+		fmt.Fprintf(os.Stdout, "    ")
+		for lasti < len(valb) {
+			if valb[lasti] >= byte(' ') && valb[lasti] <= byte('~') {
+				fmt.Fprintf(os.Stdout, "%c", valb[lasti])
+			} else {
+				fmt.Fprintf(os.Stdout, ".")
+			}
+			lasti += 1
+		}
+	}
+	fmt.Fprintf(os.Stdout, "\n")
+	return nil
+}
+
+/*WriteRegBytes*/
+func Writeregbytes_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var args []string
+	var curval uint64
+	var vals string
+	var valb []byte
+	var idx int
+	if ns == nil {
+		err = nil
+		return
+	}
+	args = ns.GetArray("subnargs")
+	if len(args) < 4 {
+		err = dbgutil.FormatError("need root path key typestr valb")
+		return
+	}
+	root := args[0]
+	path := args[1]
+	key := args[2]
+	typestr := args[3]
+	valb = []byte{}
+
+	for idx = 4; idx < len(args); idx += 1 {
+		curval, err = strop.Parseu64(args[idx])
+		if err != nil {
+			return
+		}
+		valb = append(valb, byte(curval))
+	}
+
+	vals = ""
+	for idx = 0; idx < len(valb); idx += 1 {
+		if idx > 0 {
+			vals += ","
+		}
+		vals += fmt.Sprintf("0x%02x", valb[idx])
+	}
+
+	err = winreg.WriteRegBytes(root, path, key, valb, typestr)
+	if err != nil {
+		err = dbgutil.FormatError("write %s %s\\%s %s(%s) error(%s)", root, path, key, vals, typestr, err.Error())
+		return
+	}
+	fmt.Fprintf(os.Stdout, "write [%s]%s\\%s %s(%s) succ\n", root, path, key, vals, typestr)
 	return nil
 }
 

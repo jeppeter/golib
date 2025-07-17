@@ -150,3 +150,21 @@ func UnicodeToString(inbytes []byte) (outs string, err error) {
 	err = nil
 	return
 }
+
+func Parseu64(val string) (vali uint64, err error) {
+	var ss string = val
+	var base int = 10
+	if strings.HasPrefix(val, "0x") || strings.HasPrefix(val, "0X") {
+		ss = val[2:]
+		base = 16
+	} else if strings.HasPrefix(val, "x") || strings.HasPrefix(val, "X") {
+		ss = val[1:]
+		base = 16
+	}
+	vali, err = strconv.ParseUint(ss, base, 64)
+	if err != nil {
+		err = dbgutil.FormatError("parse [%s] error [%s]", val, err.Error())
+		return
+	}
+	return
+}
