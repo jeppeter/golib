@@ -16,6 +16,8 @@ func init() {
 	Tcplisten_handler(nil, nil, nil)
 	Udpsend_handler(nil, nil, nil)
 	Udprecv_handler(nil, nil, nil)
+	Tcpclirecv_handler(nil, nil, nil)
+	Tcpclisend_handler(nil, nil, nil)
 }
 
 func Tcpconn_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -218,6 +220,102 @@ func Udprecv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
+func Tcpclisend_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var outbytes []byte
+	var server string = "127.0.0.1:50302"
+	var infile string
+	var conn net.Conn
+	var tlen int
+	var r int
+
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	infile = ns.GetString("input")
+	logutil.Debug("read %s", infile)
+	outbytes, err = fileop.ReadFileBytes(infile)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+
+	if len(sarr) > 0 {
+		server = sarr[0]
+	}
+
+	conn, err = net.Dial("tcp", server)
+	if err != nil {
+		return
+	}
+	logutil.Debug("dial [%s]", server)
+
+	tlen = 0
+
+	for tlen < len(outbytes) {
+		r, err = conn.Write(outbytes[tlen:])
+		if err != nil {
+			return
+		}
+		tlen += r
+	}
+
+	err = nil
+	return
+}
+
+func Tcpclirecv_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var inbytes []byte
+	var server string = "127.0.0.1:50302"
+	var conn net.Conn
+	var tlen int
+
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+
+	if len(sarr) > 0 {
+		server = sarr[0]
+	}
+
+	conn, err = net.Dial("tcp", server)
+	if err != nil {
+		return
+	}
+	logutil.Debug("dial [%s]", server)
+
+	tlen = 0
+	inbytes = make([]byte, 2048)
+	for {
+		tlen, err = conn.Read(inbytes)
+		if err != nil {
+			return
+		}
+		logutil.DebugBuffer(inbytes[:tlen], "read bytes")
+	}
+
+	err = nil
+	return
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -238,6 +336,12 @@ func main() {
 			"$" : 1
 		},
 		"udprecv<Udprecv_handler>##:port to recv from input##" : {
+			"$" : 1
+		},
+		"tcpclisend<Tcpclisend_handler>##host:port send from input##" : {
+			"$" : 1
+		},
+		"tcpclirecv<Tcpclirecv_handler>##host:port to recv by connect##" : {
 			"$" : 1
 		}
 

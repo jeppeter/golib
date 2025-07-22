@@ -419,12 +419,65 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	return
 }
 
+const (
+	KEYWORD_COUNTRY = "country"
+	KEYWORD_ORGANIZATION = "organization"
+	
+)
+
+func get_pkix_name(f string) (name pkix.Name, err error) {
+	var s string
+	var mapv map[string]interface{}
+	var valarr []interface{}
+	var ok bool
+
+	var s, err = fileop.ReadFile(f)
+	if err != nil {
+		return
+	}
+	mapv, err = jsonext.GetJsonMap(s)
+	if err != nil {
+		return
+	}
+	name = &pkix.Name{}
+	valarr, ok = mapv[]
+
+}
+
+func Pkixname_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var curname *pkix.Name
+	var sarr []string
+	var certfile string
+	var signfile string
+	var certdata []byte
+
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("need TAG")
+		return
+	}
+	for _, f = range sarr {
+
+	}
+}
+
 func init() {
 	Genkeycert_handler(nil, nil, nil)
 	Pemtoder_handler(nil, nil, nil)
 	Dertopem_handler(nil, nil, nil)
 	Rsasign_handler(nil, nil, nil)
 	Rsavfy_handler(nil, nil, nil)
+	Pkixname_handler(nil, nil, nil)
 }
 func main() {
 	var commandline string
@@ -451,6 +504,9 @@ func main() {
 		},
 		"rsavfy<Rsavfy_handler>##certfile inputfile signfile to verify data##" : {
 			"$" : 3
+		},
+		"pkixname<Pkixname_handler>##[inputfile] ... to format pkix.Name asn1.Marshal inputfile is json file##" : {
+			"$" : 1
 		}
 
 	}`
