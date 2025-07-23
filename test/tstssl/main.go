@@ -444,7 +444,7 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 	var curattr pkix.AttributeTypeAndValue
 	var curi int
 	var curf float64
-	var iarr []int
+	var iarr asn1.RawContent
 	retv = []pkix.AttributeTypeAndValue{}
 	for idx = 0; idx < len(valarr); idx += 1 {
 		curmap, ok = valarr[idx].(map[string]interface{})
@@ -483,7 +483,7 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 			return
 		}
 
-		iarr = []int{}
+		iarr = asn1.RawContent{}
 
 		for jdx = 0; jdx < len(carr); jdx += 1 {
 			curi = 0
@@ -497,8 +497,7 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 				curi = 0
 			}
 			logutil.Debug("curi %d", curi)
-			iarr = append(iarr, curi)
-
+			iarr = append(iarr, byte(curi))
 		}
 
 		curattr.Value = iarr
