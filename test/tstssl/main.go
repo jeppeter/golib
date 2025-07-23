@@ -479,28 +479,28 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 		curattr.Type = curoid
 		carr, ok = curmap[KEYWORD_VALUE].([]interface{})
 		if !ok {
-			err = dbgutil.FormatError("[%d].[%s] not exists", idx, KEYWORD_VALUE)
-			return
-		}
+			curattr.Value = nil
+		} else {
+			iarr = asn1.RawContent{}
 
-		iarr = asn1.RawContent{}
-
-		for jdx = 0; jdx < len(carr); jdx += 1 {
-			curi = 0
-			curi, ok = carr[jdx].(int)
-			if !ok {
-				curf, ok = carr[jdx].(float64)
-				if ok {
-					curi = int(curf)
-				}
-			} else {
+			for jdx = 0; jdx < len(carr); jdx += 1 {
 				curi = 0
+				curi, ok = carr[jdx].(int)
+				if !ok {
+					curf, ok = carr[jdx].(float64)
+					if ok {
+						curi = int(curf)
+					}
+				} else {
+					curi = 0
+				}
+				logutil.Debug("curi %d", curi)
+				iarr = append(iarr, byte(curi))
 			}
-			logutil.Debug("curi %d", curi)
-			iarr = append(iarr, byte(curi))
-		}
 
-		curattr.Value = iarr
+			curattr.Value = iarr
+
+		}
 
 		retv = append(retv, curattr)
 	}
@@ -624,6 +624,146 @@ func Pkixname_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	return
 }
 
+func Rsagen_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var rsabits int = 2048
+	var rsakey *rsa.PrivateKey
+	var rsabytes []byte
+	var capem *bytes.Buffer
+	var keyfile string
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) > 0 {
+		rsabits, err = strconv.Atoi(sarr[0])
+		if err != nil {
+			err = dbgutil.FormatError("[%s] not valid bits", sarr[0])
+			return
+		}
+	}
+
+	rsakey, err = rsa.GenerateKey(rand.Reader, rsabits)
+	if err != nil {
+		err = dbgutil.FormatError("generate %d error %s", rsabits, err.Error())
+		return
+	}
+
+	rsabytes, err = x509.MarshalPKCS8PrivateKey(rsakey)
+	if err != nil {
+		err = dbgutil.FormatError("MarshalPKCS8PrivateKey error %s", err.Error())
+		return
+	}
+
+	capem = new(bytes.Buffer)
+
+	err = pem.Encode(capem, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: rsabytes,
+	})
+	if err != nil {
+		err = dbgutil.FormatError("encode RSA PRIVATE KEY error %s", err.Error())
+		return
+	}
+	keyfile = ns.GetString("keyfile")
+	_, err = fileop.WriteFileBytes(keyfile, capem.Bytes())
+	if err != nil {
+		err = dbgutil.FormatError("can not write keyfile [%s] %s", keyfile, err.Error())
+		return
+	}
+	err = nil
+	return
+}
+
+func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var rsakey *rsa.PrivateKey
+	var tempx509 *x509.Certificate
+	var pubkey *rsa.PublicKey
+	var capem *bytes.Buffer
+	var cabytes []byte
+	var cafile string
+	var keyfile string
+	var rsabytes []byte
+	var pkany any
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("to get template json file for Certifacate")
+		return
+	}
+
+	keyfile = ns.GetString("keyfile")
+	if len(keyfile) == 0 {
+		err = dbgutil.FormatError("need keyfile")
+		return
+	}
+
+	rsabytes, err = read_pem_or_der(keyfile)
+	if err != nil {
+		return
+	}
+
+	pkany, err = x509.ParsePKCS8PrivateKey(rsabytes)
+	if err != nil {
+		err = dbgutil.FormatError("[%s] not valid rsa %s", keyfile, err.Error())
+		return
+	}
+	switch pkany.(type) {
+	case *rsa.PrivateKey:
+		rsakey = pkany.(*rsa.PrivateKey)
+	default:
+		err = dbgutil.FormatError("key is not rsakey type [%s]", reflect.TypeOf(pkany))
+		return
+	}
+
+	tempx509, err = get_certificate_file(sarr[0])
+	if err != nil {
+		return
+	}
+
+	pubkey = &(rsakey.PublicKey)
+	cabytes, err = x509.CreateCertificate(rand.Reader, tempx509, tempx509, pubkey, rsakey)
+	if err != nil {
+		err = dbgutil.FormatError("output certificate %s", err.Error())
+		return
+	}
+	capem = new(bytes.Buffer)
+	err = pem.Encode(capem, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cabytes,
+	})
+	if err != nil {
+		err = dbgutil.FormatError("encode CERTIFICATE error %s", err.Error())
+		return
+	}
+	cafile = ns.GetString("certfile")
+	_, err = fileop.WriteFileBytes(cafile, capem.Bytes())
+	if err != nil {
+		err = dbgutil.FormatError("can not write certfile [%s] %s", cafile, err.Error())
+		return
+	}
+
+	err = nil
+	return
+}
+
 func init() {
 	Genkeycert_handler(nil, nil, nil)
 	Pemtoder_handler(nil, nil, nil)
@@ -631,6 +771,8 @@ func init() {
 	Rsasign_handler(nil, nil, nil)
 	Rsavfy_handler(nil, nil, nil)
 	Pkixname_handler(nil, nil, nil)
+	Rsagen_handler(nil, nil, nil)
+	X509create_handler(nil, nil, nil)
 }
 func main() {
 	var commandline string
@@ -659,6 +801,12 @@ func main() {
 			"$" : 3
 		},
 		"pkixname<Pkixname_handler>##[inputfile] ... to format pkix.Name asn1.Marshal inputfile is json file##" : {
+			"$" : 1
+		},
+		"rsagen<Rsagen_handler>##bits to generate rsa key file##" : {
+			"$" : 1
+		},
+		"x509create<X509create_handler>##jsonfile to set x509 from template file by keyfile##" : {
 			"$" : 1
 		}
 

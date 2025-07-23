@@ -6,4 +6,4 @@ set TOPDIR=%CURDIR%\..\..
 REM md src\jsonext
 REM xcopy /s /e %CD%\..\..\jsonext src\jsonext
 set GOPATH=%GOPATH%;%TOPDIR%
-go build -o tstssl.exe main.go
+go build -o tstssl.exe main.go x509temp.go
