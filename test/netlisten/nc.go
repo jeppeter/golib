@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	//"time"
 )
 
 func init() {
@@ -256,7 +257,16 @@ func Tcpclisend_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	if err != nil {
 		return
 	}
+	defer func() {
+		logutil.Debug("closed")
+		conn.Close()
+	}()
 	logutil.Debug("dial [%s]", server)
+
+	tcpConn, ok := conn.(*net.TCPConn)
+	if ok {
+		tcpConn.SetNoDelay(true) // Disable Nagle's algorithm
+	}
 
 	tlen = 0
 

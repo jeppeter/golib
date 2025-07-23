@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"github.com/tebeka/atexit"
+	"jsonext"
 	"logutil"
 	"math/big"
 	"net"
@@ -420,36 +421,174 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 }
 
 const (
-	KEYWORD_COUNTRY = "country"
-	KEYWORD_ORGANIZATION = "organization"
-	
+	KEYWORD_COUNTRY          = "country"
+	KEYWORD_PROVINCE         = "province"
+	KEYWORD_LOCALITY         = "locality"
+	KEYWORD_STREETADDRESS    = "streetaddress"
+	KEYWORD_POSTALCODE       = "postalcode"
+	KEYWORD_ORGANIZATION     = "organization"
+	KEYWORD_ORGANIZATIONUNIT = "organizationalunit"
+	KEYWORD_COMMONNAME       = "commonname"
+	KEYWORD_SERIALNUMBER     = "serialnumber"
+	KEYWROD_EXTRANAMES       = "extranames"
+	KEYWORD_TYPE             = "type"
+	KEYWORD_VALUE            = "value"
 )
 
-func get_pkix_name(f string) (name pkix.Name, err error) {
+func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, err error) {
+	var curmap map[string]interface{}
+	var idx, jdx int
+	var ok bool
+	var carr []interface{}
+	var curoid asn1.ObjectIdentifier
+	var curattr pkix.AttributeTypeAndValue
+	var curi int
+	var curf float64
+	var iarr []int
+	retv = []pkix.AttributeTypeAndValue{}
+	for idx = 0; idx < len(valarr); idx += 1 {
+		curmap, ok = valarr[idx].(map[string]interface{})
+		if !ok {
+			err = dbgutil.FormatError("[%d] not valid map[string]interface{}", idx)
+			return
+		}
+
+		carr, ok = curmap[KEYWORD_TYPE].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("[%d].[%s] not array", idx, KEYWORD_TYPE)
+			return
+		}
+
+		curattr = pkix.AttributeTypeAndValue{}
+		curoid = asn1.ObjectIdentifier{}
+		for jdx = 0; jdx < len(carr); jdx += 1 {
+			curi = 0
+			curi, ok = carr[jdx].(int)
+			if !ok {
+				curf, ok = carr[jdx].(float64)
+				if ok {
+					curi = int(curf)
+				}
+			} else {
+				curi = 0
+			}
+			logutil.Debug("curi %d", curi)
+			curoid = append(curoid, curi)
+		}
+
+		curattr.Type = curoid
+		carr, ok = curmap[KEYWORD_VALUE].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("[%d].[%s] not exists", idx, KEYWORD_VALUE)
+			return
+		}
+
+		iarr = []int{}
+
+		for jdx = 0; jdx < len(carr); jdx += 1 {
+			curi = 0
+			curi, ok = carr[jdx].(int)
+			if !ok {
+				curf, ok = carr[jdx].(float64)
+				if ok {
+					curi = int(curf)
+				}
+			} else {
+				curi = 0
+			}
+			logutil.Debug("curi %d", curi)
+			iarr = append(iarr, curi)
+
+		}
+
+		curattr.Value = iarr
+
+		retv = append(retv, curattr)
+	}
+
+	err = nil
+	return
+}
+
+func get_array_string(mapv map[string]interface{}, key string) (retv []string) {
+	//var ok bool
+	var err error
+	var idx int
+	var valarr []interface{}
+	retv = []string{}
+
+	valarr, err = jsonext.GetJsonValueArray(key, mapv)
+	if err != nil {
+		logutil.Debug("[%s] not ok %s", key, err.Error())
+		err = nil
+		return
+	}
+	for idx = 0; idx < len(valarr); idx += 1 {
+		retv = append(retv, valarr[idx].(string))
+	}
+	return
+}
+
+func get_pkix_name(f string) (name *pkix.Name, err error) {
 	var s string
 	var mapv map[string]interface{}
 	var valarr []interface{}
+	var valinter interface{}
 	var ok bool
+	name = &pkix.Name{}
 
-	var s, err = fileop.ReadFile(f)
+	s, err = fileop.ReadFile(f)
 	if err != nil {
 		return
 	}
+
+	logutil.Debug("[%s]\n%s", f, s)
 	mapv, err = jsonext.GetJsonMap(s)
 	if err != nil {
 		return
 	}
-	name = &pkix.Name{}
-	valarr, ok = mapv[]
+	name.Country = get_array_string(mapv, KEYWORD_COUNTRY)
+	name.Province = get_array_string(mapv, KEYWORD_PROVINCE)
+	name.Locality = get_array_string(mapv, KEYWORD_LOCALITY)
+	name.StreetAddress = get_array_string(mapv, KEYWORD_STREETADDRESS)
+	name.PostalCode = get_array_string(mapv, KEYWORD_POSTALCODE)
+	name.Organization = get_array_string(mapv, KEYWORD_ORGANIZATION)
+	name.OrganizationalUnit = get_array_string(mapv, KEYWORD_ORGANIZATIONUNIT)
+
+	valinter, ok = mapv[KEYWORD_COMMONNAME]
+	if ok {
+		name.CommonName = valinter.(string)
+	} else {
+		name.CommonName = ""
+	}
+
+	valinter, ok = mapv[KEYWORD_SERIALNUMBER]
+	if ok {
+		name.SerialNumber = valinter.(string)
+	} else {
+		name.SerialNumber = ""
+	}
+
+	valarr, ok = mapv[KEYWROD_EXTRANAMES].([]interface{})
+	if ok {
+		name.ExtraNames, err = get_extra_names(valarr)
+		if err != nil {
+			return
+		}
+	} else {
+		name.ExtraNames = []pkix.AttributeTypeAndValue{}
+	}
+
+	err = nil
+	return
 
 }
 
 func Pkixname_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var curname *pkix.Name
 	var sarr []string
-	var certfile string
-	var signfile string
-	var certdata []byte
+	var f string
+	var outb []byte
 
 	err = nil
 	if ns == nil {
@@ -467,8 +606,23 @@ func Pkixname_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 		return
 	}
 	for _, f = range sarr {
+		curname, err = get_pkix_name(f)
+		if err != nil {
+			return
+		}
 
+		logutil.Debug("[%s] Country %v", f, curname.Country)
+
+		outb, err = asn1.Marshal(curname.ToRDNSequence())
+		if err != nil {
+			return
+		}
+
+		logutil.DebugBuffer(outb, "[%s] bytes", f)
 	}
+
+	err = nil
+	return
 }
 
 func init() {
