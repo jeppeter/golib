@@ -25,7 +25,10 @@ const (
 	KEYWORD_EXT_KEYUSAGE_MICROSOFT_COMMERCIAL_CODE_SIGNING = "microsoftcommercialcodesigning"
 	KEYWORD_EXT_KEYUSAGE_MICROSOFT_KERNEL_CODE_SIGNING     = "microsoftkernelcodesigning"
 
-	KEYWORD_AUTHORITY_KEY_ID = "authoritykeyid"
+	KEYWORD_AUTHORITY_KEY_ID        = "authoritykeyid"
+	KEYWORD_BASIC_CONSTRAINT_VALID  = "basiccontraintsvalid"
+	KEYWORD_CRL_DISTRIBUTION_POINTS = "crldistributionpoints"
+	KEYWORD_DNS_NAMES               = "dnsnames"
 )
 
 var extKeyUsageValue = []struct {
@@ -107,6 +110,7 @@ func get_certificate_file(f string) (tempx509 *x509.Certificate, err error) {
 	var mapv map[string]interface{}
 	var arrs []string
 	var valarr []interface{}
+	var valbool bool
 	tempx509 = &x509.Certificate{}
 	s, err = fileop.ReadFile(f)
 	if err != nil {
@@ -131,10 +135,30 @@ func get_certificate_file(f string) (tempx509 *x509.Certificate, err error) {
 
 	valarr, ok = mapv[KEYWORD_AUTHORITY_KEY_ID].([]interface{})
 	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_AUTHORITY_KEY_ID)
 		tempx509.AuthorityKeyId, err = get_byte_array(valarr, KEYWORD_AUTHORITY_KEY_ID)
 		if err != nil {
 			return
 		}
+	}
+
+	tempx509.BasicConstraintsValid = false
+	valbool, ok = mapv[KEYWORD_BASIC_CONSTRAINT_VALID].(bool)
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_BASIC_CONSTRAINT_VALID)
+		tempx509.BasicConstraintsValid = valbool
+	}
+
+	arrs, ok = mapv[KEYWORD_CRL_DISTRIBUTION_POINTS].([]string)
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_CRL_DISTRIBUTION_POINTS)
+		tempx509.CRLDistributionPoints = arrs
+	}
+
+	arrs, ok = mapv[KEYWORD_DNS_NAMES].([]string)
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_DNS_NAMES)
+		tempx509.DNSNames = arrs
 	}
 
 	err = nil
