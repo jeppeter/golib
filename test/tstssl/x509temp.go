@@ -149,12 +149,14 @@ func get_certificate_file(f string) (tempx509 *x509.Certificate, err error) {
 		tempx509.BasicConstraintsValid = valbool
 	}
 
+	tempx509.CRLDistributionPoints = []string{}
 	arrs, ok = mapv[KEYWORD_CRL_DISTRIBUTION_POINTS].([]string)
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_CRL_DISTRIBUTION_POINTS)
 		tempx509.CRLDistributionPoints = arrs
 	}
 
+	tempx509.DNSNames = []string{}
 	arrs, ok = mapv[KEYWORD_DNS_NAMES].([]string)
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_DNS_NAMES)
