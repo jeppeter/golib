@@ -29,6 +29,7 @@ const (
 	KEYWORD_BASIC_CONSTRAINT_VALID  = "basiccontraintsvalid"
 	KEYWORD_CRL_DISTRIBUTION_POINTS = "crldistributionpoints"
 	KEYWORD_DNS_NAMES               = "dnsnames"
+	KEYWORD_EMAIL_ADDRESSES         = "emailaddresses"
 )
 
 var extKeyUsageValue = []struct {
@@ -161,6 +162,13 @@ func get_certificate_file(f string) (tempx509 *x509.Certificate, err error) {
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_DNS_NAMES)
 		tempx509.DNSNames = arrs
+	}
+
+	tempx509.EmailAddresses = []string{}
+	arrs, ok = mapv[KEYWORD_EMAIL_ADDRESSES].([]string)
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_EMAIL_ADDRESSES)
+		tempx509.EmailAddresses = arrs
 	}
 
 	err = nil
