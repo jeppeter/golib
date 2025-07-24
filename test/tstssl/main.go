@@ -539,7 +539,7 @@ func Rsagen_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
 	var rsakey *rsa.PrivateKey
-	var tempx509 *x509.Certificate
+	var tempx509 x509.Certificate
 	var pubkey *rsa.PublicKey
 	var capem *bytes.Buffer
 	var cabytes []byte
@@ -593,7 +593,7 @@ func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	}
 
 	pubkey = &(rsakey.PublicKey)
-	cabytes, err = x509.CreateCertificate(rand.Reader, tempx509, tempx509, pubkey, rsakey)
+	cabytes, err = x509.CreateCertificate(rand.Reader, &tempx509, &tempx509, pubkey, rsakey)
 	if err != nil {
 		err = dbgutil.FormatError("output certificate %s", err.Error())
 		return

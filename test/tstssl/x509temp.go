@@ -8,6 +8,7 @@ import (
 	"fileop"
 	"jsonext"
 	"logutil"
+	"math/big"
 )
 
 const (
@@ -179,11 +180,31 @@ const (
 	KEYWORD_EXT_KEYUSAGE_MICROSOFT_COMMERCIAL_CODE_SIGNING = "microsoftcommercialcodesigning"
 	KEYWORD_EXT_KEYUSAGE_MICROSOFT_KERNEL_CODE_SIGNING     = "microsoftkernelcodesigning"
 
+	KEYWORD_MD2_WITH_RSA = "md2withrsa"
+	KEYWORD_MD5_WITH_RSA = "md5withrsa"
+	KEYWORD_SHA1_WITH_RSA = "sha1withrsa"
+	KEYWORD_SHA256_WITH_RSA = "sha256withrsa"
+	SHA384WithRSA
+	SHA512WithRSA
+	DSAWithSHA1   // Unsupported.
+	DSAWithSHA256 // Unsupported.
+	ECDSAWithSHA1 // Only supported for signing, and verification of CRLs, CSRs, and OCSP responses.
+	ECDSAWithSHA256
+	ECDSAWithSHA384
+	ECDSAWithSHA512
+	SHA256WithRSAPSS
+	SHA384WithRSAPSS
+	SHA512WithRSAPSS
+	PureEd25519
+
+
 	KEYWORD_AUTHORITY_KEY_ID        = "authoritykeyid"
 	KEYWORD_BASIC_CONSTRAINT_VALID  = "basiccontraintsvalid"
 	KEYWORD_CRL_DISTRIBUTION_POINTS = "crldistributionpoints"
 	KEYWORD_DNS_NAMES               = "dnsnames"
 	KEYWORD_EMAIL_ADDRESSES         = "emailaddresses"
+	KEYWORD_EXCLUDED_DNS_DOMAINS    = "excludeddnsdomains"
+	KEYWORD_EXCLUDED_EMAILADDRESSES = "excludeemailaddresses"
 )
 
 var extKeyUsageValue = []struct {
@@ -249,6 +270,7 @@ func get_byte_array(valarr []interface{}, note string) (retv []byte, err error) 
 
 		if vali < 0 || vali > 255 {
 			err = dbgutil.FormatError("[%s].[%d] %d not byte value", note, idx, vali)
+			return
 		}
 
 		retv = append(retv, byte(vali))
@@ -256,16 +278,163 @@ func get_byte_array(valarr []interface{}, note string) (retv []byte, err error) 
 
 	err = nil
 	return
-
 }
 
-func get_certificate_file(f string) (tempx509 *x509.Certificate, err error) {
+func get_objoid_array(valarr []interface{}, note string) (retv asn1.ObjectIdentifier, err error) {
+	var idx int
+	var valf float64
+	var vali int
+	var ok bool
+	retv = asn1.ObjectIdentifier{}
+
+	for idx = 0; idx < len(valarr); idx += 1 {
+		vali, ok = valarr[idx].(int)
+		if !ok {
+			valf, ok = valarr[idx].(float64)
+			if !ok {
+				err = dbgutil.FormatError("[%s].[%d] not valid", note, idx)
+				return
+			}
+			vali = int(valf)
+		}
+
+		retv = append(retv, vali)
+	}
+
+	err = nil
+	return
+}
+
+func get_int_value(val interface{}, note string) (ival int, err error) {
+	var vali int
+	var valf float64
+	var ok bool
+	vali, ok = val.(int)
+	if ok {
+		ival = vali
+	} else {
+		valf, ok = val.(float64)
+		if ok {
+			ival = int(valf)
+		} else {
+			err = dbgutil.FormatError("[%s] not int value", note)
+			return
+		}
+	}
+	err = nil
+	return
+}
+
+func get_time_value(times string, note string) (retv time.Time, err error) {
+	retv, err = time.Parse("2020-02-02 13:20:50", times)
+	if err != nil {
+		err = dbgutil.FormatError("[%s] [%s] parse error %s", note, times, err.Error())
+		return
+	}
+	return
+}
+
+func get_netip_value(val []interface{}, note string) (retv []*net.IPNet, err error) {
+	var idx int
+	var ok bool
+	var s string
+	var curnet *net.IPNet
+	retv = []*net.IPNet{}
+	for idx = 0; idx < len(val); idx += 1 {
+		s, ok = val[idx].(string)
+		if !ok {
+			err = dbgutil.FormatError("[%s].[%d] not valid string", note, idx)
+			return
+		}
+		curnet, err = net.ParseCIDR(s)
+		if err != nil {
+			err = dbgutil.FormatError("[%s].[%d] parse [%s] error %s", note, idx, s, err.Error())
+			return
+		}
+		retv = append(retv, curnet)
+	}
+	err = nil
+	return
+}
+
+func get_ip_value(val []interface{}, note string) (retv []net.IP, err error) {
+	var idx int
+	var ok bool
+	var s string
+	var curnet net.IP
+	retv = []net.IP{}
+	for idx = 0; idx < len(val); idx += 1 {
+		s, ok = val[idx].(string)
+		if !ok {
+			err = dbgutil.FormatError("[%s].[%d] not valid string", note, idx)
+			return
+		}
+		curnet, err = net.ParseIP(s)
+		if err != nil {
+			err = dbgutil.FormatError("[%s].[%d] parse [%s] error %s", note, idx, s, err.Error())
+			return
+		}
+		retv = append(retv, curnet)
+	}
+	err = nil
+	return
+}
+
+func get_objoids_value(val []interface{}, note string) (retv []asn1.ObjectIdentifier, err error) {
+	var idx int
+	var curoid asn1.ObjectIdentifier
+	var curinter []interface{}
+	var nval []interface{}
+	var ok bool
+	retv = []asn1.ObjectIdentifier{}
+	for idx = 0; idx < len(val); idx += 1 {
+		curinter, ok = val[idx].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("[%s].[%d] not array type", note, idx)
+			return
+		}
+		curoid, err = get_objoid_array(curinter, fmt.Sprintf("[%s].[%d]", note, idx))
+		if err != nil {
+			return
+		}
+		retv = append(retv, curoid)
+	}
+	err = nil
+	return
+}
+
+func get_bigint_value(val string, note string) (retv big.Int, err error) {
+	var base int = 10
+	var inputs string = val
+	if strings.HasPrefix(val, "0x") || strings.HasPrefix(val, "0X") {
+		inputs = val[2:]
+		base = 16
+	} else if strings.HasPrefix(val, "x") || strings.HasPrefix(val, "X") {
+		inputs = val[1:]
+		base = 16
+	}
+	retv, ok = big.SetString(inputs, base)
+	if !ok {
+		err = dbgutil.FormatError("[%s] [%s] not valid big.Int ", note, val)
+		return
+	}
+	err = nil
+	return
+}
+
+func get_algorithm_value(val string, note string) (retv int, err error) {
+	retv = x509.UnknownSignatureAlgorithm
+	if 
+}
+
+func get_certificate_file(f string) (tempx509 x509.Certificate, err error) {
 	var s string
 	var ok bool
 	var mapv map[string]interface{}
 	var arrs []string
 	var valarr []interface{}
 	var valbool bool
+	var intval interface{}
 	tempx509 = &x509.Certificate{}
 	s, err = fileop.ReadFile(f)
 	if err != nil {
@@ -323,6 +492,19 @@ func get_certificate_file(f string) (tempx509 *x509.Certificate, err error) {
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_EMAIL_ADDRESSES)
 		tempx509.EmailAddresses = arrs
+	}
+
+	tempx509.ExcludedDNSDomains = []string{}
+	arrs, ok = mapv[KEYWORD_EXCLUDED_DNS_DOMAINS].([]string)
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_EXCLUDED_DNS_DOMAINS)
+		tempx509.ExcludedDNSDomains = arrs
+	}
+
+	tempx509.ExcludedEmailAddresses = []string{}
+	arrs, ok = mapv[KEYWORD_EXCLUDED_EMAILADDRESSES].([]string)
+	if ok {
+		logutil.Debug("[%s] parse")
 	}
 
 	err = nil
