@@ -403,7 +403,7 @@ func get_int_value(val interface{}, note string) (ival int, err error) {
 func get_time_value(times string, note string) (retv time.Time, err error) {
 	retv, err = time.Parse("2020-02-02 13:20:50", times)
 	if err != nil {
-		err = dbgutil.FormatError("[%s] [%s] parse error %s", note, times, err.Error())
+		err = dbgutil.FormatError("[%s] [%s] parse error %s please use [2020-02-02 13:20:50] format", note, times, err.Error())
 		return
 	}
 	return
