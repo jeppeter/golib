@@ -29,6 +29,8 @@ const (
 	KEYWROD_EXTRANAMES       = "extranames"
 	KEYWORD_TYPE             = "type"
 	KEYWORD_VALUE            = "value"
+	KEYWORD_TAG              = "tag"
+	KEYWORD_CONTENT          = "content"
 )
 
 func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, err error) {
@@ -39,8 +41,10 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 	var curoid asn1.ObjectIdentifier
 	var curattr pkix.AttributeTypeAndValue
 	var curi int
-	var curf float64
-	var iarr asn1.RawContent
+	var vali int
+	var iarr asn1.RawValue
+	var valmap map[string]interface{}
+	var intval interface{}
 	retv = []pkix.AttributeTypeAndValue{}
 	for idx = 0; idx < len(valarr); idx += 1 {
 		curmap, ok = valarr[idx].(map[string]interface{})
@@ -58,40 +62,50 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 		curattr = pkix.AttributeTypeAndValue{}
 		curoid = asn1.ObjectIdentifier{}
 		for jdx = 0; jdx < len(carr); jdx += 1 {
-			curi = 0
-			curi, ok = carr[jdx].(int)
-			if !ok {
-				curf, ok = carr[jdx].(float64)
-				if ok {
-					curi = int(curf)
-				}
-			} else {
-				curi = 0
+			curi, err = get_int_value(carr[jdx], fmt.Sprintf("[%s].[%d]", KEYWORD_TYPE, jdx))
+			if err != nil {
+				return
 			}
 			logutil.Debug("curi %d", curi)
 			curoid = append(curoid, curi)
 		}
 
 		curattr.Type = curoid
-		carr, ok = curmap[KEYWORD_VALUE].([]interface{})
+		valmap, ok = curmap[KEYWORD_VALUE].(map[string]interface{})
 		if !ok {
 			curattr.Value = nil
 		} else {
-			iarr = asn1.RawContent{}
+			iarr = asn1.RawValue{}
+			iarr.Class = 0
+			iarr.Tag = 0
+			iarr.IsCompound = false
+			iarr.Bytes = []byte{}
+			iarr.FullBytes = []byte{}
 
-			for jdx = 0; jdx < len(carr); jdx += 1 {
-				curi = 0
-				curi, ok = carr[jdx].(int)
-				if !ok {
-					curf, ok = carr[jdx].(float64)
-					if ok {
-						curi = int(curf)
-					}
-				} else {
-					curi = 0
-				}
-				logutil.Debug("curi %d", curi)
-				iarr = append(iarr, byte(curi))
+			intval, ok = valmap[KEYWORD_TAG]
+			if !ok {
+				err = dbgutil.FormatError("[%s][%d] no %s", KEYWORD_VALUE, idx, KEYWORD_TAG)
+				return
+			}
+			vali, err = get_int_value(intval, fmt.Sprintf("[%s].[%d]", KEYWROD_EXTRANAMES, idx))
+			if err != nil {
+				return
+			}
+
+			iarr.Tag = (vali & 0x1f)
+			if (vali & 0x20) != 0 {
+				iarr.IsCompound = true
+			}
+			iarr.Class = ((vali >> 6) & 0x3)
+
+			carr, ok = valmap[KEYWORD_CONTENT].([]interface{})
+			if !ok {
+				err = dbgutil.FormatError("[%s][%d] no %s", KEYWORD_VALUE, idx, KEYWORD_CONTENT)
+				return
+			}
+			iarr.Bytes, err = get_bytes_value(carr, fmt.Sprintf("[%s][%d] [%s]", KEYWORD_VALUE, idx, KEYWORD_CONTENT))
+			if err != nil {
+				return
 			}
 
 			curattr.Value = iarr
