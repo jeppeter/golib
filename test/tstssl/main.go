@@ -433,7 +433,7 @@ func get_pkix_name(f string) (name pkix.Name, err error) {
 	if err != nil {
 		return
 	}
-	name, err = get_pkix_name_mapv(mapv)
+	name, err = get_pkixname_value(mapv, "")
 	return
 }
 
