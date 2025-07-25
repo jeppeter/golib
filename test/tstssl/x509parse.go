@@ -1422,6 +1422,7 @@ func processExtensions(out *x509.Certificate) error {
 }
 
 func parseCertificate(der []byte) (*x509.Certificate, error) {
+	var nbytes []byte
 	cert := &x509.Certificate{}
 
 	input := cryptobyte.String(der)
@@ -1432,7 +1433,6 @@ func parseCertificate(der []byte) (*x509.Certificate, error) {
 		return nil, errors.New("x509: malformed certificate")
 	}
 	cert.Raw = input
-	logutil.DebugBuffer(cert.Raw, "raw")
 	if !input.ReadASN1(&input, cryptobyte_asn1.SEQUENCE) {
 		return nil, errors.New("x509: malformed certificate")
 	}
@@ -1443,8 +1443,10 @@ func parseCertificate(der []byte) (*x509.Certificate, error) {
 	if !input.ReadASN1Element(&tbs, cryptobyte_asn1.SEQUENCE) {
 		return nil, errors.New("x509: malformed tbs certificate")
 	}
+	nbytes = []byte(tbs)
+	logutil.DebugBuffer(nbytes, "tbs")
 	cert.RawTBSCertificate = tbs
-	logutil.DebugBuffer(cert.RawTBSCertificate, "RawTBSCertificate")
+
 	if !tbs.ReadASN1(&tbs, cryptobyte_asn1.SEQUENCE) {
 		return nil, errors.New("x509: malformed tbs certificate")
 	}
@@ -1486,6 +1488,8 @@ func parseCertificate(der []byte) (*x509.Certificate, error) {
 	if !bytes.Equal(outerSigAISeq, sigAISeq) {
 		return nil, errors.New("x509: inner and outer signature algorithm identifiers don't match")
 	}
+	nbytes = []byte(sigAISeq)
+	logutil.DebugBuffer(nbytes, "sigAISeq")
 	sigAI, err := parseAI(sigAISeq)
 	if err != nil {
 		return nil, err
