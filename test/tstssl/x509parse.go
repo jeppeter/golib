@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/cryptobyte"
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
+	"logutil"
 	"math/big"
 	"net"
 	"net/url"
@@ -32,6 +33,26 @@ const (
 	nameTypeDNS   = 2
 	nameTypeURI   = 6
 	nameTypeIP    = 7
+)
+
+var (
+	oidAuthorityInfoAccessOcsp    = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 1}
+	oidAuthorityInfoAccessIssuers = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 2}
+)
+
+var (
+	oidExtensionSubjectKeyId          = []int{2, 5, 29, 14}
+	oidExtensionKeyUsage              = []int{2, 5, 29, 15}
+	oidExtensionExtendedKeyUsage      = []int{2, 5, 29, 37}
+	oidExtensionAuthorityKeyId        = []int{2, 5, 29, 35}
+	oidExtensionBasicConstraints      = []int{2, 5, 29, 19}
+	oidExtensionSubjectAltName        = []int{2, 5, 29, 17}
+	oidExtensionCertificatePolicies   = []int{2, 5, 29, 32}
+	oidExtensionNameConstraints       = []int{2, 5, 29, 30}
+	oidExtensionCRLDistributionPoints = []int{2, 5, 29, 31}
+	oidExtensionAuthorityInfoAccess   = []int{1, 3, 6, 1, 5, 5, 7, 1, 1}
+	oidExtensionCRLNumber             = []int{2, 5, 29, 20}
+	oidExtensionReasonCode            = []int{2, 5, 29, 21}
 )
 
 var (
@@ -1121,6 +1142,50 @@ func parseExtKeyUsageExtension(der cryptobyte.String) ([]x509.ExtKeyUsage, []asn
 	return extKeyUsages, unknownUsages, nil
 }
 
+func getAsn1IdentifierFromrawBytes(der []byte) (ident asn1.ObjectIdentifier, err error) {
+	var nbytes []byte
+	var clen int
+	var nlen int
+	var curlen int
+	var lenbytes []byte
+	var idx int
+	nbytes = []byte{}
+	nbytes = append(nbytes, byte(asn1.TagOID))
+	clen = len(der)
+	if clen < 0x7f {
+		nbytes = append(nbytes, byte(clen))
+	} else if clen < (1 << 23) {
+		curlen = clen
+		lenbytes = []byte{}
+		for curlen > 0 {
+			lenbytes = append(lenbytes, byte(curlen&0xff))
+			curlen >>= 8
+		}
+		nbytes = append(nbytes, byte(len(lenbytes)|0x80))
+		nlen = len(lenbytes) - 1
+		for nlen >= 0 {
+			nbytes = append(nbytes, lenbytes[nlen])
+			nlen -= 1
+		}
+	} else {
+		err = fmt.Errorf("max length %d", len(der))
+		return
+	}
+
+	for idx = 0; idx < len(der); idx += 1 {
+		nbytes = append(nbytes, der[idx])
+	}
+
+	ident = asn1.ObjectIdentifier{}
+	_, err = asn1.Unmarshal(nbytes, &ident)
+	if err != nil {
+		return
+	}
+	err = nil
+	return
+
+}
+
 func newOIDFromDER(der []byte) (x509.OID, bool) {
 	if len(der) == 0 || der[len(der)-1]&0x80 != 0 {
 		return x509.OID{}, false
@@ -1139,8 +1204,19 @@ func newOIDFromDER(der []byte) (x509.OID, bool) {
 		}
 	}
 
-	//return x509.OID{der}, true
-	return x509.OID{}, true
+	var obj asn1.ObjectIdentifier
+	var err error
+	obj, err = getAsn1IdentifierFromrawBytes(der)
+	if err != nil {
+		return x509.OID{}, false
+	}
+	var cs = obj.String()
+	var oidc x509.OID
+	oidc, err = x509.ParseOID(cs)
+	if err != nil {
+		return x509.OID{}, false
+	}
+	return oidc, true
 }
 
 func parseCertificatePoliciesExtension(der cryptobyte.String) ([]x509.OID, error) {
@@ -1161,6 +1237,25 @@ func parseCertificatePoliciesExtension(der cryptobyte.String) ([]x509.OID, error
 		oids = append(oids, oid)
 	}
 	return oids, nil
+}
+
+func transOIDToObjectIdentifier(oid x509.OID) (retv asn1.ObjectIdentifier, ok bool) {
+	var err error
+	var der []byte
+	retv = asn1.ObjectIdentifier{}
+	ok = false
+	der, err = oid.MarshalBinary()
+	if err != nil {
+		return
+	}
+
+	retv, err = getAsn1IdentifierFromrawBytes(der)
+	if err != nil {
+		return
+	}
+	ok = true
+	return
+
 }
 
 func processExtensions(out *x509.Certificate) error {
@@ -1273,7 +1368,7 @@ func processExtensions(out *x509.Certificate) error {
 				}
 				out.PolicyIdentifiers = make([]asn1.ObjectIdentifier, 0, len(out.Policies))
 				for _, oid := range out.Policies {
-					if oid, ok := oid.toASN1OID(); ok {
+					if oid, ok := transOIDToObjectIdentifier(oid); ok {
 						out.PolicyIdentifiers = append(out.PolicyIdentifiers, oid)
 					}
 				}
@@ -1337,6 +1432,7 @@ func parseCertificate(der []byte) (*x509.Certificate, error) {
 		return nil, errors.New("x509: malformed certificate")
 	}
 	cert.Raw = input
+	logutil.DebugBuffer(cert.Raw, "raw")
 	if !input.ReadASN1(&input, cryptobyte_asn1.SEQUENCE) {
 		return nil, errors.New("x509: malformed certificate")
 	}
@@ -1348,6 +1444,7 @@ func parseCertificate(der []byte) (*x509.Certificate, error) {
 		return nil, errors.New("x509: malformed tbs certificate")
 	}
 	cert.RawTBSCertificate = tbs
+	logutil.DebugBuffer(cert.RawTBSCertificate, "RawTBSCertificate")
 	if !tbs.ReadASN1(&tbs, cryptobyte_asn1.SEQUENCE) {
 		return nil, errors.New("x509: malformed tbs certificate")
 	}

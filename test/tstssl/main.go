@@ -618,6 +618,43 @@ func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
+func X509parse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var tempx509 *x509.Certificate
+	var x509bytes []byte
+	var f string
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("to get template json file for Certifacate")
+		return
+	}
+
+	for _, f = range sarr {
+		x509bytes, err = read_pem_or_der(f)
+		if err != nil {
+			return
+		}
+		tempx509, err = parseCertificate(x509bytes)
+		if err != nil {
+			return
+		}
+		display_x509_cert(tempx509)
+	}
+
+	err = nil
+	return
+}
+
 func init() {
 	Genkeycert_handler(nil, nil, nil)
 	Pemtoder_handler(nil, nil, nil)
@@ -627,6 +664,7 @@ func init() {
 	Pkixname_handler(nil, nil, nil)
 	Rsagen_handler(nil, nil, nil)
 	X509create_handler(nil, nil, nil)
+	X509parse_handler(nil, nil, nil)
 }
 func main() {
 	var commandline string
@@ -662,6 +700,9 @@ func main() {
 		},
 		"x509create<X509create_handler>##jsonfile to set x509 from template file by keyfile##" : {
 			"$" : 1
+		},
+		"x509parse<X509parse_handler>##pemfile ... to parse x509.Certificate##" : {
+			"$" : "+"
 		}
 
 	}`
