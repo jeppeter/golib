@@ -1470,6 +1470,7 @@ func parseCertificate(der []byte) (*x509.Certificate, error) {
 		return nil, errors.New("x509: negative serial number")
 	}
 	cert.SerialNumber = serial
+	logutil.Debug("SerialNumber 0x%x", cert.SerialNumber)
 
 	var sigAISeq cryptobyte.String
 	if !tbs.ReadASN1(&sigAISeq, cryptobyte_asn1.SEQUENCE) {
