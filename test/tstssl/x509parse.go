@@ -607,12 +607,15 @@ func parseKeyUsageExtension(der cryptobyte.String) (x509.KeyUsage, error) {
 		return 0, errors.New("x509: invalid key usage")
 	}
 
-	var usage int
+	logutil.DebugBuffer(usageBits.Bytes, "Bytes")
+
+	var usage int = 0
 	for i := 0; i < 9; i++ {
 		if usageBits.At(i) != 0 {
 			usage |= 1 << uint(i)
 		}
 	}
+	logutil.Debug("usage 0x%x", usage)
 	return x509.KeyUsage(usage), nil
 }
 
