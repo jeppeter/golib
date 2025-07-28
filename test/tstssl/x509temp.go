@@ -183,7 +183,6 @@ func get_pkixname_value(mapv map[string]interface{}, note string) (name pkix.Nam
 }
 
 const (
-	KEYWORD_EXTKEYUSAGE                                    = "extkeyusage"
 	KEYWORD_EXT_KEYUSAGE_ANY                               = "any"
 	KEYWORD_EXT_KEYUSAGE_SERVER_AUTH                       = "serverauth"
 	KEYWORD_EXT_KEYUSAGE_CLIENT_AUTH                       = "clientauth"
