@@ -322,19 +322,31 @@ var keyUsageValue = []struct {
 	{x509.KeyUsageDecipherOnly, KEYWORD_DECIPHER_ONLY},
 }
 
-func get_keyusage_value(val string, note string) (retv x509.KeyUsage, err error) {
+func get_keyusage_value(arrs []string, note string) (retv x509.KeyUsage, err error) {
 	retv = 0
 	var jdx int
-	for jdx = 0; jdx < len(keyUsageValue); jdx += 1 {
-		if keyUsageValue[jdx].key == val {
-			err = nil
-			retv = keyUsageValue[jdx].value
+	var idx int
+	var matched bool
+	var vali int = 0
+	for idx = 0; idx < len(arrs); idx += 1 {
+		matched = false
+		for jdx = 0; jdx < len(keyUsageValue); jdx += 1 {
+			if keyUsageValue[jdx].key == arrs[idx] {
+				matched = true
+				vali |= int(keyUsageValue[jdx].value)
+				break
+			}
+		}
+
+		if !matched {
+			err = dbgutil.FormatError("[%s].[%d] [%s] not valid key usage", note, idx, arrs[idx])
 			return
 		}
+
 	}
 
-	err = dbgutil.FormatError("[%s] [%s] not valid key usage", note, val)
-
+	err = nil
+	retv = x509.KeyUsage(vali)
 	return
 }
 
@@ -578,6 +590,23 @@ func get_urls_value(val []string, note string) (retv []*url.URL, err error) {
 	return
 }
 
+func trans_inter_to_string(valarr []interface{}, note string) (arrs []string, err error) {
+	arrs = []string{}
+	var idx int
+	var s string
+	var ok bool
+	for idx = 0; idx < len(valarr); idx += 1 {
+		s, ok = valarr[idx].(string)
+		if !ok {
+			err = dbgutil.FormatError("[%s].[%s] not string", note, idx)
+			return
+		}
+		arrs = append(arrs, s)
+	}
+	err = nil
+	return
+}
+
 func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	var s string
 	var ok bool
@@ -600,9 +629,13 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.ExtKeyUsage = []x509.ExtKeyUsage{}
-	arrs, ok = mapv[KEYWORD_EXT_KEY_USAGE].([]string)
+	valarr, ok = mapv[KEYWORD_EXT_KEY_USAGE].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_EXT_KEY_USAGE)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_EXT_KEY_USAGE)
+		if err != nil {
+			return
+		}
 		x509temp.ExtKeyUsage, err = get_key_ext_usage(arrs, KEYWORD_EXT_KEY_USAGE)
 		if err != nil {
 			return
@@ -627,37 +660,57 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.CRLDistributionPoints = []string{}
-	arrs, ok = mapv[KEYWORD_CRL_DISTRIBUTION_POINTS].([]string)
+	valarr, ok = mapv[KEYWORD_CRL_DISTRIBUTION_POINTS].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_CRL_DISTRIBUTION_POINTS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_CRL_DISTRIBUTION_POINTS)
+		if err != nil {
+			return
+		}
 		x509temp.CRLDistributionPoints = arrs
 	}
 
 	x509temp.DNSNames = []string{}
-	arrs, ok = mapv[KEYWORD_DNS_NAMES].([]string)
+	valarr, ok = mapv[KEYWORD_DNS_NAMES].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_DNS_NAMES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_DNS_NAMES)
+		if err != nil {
+			return
+		}
 		x509temp.DNSNames = arrs
 	}
 
 	x509temp.EmailAddresses = []string{}
-	arrs, ok = mapv[KEYWORD_EMAIL_ADDRESSES].([]string)
+	valarr, ok = mapv[KEYWORD_EMAIL_ADDRESSES].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_EMAIL_ADDRESSES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_EMAIL_ADDRESSES)
+		if err != nil {
+			return
+		}
 		x509temp.EmailAddresses = arrs
 	}
 
 	x509temp.ExcludedDNSDomains = []string{}
-	arrs, ok = mapv[KEYWORD_EXCLUDED_DNS_DOMAINS].([]string)
+	valarr, ok = mapv[KEYWORD_EXCLUDED_DNS_DOMAINS].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_EXCLUDED_DNS_DOMAINS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_EXCLUDED_DNS_DOMAINS)
+		if err != nil {
+			return
+		}
 		x509temp.ExcludedDNSDomains = arrs
 	}
 
 	x509temp.ExcludedEmailAddresses = []string{}
-	arrs, ok = mapv[KEYWORD_EXCLUDED_EMAIL_ADDRESSES].([]string)
+	valarr, ok = mapv[KEYWORD_EXCLUDED_EMAIL_ADDRESSES].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_EXCLUDED_EMAIL_ADDRESSES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_EXCLUDED_EMAIL_ADDRESSES)
+		if err != nil {
+			return
+		}
 		x509temp.ExcludedEmailAddresses = arrs
 	}
 
@@ -689,17 +742,25 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.IssuingCertificateURL = []string{}
-	arrs, ok = mapv[KEYWORD_ISSUING_CERTIFICATE_URL].([]string)
+	valarr, ok = mapv[KEYWORD_ISSUING_CERTIFICATE_URL].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_ISSUING_CERTIFICATE_URL)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_ISSUING_CERTIFICATE_URL)
+		if err != nil {
+			return
+		}
 		x509temp.IssuingCertificateURL = arrs
 	}
 
 	x509temp.KeyUsage = 0
-	vals, ok = mapv[KEYWORD_KEY_USAGE].(string)
+	valarr, ok = mapv[KEYWORD_KEY_USAGE].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_KEY_USAGE)
-		x509temp.KeyUsage, err = get_keyusage_value(vals, KEYWORD_KEY_USAGE)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_KEY_USAGE)
+		if err != nil {
+			return
+		}
+		x509temp.KeyUsage, err = get_keyusage_value(arrs, KEYWORD_KEY_USAGE)
 		if err != nil {
 			return
 		}
@@ -743,16 +804,24 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.OCSPServer = []string{}
-	arrs, ok = mapv[KEYWORD_O_C_S_P_SERVER].([]string)
+	valarr, ok = mapv[KEYWORD_O_C_S_P_SERVER].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_O_C_S_P_SERVER)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_O_C_S_P_SERVER)
+		if err != nil {
+			return
+		}
 		x509temp.OCSPServer = arrs
 	}
 
 	x509temp.PermittedDNSDomains = []string{}
-	arrs, ok = mapv[KEYWORD_PERMITTED_DNS_DOMAINS].([]string)
+	valarr, ok = mapv[KEYWORD_PERMITTED_DNS_DOMAINS].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_PERMITTED_DNS_DOMAINS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_PERMITTED_DNS_DOMAINS)
+		if err != nil {
+			return
+		}
 		x509temp.PermittedDNSDomains = arrs
 	}
 
@@ -764,9 +833,13 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.PermittedEmailAddresses = []string{}
-	arrs, ok = mapv[KEYWORD_PERMITTED_EMAIL_ADDRESSES].([]string)
+	valarr, ok = mapv[KEYWORD_PERMITTED_EMAIL_ADDRESSES].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_PERMITTED_EMAIL_ADDRESSES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_PERMITTED_EMAIL_ADDRESSES)
+		if err != nil {
+			return
+		}
 		x509temp.PermittedEmailAddresses = arrs
 	}
 
@@ -781,9 +854,13 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.PermittedURIDomains = []string{}
-	arrs, ok = mapv[KEYWORD_PERMITTED_URI_DOMAINS].([]string)
+	valarr, ok = mapv[KEYWORD_PERMITTED_URI_DOMAINS].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_PERMITTED_URI_DOMAINS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_PERMITTED_URI_DOMAINS)
+		if err != nil {
+			return
+		}
 		x509temp.PermittedURIDomains = arrs
 	}
 
@@ -798,9 +875,13 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.Policies = []x509.OID{}
-	arrs, ok = mapv[KEYWORD_POLICIES].([]string)
+	valarr, ok = mapv[KEYWORD_POLICIES].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_POLICIES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_POLICIES)
+		if err != nil {
+			return
+		}
 		x509temp.Policies, err = get_oids_value(arrs, KEYWORD_POLICIES)
 		if err != nil {
 			return
@@ -847,9 +928,13 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	}
 
 	x509temp.URIs = []*url.URL{}
-	arrs, ok = mapv[KEYWORD_URIS].([]string)
+	valarr, ok = mapv[KEYWORD_URIS].([]interface{})
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_URIS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_URIS)
+		if err != nil {
+			return
+		}
 		x509temp.URIs, err = get_urls_value(arrs, KEYWORD_URIS)
 		if err != nil {
 			return

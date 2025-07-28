@@ -11,7 +11,7 @@
 	"ipaddresses" : [],
 	"isca" : false,
 	"issuingcertificateurl" : [],
-	"#keyusage" : "",
+	"keyusage" : [],
 	"maxpathlen" : 0,
 	"maxpathlenzero" : false,
 	"#notafter" : null,

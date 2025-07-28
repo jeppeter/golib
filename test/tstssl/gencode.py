@@ -9,6 +9,81 @@ import importlib
 import struct
 
 
+def read_file(infile=None):
+    fin = sys.stdin
+    if infile is not None:
+        fin = open(infile,'rb')
+    rets = ''
+    if 'b' in fin.mode:
+        rdata = b''
+        while True:
+            try:
+                l = fin.read(64 * 1024)
+                if l is None or len(l) == 0:
+                    break
+                rdata += l
+            except:
+                break
+        if sys.version[0] == '3':
+            rets = rdata.decode('utf-8')
+        else:
+            rets = rdata
+    else:        
+        for l in fin:
+            s = l
+            rets += s
+
+    if fin != sys.stdin:
+        fin.close()
+    fin = None
+    return rets
+
+def read_file_bytes(infile=None):
+    fin = sys.stdin
+    if infile is not None:
+        fin = open(infile,'rb')
+    retb = b''
+    while True:
+        if fin != sys.stdin:
+            curb = fin.read(1024 * 1024)
+        else:
+            curb = fin.buffer.read()
+        if curb is None or len(curb) == 0:
+            break
+        retb += curb
+    if fin != sys.stdin:
+        fin.close()
+    fin = None
+    return retb
+
+
+def write_file(s,outfile=None):
+    fout = sys.stdout
+    if outfile is not None:
+        fout = open(outfile, 'w+b')
+    outs = s
+    if 'b' in fout.mode:
+        outs = s.encode('utf-8')
+    fout.write(outs)
+    if fout != sys.stdout:
+        fout.close()
+    fout = None
+    return 
+
+def write_file_bytes(sarr,outfile=None):
+    fout = sys.stdout
+    if outfile is not None:
+        fout = open(outfile, 'wb')
+    if 'b' not in fout.mode:
+        fout.buffer.write(sarr)
+    else:        
+        fout.write(sarr)
+    if fout != sys.stdout:
+        fout.close()
+    fout = None
+    return 
+
+
 def set_logging(args):
     loglvl= logging.ERROR
     if args.verbose >= 3:
@@ -142,9 +217,13 @@ def format_tabline(tab,l):
 def format_strings_code(name):
 	keyword = format_keyword(name)
 	runcode = format_tabline(1,'x509temp.%s = []string{}'%(name))
-	runcode += format_tabline(1,'arrs, ok = mapv[%s].([]string)'%(keyword))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse", %s)'%(keyword))
+	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
+	runcode += format_tabline(2, 'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
 	runcode += format_tabline(2,'x509temp.%s = arrs'%(name))
 	runcode += format_tabline(1,'}')
 	kdefine = '%s = "%s"'%(keyword,name.lower())
@@ -167,10 +246,14 @@ def format_int_code(name):
 def format_keyusage_code(name):
 	keyword = format_keyword(name)
 	runcode = format_tabline(1,'x509temp.%s = 0'%(name))
-	runcode += format_tabline(1,'vals, ok = mapv[%s].(string)'%(keyword))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse", %s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s, err = get_keyusage_value(vals,%s)'%(name,keyword))
+	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
+	runcode += format_tabline(2, 'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
+	runcode += format_tabline(2,'x509temp.%s, err = get_keyusage_value(arrs,%s)'%(name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -304,9 +387,13 @@ def format_objoids_code(name):
 def format_oids_code(name):
 	keyword = format_keyword(name)
 	runcode = format_tabline(1,'x509temp.%s = []x509.OID{}'%(name))
-	runcode += format_tabline(1,'arrs, ok = mapv[%s].([]string)'%(keyword))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
+	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
+	runcode += format_tabline(2, 'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
 	runcode += format_tabline(2,'x509temp.%s , err = get_oids_value(arrs,%s)'%(name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
@@ -318,9 +405,13 @@ def format_oids_code(name):
 def format_urls_code(name):
 	keyword = format_keyword(name)
 	runcode = format_tabline(1,'x509temp.%s = []*url.URL{}'%(name))
-	runcode += format_tabline(1,'arrs, ok = mapv[%s].([]string)'%(keyword))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
+	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
+	runcode += format_tabline(2, 'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
 	runcode += format_tabline(2,'x509temp.%s , err = get_urls_value(arrs,%s)'%(name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
@@ -332,9 +423,13 @@ def format_urls_code(name):
 def format_extkeyusage_code(name):
 	keyword = format_keyword(name)
 	runcode = format_tabline(1,'x509temp.%s = []x509.ExtKeyUsage{}'%(name))
-	runcode += format_tabline(1,'arrs, ok = mapv[%s].([]string)'%(keyword))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
+	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
+	runcode += format_tabline(2, 'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
 	runcode += format_tabline(2,'x509temp.%s , err = get_key_ext_usage(arrs,%s)'%(name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
@@ -450,12 +545,35 @@ def gencode_handler(args,parser):
 	sys.exit(0)
 	return
 
+def grconst_handler(args,parser):
+	set_logging(args)
+	s = read_file(args.input)
+	sarr = re.split('\n', s)
+	ms = re.compile('^\\s*([a-zA-Z0-9]+)')
+	shiftval = 0
+	outs = ''
+	for l in sarr:
+		l = l.rstrip('\r')
+		m = ms.findall(l)
+		if m is not None and len(m) > 0 :
+			name = m[0]
+			keyword = format_keyword(name)
+			val = 1 << shiftval
+			outs += format_tabline(0,'pub const %s :u32 = %d;'%(keyword,val))
+			shiftval += 1
+	write_file(outs,args.output)
+	sys.exit(0)
+	return
+
 def main():
     commandline='''
     {
         "input|i" : null,
         "output|o" : null,
         "gencode<gencode_handler>##to format code to output##" : {
+        	"$" : 0
+        },
+        "grconst<grconst_handler>##to format rust const values##" : {
         	"$" : 0
         }
     }
