@@ -582,6 +582,53 @@ def grconst_handler(args,parser):
 	sys.exit(0)
 	return
 
+def genenum_handler(args,parser):
+	set_logging(args)
+	enumname = args.subnargs[0]
+	s = read_file(args.input)
+	mexpr = re.compile('^\\s*([a-zA-Z0-9]+)')
+	sarr = re.split('\n',s)
+	members = []
+	for l in sarr:
+		l = l.rstrip('\r')
+		m = mexpr.findall(l)
+		if m is not None and len(m) > 0:
+			members.append(m[0])
+
+
+	outs = format_tabline(0,'pub enum %s {'%(enumname))
+	for m in members:
+		outs += format_tabline(1,'%s,'%(m))
+	outs += format_tabline(0,'}')
+
+	outs += format_tabline(0,'')
+	outs += format_tabline(0,'impl PartialEq for %s {'%(enumname))
+	outs += format_tabline(1,'fn ne(&self,other :&Self) -> bool {')
+	outs += format_tabline(2,'return !self.eq(other);')
+	outs += format_tabline(1,'}')
+
+	outs += format_tabline(1,'')
+
+	outs += format_tabline(1,'fn eq(&self,other :&Self) -> bool{')
+	outs += format_tabline(2,'let mut retval :bool = false;');
+	outs += format_tabline(2,'match self {')
+	for m in members:
+		outs += format_tabline(3,'%s::%s => {'%(enumname,m))
+		outs += format_tabline(4,'match other {')
+		outs += format_tabline(5,'%s::%s => {retval = true;},'%(enumname,m))
+		outs += format_tabline(5,'_ => {},')
+		outs += format_tabline(4,'}')
+		outs += format_tabline(3,'},')
+	outs += format_tabline(2,'}')
+	outs += format_tabline(2,'return retval;')
+	outs += format_tabline(1,'}')
+
+	outs += format_tabline(0,'}')
+
+	write_file(outs,args.output)
+	sys.exit(0)
+	return
+
 def main():
     commandline='''
     {
@@ -592,6 +639,9 @@ def main():
         },
         "grconst<grconst_handler>##to format rust const values##" : {
         	"$" : 0
+        },
+        "genenum<genenum_handler>##enumname to generate enum with Partial##" : {
+        	"$" : 1
         }
     }
     '''
