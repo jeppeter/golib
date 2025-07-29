@@ -8,6 +8,7 @@
 	"excludeddnsdomains" : [],
 	"excludedemailaddresses" : [],
 	"excludedipranges" : [],
+	"excludeduridomains" : [],
 	"ipaddresses" : [],
 	"isca" : false,
 	"issuingcertificateurl" : [],

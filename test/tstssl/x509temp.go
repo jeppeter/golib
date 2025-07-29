@@ -240,6 +240,7 @@ const (
 	KEYWORD_EXCLUDED_DNS_DOMAINS           = "excludeddnsdomains"
 	KEYWORD_EXCLUDED_EMAIL_ADDRESSES       = "excludedemailaddresses"
 	KEYWORD_EXCLUDED_IP_RANGES             = "excludedipranges"
+	KEYWORD_EXCLUDED_URI_DOMAINS           = "excludeduridomains"
 	KEYWORD_IP_ADDRESSES                   = "ipaddresses"
 	KEYWORD_IS_CA                          = "isca"
 	KEYWORD_ISSUING_CERTIFICATE_URL        = "issuingcertificateurl"
@@ -722,6 +723,17 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	x509temp.ExcludedURIDomains = []string{}
+	valarr, ok = mapv[KEYWORD_EXCLUDED_URI_DOMAINS].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_EXCLUDED_URI_DOMAINS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_EXCLUDED_URI_DOMAINS)
+		if err != nil {
+			return
+		}
+		x509temp.ExcludedURIDomains = arrs
 	}
 
 	x509temp.IPAddresses = []net.IP{}

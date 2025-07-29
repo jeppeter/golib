@@ -1263,6 +1263,7 @@ func transOIDToObjectIdentifier(oid x509.OID) (retv asn1.ObjectIdentifier, ok bo
 
 func processExtensions(out *x509.Certificate) error {
 	var err error
+	var nbytes []byte
 	for _, e := range out.Extensions {
 		unhandled := false
 
@@ -1363,6 +1364,8 @@ func processExtensions(out *x509.Certificate) error {
 				if !val.ReadASN1(&skid, cryptobyte_asn1.OCTET_STRING) {
 					return errors.New("x509: invalid subject key identifier")
 				}
+				nbytes = []byte(skid)
+				logutil.DebugBuffer(nbytes, "SubjectKeyId")
 				out.SubjectKeyId = skid
 			case 32:
 				out.Policies, err = parseCertificatePoliciesExtension(e.Value)

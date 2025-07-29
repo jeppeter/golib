@@ -192,7 +192,8 @@ errkeys = {
 	'KEYWORD_PERMITTED_I_P_RANGES' : 'KEYWORD_PERMITTED_IP_RANGES',
 	'KEYWORD_PERMITTED_U_R_I_DOMAINS' : 'KEYWORD_PERMITTED_URI_DOMAINS',
 	'KEYWORD_U_R_IS' : 'KEYWORD_URIS',
-	'KEY_USAGE_C_R_L_SIGN' : 'KEY_USAGE_CRL_SIGN'
+	'KEY_USAGE_C_R_L_SIGN' : 'KEY_USAGE_CRL_SIGN',
+	'KEYWORD_EXCLUDED_U_R_I_DOMAINS' : 'KEYWORD_EXCLUDED_URI_DOMAINS'
 }
 
 
@@ -477,6 +478,7 @@ KEYWORDS = ['ExtKeyUsage',
 'ExcludedDNSDomains',
 'ExcludedEmailAddresses',
 'ExcludedIPRanges',
+'ExcludedURIDomains',
 'IPAddresses',
 'IsCA',
 'IssuingCertificateURL',
@@ -510,6 +512,7 @@ KEYMAPS = {
 'ExcludedDNSDomains': 'strings',
 'ExcludedEmailAddresses': 'strings',
 'ExcludedIPRanges': 'ipnet',
+'ExcludedURIDomains' : 'strings',
 'IPAddresses': 'ip',
 'IsCA': 'bool',
 'IssuingCertificateURL': 'strings',
