@@ -191,7 +191,8 @@ errkeys = {
 	'KEYWORD_PERMITTED_D_N_S_DOMAINS_CRITICAL' : 'KEYWORD_PERMITTED_DNS_DOMAINS_CRITICAL',
 	'KEYWORD_PERMITTED_I_P_RANGES' : 'KEYWORD_PERMITTED_IP_RANGES',
 	'KEYWORD_PERMITTED_U_R_I_DOMAINS' : 'KEYWORD_PERMITTED_URI_DOMAINS',
-	'KEYWORD_U_R_IS' : 'KEYWORD_URIS'
+	'KEYWORD_U_R_IS' : 'KEYWORD_URIS',
+	'KEY_USAGE_C_R_L_SIGN' : 'KEY_USAGE_CRL_SIGN'
 }
 
 
@@ -204,6 +205,19 @@ def format_keyword(name):
 	if keyword in errkeys.keys():
 		keyword = errkeys[keyword]
 	return keyword
+
+def format_uppername(name):
+	outarr = split_capital_name(name)
+	keyword = ''
+	for s in outarr:
+		if len(keyword) > 0:
+			keyword += '_'
+		keyword += '%s'%(s.upper())
+
+	if keyword in errkeys.keys():
+		keyword = errkeys[keyword]
+	return keyword
+
 
 
 def format_tabline(tab,l):
@@ -557,7 +571,7 @@ def grconst_handler(args,parser):
 		m = ms.findall(l)
 		if m is not None and len(m) > 0 :
 			name = m[0]
-			keyword = format_keyword(name)
+			keyword = format_uppername(name)
 			val = 1 << shiftval
 			outs += format_tabline(0,'pub const %s :u32 = %d;'%(keyword,val))
 			shiftval += 1
