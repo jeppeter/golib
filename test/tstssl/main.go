@@ -593,7 +593,8 @@ func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	}
 
 	pubkey = &(rsakey.PublicKey)
-	cabytes, err = x509.CreateCertificate(rand.Reader, &tempx509, &tempx509, pubkey, rsakey)
+	//cabytes, err = x509.CreateCertificate(rand.Reader, &tempx509, &tempx509, pubkey, rsakey)
+	cabytes, err = createCertificate(rand.Reader, &tempx509, &tempx509, pubkey, rsakey)
 	if err != nil {
 		err = dbgutil.FormatError("output certificate %s", err.Error())
 		return

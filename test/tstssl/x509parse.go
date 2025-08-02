@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto"
 	"crypto/dsa"
 	"crypto/ecdh"
 	"crypto/ecdsa"
@@ -117,82 +116,7 @@ var (
 	pssParametersSHA512 = asn1.RawValue{FullBytes: []byte{48, 52, 160, 15, 48, 13, 6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 3, 5, 0, 161, 28, 48, 26, 6, 9, 42, 134, 72, 134, 247, 13, 1, 1, 8, 48, 13, 6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 3, 5, 0, 162, 3, 2, 1, 64}}
 )
 
-var (
-	// RFC 3279, 2.3 Public Key Algorithms
-	//
-	//	pkcs-1 OBJECT IDENTIFIER ::== { iso(1) member-body(2) us(840)
-	//		rsadsi(113549) pkcs(1) 1 }
-	//
-	// rsaEncryption OBJECT IDENTIFIER ::== { pkcs1-1 1 }
-	//
-	//	id-dsa OBJECT IDENTIFIER ::== { iso(1) member-body(2) us(840)
-	//		x9-57(10040) x9cm(4) 1 }
-	oidPublicKeyRSA = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
-	oidPublicKeyDSA = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
-	// RFC 5480, 2.1.1 Unrestricted Algorithm Identifier and Parameters
-	//
-	//	id-ecPublicKey OBJECT IDENTIFIER ::= {
-	//		iso(1) member-body(2) us(840) ansi-X9-62(10045) keyType(2) 1 }
-	oidPublicKeyECDSA = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
-	// RFC 8410, Section 3
-	//
-	//	id-X25519    OBJECT IDENTIFIER ::= { 1 3 101 110 }
-	//	id-Ed25519   OBJECT IDENTIFIER ::= { 1 3 101 112 }
-	oidPublicKeyX25519  = asn1.ObjectIdentifier{1, 3, 101, 110}
-	oidPublicKeyEd25519 = asn1.ObjectIdentifier{1, 3, 101, 112}
-)
 
-// RFC 5480, 2.1.1.1. Named Curve
-//
-//	secp224r1 OBJECT IDENTIFIER ::= {
-//	  iso(1) identified-organization(3) certicom(132) curve(0) 33 }
-//
-//	secp256r1 OBJECT IDENTIFIER ::= {
-//	  iso(1) member-body(2) us(840) ansi-X9-62(10045) curves(3)
-//	  prime(1) 7 }
-//
-//	secp384r1 OBJECT IDENTIFIER ::= {
-//	  iso(1) identified-organization(3) certicom(132) curve(0) 34 }
-//
-//	secp521r1 OBJECT IDENTIFIER ::= {
-//	  iso(1) identified-organization(3) certicom(132) curve(0) 35 }
-//
-// NB: secp256r1 is equivalent to prime256v1
-var (
-	oidNamedCurveP224 = asn1.ObjectIdentifier{1, 3, 132, 0, 33}
-	oidNamedCurveP256 = asn1.ObjectIdentifier{1, 2, 840, 10045, 3, 1, 7}
-	oidNamedCurveP384 = asn1.ObjectIdentifier{1, 3, 132, 0, 34}
-	oidNamedCurveP521 = asn1.ObjectIdentifier{1, 3, 132, 0, 35}
-)
-
-var emptyRawValue = asn1.RawValue{}
-
-var signatureAlgorithmDetails = []struct {
-	algo       x509.SignatureAlgorithm
-	name       string
-	oid        asn1.ObjectIdentifier
-	params     asn1.RawValue
-	pubKeyAlgo x509.PublicKeyAlgorithm
-	hash       crypto.Hash
-	isRSAPSS   bool
-}{
-	{x509.MD5WithRSA, "MD5-RSA", oidSignatureMD5WithRSA, asn1.NullRawValue, x509.RSA, crypto.MD5, false},
-	{x509.SHA1WithRSA, "SHA1-RSA", oidSignatureSHA1WithRSA, asn1.NullRawValue, x509.RSA, crypto.SHA1, false},
-	{x509.SHA1WithRSA, "SHA1-RSA", oidISOSignatureSHA1WithRSA, asn1.NullRawValue, x509.RSA, crypto.SHA1, false},
-	{x509.SHA256WithRSA, "SHA256-RSA", oidSignatureSHA256WithRSA, asn1.NullRawValue, x509.RSA, crypto.SHA256, false},
-	{x509.SHA384WithRSA, "SHA384-RSA", oidSignatureSHA384WithRSA, asn1.NullRawValue, x509.RSA, crypto.SHA384, false},
-	{x509.SHA512WithRSA, "SHA512-RSA", oidSignatureSHA512WithRSA, asn1.NullRawValue, x509.RSA, crypto.SHA512, false},
-	{x509.SHA256WithRSAPSS, "SHA256-RSAPSS", oidSignatureRSAPSS, pssParametersSHA256, x509.RSA, crypto.SHA256, true},
-	{x509.SHA384WithRSAPSS, "SHA384-RSAPSS", oidSignatureRSAPSS, pssParametersSHA384, x509.RSA, crypto.SHA384, true},
-	{x509.SHA512WithRSAPSS, "SHA512-RSAPSS", oidSignatureRSAPSS, pssParametersSHA512, x509.RSA, crypto.SHA512, true},
-	{x509.DSAWithSHA1, "DSA-SHA1", oidSignatureDSAWithSHA1, emptyRawValue, x509.DSA, crypto.SHA1, false},
-	{x509.DSAWithSHA256, "DSA-SHA256", oidSignatureDSAWithSHA256, emptyRawValue, x509.DSA, crypto.SHA256, false},
-	{x509.ECDSAWithSHA1, "ECDSA-SHA1", oidSignatureECDSAWithSHA1, emptyRawValue, x509.ECDSA, crypto.SHA1, false},
-	{x509.ECDSAWithSHA256, "ECDSA-SHA256", oidSignatureECDSAWithSHA256, emptyRawValue, x509.ECDSA, crypto.SHA256, false},
-	{x509.ECDSAWithSHA384, "ECDSA-SHA384", oidSignatureECDSAWithSHA384, emptyRawValue, x509.ECDSA, crypto.SHA384, false},
-	{x509.ECDSAWithSHA512, "ECDSA-SHA512", oidSignatureECDSAWithSHA512, emptyRawValue, x509.ECDSA, crypto.SHA512, false},
-	{x509.PureEd25519, "Ed25519", oidSignatureEd25519, emptyRawValue, x509.Ed25519, crypto.Hash(0) /* no pre-hashing */, false},
-}
 
 type pssParameters struct {
 	// The following three fields are not marked as
@@ -1095,26 +1019,6 @@ func parseAuthorityKeyIdentifier(e pkix.Extension) ([]byte, error) {
 	return nil, nil
 }
 
-// extKeyUsageOIDs contains the mapping between an ExtKeyUsage and its OID.
-var extKeyUsageOIDs = []struct {
-	extKeyUsage x509.ExtKeyUsage
-	oid         asn1.ObjectIdentifier
-}{
-	{x509.ExtKeyUsageAny, oidExtKeyUsageAny},
-	{x509.ExtKeyUsageServerAuth, oidExtKeyUsageServerAuth},
-	{x509.ExtKeyUsageClientAuth, oidExtKeyUsageClientAuth},
-	{x509.ExtKeyUsageCodeSigning, oidExtKeyUsageCodeSigning},
-	{x509.ExtKeyUsageEmailProtection, oidExtKeyUsageEmailProtection},
-	{x509.ExtKeyUsageIPSECEndSystem, oidExtKeyUsageIPSECEndSystem},
-	{x509.ExtKeyUsageIPSECTunnel, oidExtKeyUsageIPSECTunnel},
-	{x509.ExtKeyUsageIPSECUser, oidExtKeyUsageIPSECUser},
-	{x509.ExtKeyUsageTimeStamping, oidExtKeyUsageTimeStamping},
-	{x509.ExtKeyUsageOCSPSigning, oidExtKeyUsageOCSPSigning},
-	{x509.ExtKeyUsageMicrosoftServerGatedCrypto, oidExtKeyUsageMicrosoftServerGatedCrypto},
-	{x509.ExtKeyUsageNetscapeServerGatedCrypto, oidExtKeyUsageNetscapeServerGatedCrypto},
-	{x509.ExtKeyUsageMicrosoftCommercialCodeSigning, oidExtKeyUsageMicrosoftCommercialCodeSigning},
-	{x509.ExtKeyUsageMicrosoftKernelCodeSigning, oidExtKeyUsageMicrosoftKernelCodeSigning},
-}
 
 func extKeyUsageFromOID(oid asn1.ObjectIdentifier) (eku x509.ExtKeyUsage, ok bool) {
 	for _, pair := range extKeyUsageOIDs {
