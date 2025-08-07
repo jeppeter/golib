@@ -354,12 +354,14 @@ func boringAllowCert_func(c *x509.Certificate) bool {
 // to the chain in currentChain.
 func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509.Certificate, opts *VerifyOptionsF) error {
 	if len(c.UnhandledCriticalExtensions) > 0 {
+		logutil.Debug(" ")
 		return x509.UnhandledCriticalExtension{}
 	}
 
 	if len(currentChain) > 0 {
 		child := currentChain[len(currentChain)-1]
 		if !bytes.Equal(child.RawIssuer, c.RawSubject) {
+			logutil.Debug(" ")
 			return x509.CertificateInvalidError{c, x509.NameMismatch, ""}
 		}
 	}
@@ -369,12 +371,14 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 		now = time.Now()
 	}
 	if now.Before(c.NotBefore) {
+		logutil.Debug(" ")
 		return x509.CertificateInvalidError{
 			Cert:   c,
 			Reason: x509.Expired,
 			Detail: fmt.Sprintf("current time %s is before %s", now.Format(time.RFC3339), c.NotBefore.Format(time.RFC3339)),
 		}
 	} else if now.After(c.NotAfter) {
+		logutil.Debug(" ")
 		return x509.CertificateInvalidError{
 			Cert:   c,
 			Reason: x509.Expired,
@@ -390,6 +394,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 
 	if certType == intermediateCertificate || certType == rootCertificate {
 		if len(currentChain) == 0 {
+			logutil.Debug(" ")
 			return errors.New("x509: internal error: empty chain when appending CA cert")
 		}
 	}
@@ -409,6 +414,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 					name := string(data)
 					mailbox, ok := parseRFC2821Mailbox(name)
 					if !ok {
+						logutil.Debug(" ")
 						return fmt.Errorf("x509: cannot parse rfc822Name %q", mailbox)
 					}
 
@@ -416,12 +422,14 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 						func(parsedName, constraint any) (bool, error) {
 							return matchEmailConstraint_func(parsedName.(rfc2821MailboxF), constraint.(string))
 						}, c.PermittedEmailAddresses, c.ExcludedEmailAddresses); err != nil {
+						logutil.Debug(" ")
 						return err
 					}
 
 				case nameTypeDNS:
 					name := string(data)
 					if _, ok := domainToReverseLabels(name); !ok {
+						logutil.Debug(" ")
 						return fmt.Errorf("x509: cannot parse dnsName %q", name)
 					}
 
@@ -429,6 +437,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 						func(parsedName, constraint any) (bool, error) {
 							return matchDomainConstraint_func(parsedName.(string), constraint.(string))
 						}, c.PermittedDNSDomains, c.ExcludedDNSDomains); err != nil {
+						logutil.Debug(" ")
 						return err
 					}
 
@@ -436,6 +445,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 					name := string(data)
 					uri, err := url.Parse(name)
 					if err != nil {
+						logutil.Debug(" ")
 						return fmt.Errorf("x509: internal error: URI SAN %q failed to parse", name)
 					}
 
@@ -443,6 +453,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 						func(parsedName, constraint any) (bool, error) {
 							return matchURIConstraint_func(parsedName.(*url.URL), constraint.(string))
 						}, c.PermittedURIDomains, c.ExcludedURIDomains); err != nil {
+						logutil.Debug(" ")
 						return err
 					}
 
@@ -456,6 +467,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 						func(parsedName, constraint any) (bool, error) {
 							return matchIPConstraint_func(parsedName.(net.IP), constraint.(*net.IPNet))
 						}, c.PermittedIPRanges, c.ExcludedIPRanges); err != nil {
+						logutil.Debug(" ")
 						return err
 					}
 
@@ -490,12 +502,14 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 	// encryption key could only be used for Diffie-Hellman key agreement.
 
 	if certType == intermediateCertificate && (!c.BasicConstraintsValid || !c.IsCA) {
+		logutil.Debug(" ")
 		return x509.CertificateInvalidError{c, x509.NotAuthorizedToSign, ""}
 	}
 
 	if c.BasicConstraintsValid && c.MaxPathLen >= 0 {
 		numIntermediates := len(currentChain) - 1
 		if numIntermediates > c.MaxPathLen {
+			logutil.Debug(" ")
 			return x509.CertificateInvalidError{c, x509.TooManyIntermediates, ""}
 		}
 	}
@@ -504,6 +518,7 @@ func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509
 		// IncompatibleUsage is not quite right here,
 		// but it's also the "no chains found" error
 		// and is close enough.
+		logutil.Debug(" ")
 		return x509.CertificateInvalidError{c, x509.IncompatibleUsage, ""}
 	}
 
@@ -600,7 +615,10 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 		hintCert *x509.Certificate
 	)
 
+	logutil.Debug(" ")
+
 	considerCandidate := func(certType int, candidate potentialParent) {
+		logutil.Debug(" ")
 		if candidate.cert.PublicKey == nil || alreadyInChain_func(candidate.cert, currentChain) {
 			return
 		}
@@ -609,12 +627,27 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 			sigChecks = new(int)
 		}
 		*sigChecks++
+		logutil.Debug(" ")
 		if *sigChecks > maxChainSignatureChecks_var {
 			err = errors.New("x509: signature check attempts limit reached while verifying certificate chain")
 			return
 		}
 
+		logutil.Debug(" ")
 		if err := c.CheckSignatureFrom(candidate.cert); err != nil {
+			logutil.Debug(" ")
+			if hintErr == nil {
+				hintErr = err
+				hintCert = candidate.cert
+			}
+			logutil.Debug(" ")
+			return
+		}
+
+		logutil.Debug(" ")
+		err = isValid_Certificate(candidate.cert, certType, currentChain, opts)
+		if err != nil {
+			logutil.Debug(" ")
 			if hintErr == nil {
 				hintErr = err
 				hintCert = candidate.cert
@@ -622,17 +655,11 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 			return
 		}
 
-		err = isValid_Certificate(candidate.cert, certType, currentChain, opts)
-		if err != nil {
-			if hintErr == nil {
-				hintErr = err
-				hintCert = candidate.cert
-			}
-			return
-		}
+		logutil.Debug(" ")
 
 		if candidate.constraint != nil {
 			if err := candidate.constraint(currentChain); err != nil {
+				logutil.Debug(" ")
 				if hintErr == nil {
 					hintErr = err
 					hintCert = candidate.cert
@@ -651,9 +678,12 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 		}
 	}
 
+	logutil.Debug(" ")
 	for _, root := range opts.Roots.findPotentialParents(c) {
 		considerCandidate(rootCertificate, root)
 	}
+
+	logutil.Debug(" ")
 	for _, intermediate := range opts.Intermediates.findPotentialParents(c) {
 		considerCandidate(intermediateCertificate, intermediate)
 	}
@@ -662,6 +692,7 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 		err = nil
 	}
 	if len(chains) == 0 && err == nil {
+		logutil.Debug(" ")
 		err = UnknownAuthorityError_s{c, hintErr, hintCert}
 	}
 
@@ -774,11 +805,14 @@ func Verify_Certificate(c *x509.Certificate, opts VerifyOptionsF) (chains [][]*x
 		return nil, errNoRootError
 	}
 
+	logutil.Debug(" ")
+
 	err = isValid_Certificate(c, leafCertificate, nil, &opts)
 	if err != nil {
 		return
 	}
 
+	logutil.Debug(" ")
 	if len(opts.DNSName) > 0 {
 		err = c.VerifyHostname(opts.DNSName)
 		if err != nil {
@@ -786,8 +820,10 @@ func Verify_Certificate(c *x509.Certificate, opts VerifyOptionsF) (chains [][]*x
 		}
 	}
 
+	logutil.Debug(" ")
 	var candidateChains [][]*x509.Certificate
 	if opts.Roots.contains(c) {
+		logutil.Debug(" ")
 		candidateChains = [][]*x509.Certificate{{c}}
 	} else {
 		candidateChains, err = buildChains_Certificate(c, []*x509.Certificate{c}, nil, &opts)
@@ -796,10 +832,12 @@ func Verify_Certificate(c *x509.Certificate, opts VerifyOptionsF) (chains [][]*x
 		}
 	}
 
+	logutil.Debug(" ")
 	if len(opts.KeyUsages) == 0 {
 		opts.KeyUsages = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 	}
 
+	logutil.Debug(" ")
 	for _, eku := range opts.KeyUsages {
 		if eku == x509.ExtKeyUsageAny {
 			// If any key usage is acceptable, no need to check the chain for
