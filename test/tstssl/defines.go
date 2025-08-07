@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/asn1"
-	"math/big"
+	"crypto"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"crypto"
+	"encoding/asn1"
+	"math/big"
 	"time"
 )
 
@@ -57,7 +57,6 @@ var (
 	oidNamedCurveP521 = asn1.ObjectIdentifier{1, 3, 132, 0, 35}
 )
 
-
 var emptyRawValue = asn1.RawValue{}
 
 var signatureAlgorithmDetails = []struct {
@@ -87,7 +86,6 @@ var signatureAlgorithmDetails = []struct {
 	{x509.PureEd25519, "Ed25519", oidSignatureEd25519, emptyRawValue, x509.Ed25519, crypto.Hash(0) /* no pre-hashing */, false},
 }
 
-
 // extKeyUsageOIDs contains the mapping between an ExtKeyUsage and its OID.
 var extKeyUsageOIDs = []struct {
 	extKeyUsage x509.ExtKeyUsage
@@ -113,7 +111,6 @@ var extKeyUsageOIDs = []struct {
 // just an empty SEQUENCE.
 var emptyASN1Subject = []byte{0x30, 0}
 
-
 type basicConstraints struct {
 	IsCA       bool `asn1:"optional"`
 	MaxPathLen int  `asn1:"optional,default:-1"`
@@ -135,7 +132,6 @@ type distributionPointName struct {
 	RelativeName pkix.RDNSequence `asn1:"optional,tag:1"`
 }
 
-
 // RFC 5280, 4.2.1.14
 type distributionPoint struct {
 	DistributionPoint distributionPointName `asn1:"optional,tag:0"`
@@ -155,7 +151,6 @@ type certificate struct {
 	SignatureValue     asn1.BitString
 }
 
-
 type tbsCertificate struct {
 	Raw                asn1.RawContent
 	Version            int `asn1:"optional,explicit,default:0,tag:0"`
@@ -169,3 +164,146 @@ type tbsCertificate struct {
 	SubjectUniqueId    asn1.BitString   `asn1:"optional,tag:2"`
 	Extensions         []pkix.Extension `asn1:"omitempty,optional,explicit,tag:3"`
 }
+
+const (
+	KEYWORD_COUNTRY          = "country"
+	KEYWORD_PROVINCE         = "province"
+	KEYWORD_LOCALITY         = "locality"
+	KEYWORD_STREETADDRESS    = "streetaddress"
+	KEYWORD_POSTALCODE       = "postalcode"
+	KEYWORD_ORGANIZATION     = "organization"
+	KEYWORD_ORGANIZATIONUNIT = "organizationalunit"
+	KEYWORD_COMMONNAME       = "commonname"
+	KEYWORD_SERIALNUMBER     = "serialnumber"
+	KEYWROD_EXTRANAMES       = "extranames"
+	KEYWORD_TYPE             = "type"
+	KEYWORD_VALUE            = "value"
+	KEYWORD_TAG              = "tag"
+	KEYWORD_CONTENT          = "content"
+)
+
+const (
+	KEYWORD_EXT_KEYUSAGE_ANY                               = "any"
+	KEYWORD_EXT_KEYUSAGE_SERVER_AUTH                       = "serverauth"
+	KEYWORD_EXT_KEYUSAGE_CLIENT_AUTH                       = "clientauth"
+	KEYWORD_EXT_KEYUSAGE_CODE_SIGNING                      = "codesigning"
+	KEYWORD_EXT_KEYUSAGE_EMAIL_PROTECTION                  = "emailprotection"
+	KEYWORD_EXT_KEYUSAGE_IPSEC_END_SYSTEM                  = "ipsecencsystem"
+	KEYWORD_EXT_KEYUSAGE_IPSEC_TUNNEL                      = "ipsectunnel"
+	KEYWORD_EXT_KEYUSAGE_IPSEC_USER                        = "ipsecuser"
+	KEYWORD_EXT_KEYUSAGE_TIME_STAMPING                     = "timestamping"
+	KEYWORD_EXT_KEYUSAGE_OCSP_SIGNING                      = "ocspsigning"
+	KEYWORD_EXT_KEYUSAGE_MICROSOFT_SERVER_GATED_CRYPTO     = "microsoftservergatedcrypto"
+	KEYWORD_EXT_KEYUSAGE_NETSCAPE_SERVER_GATED_CRYPTO      = "netscapeserergatedcrypto"
+	KEYWORD_EXT_KEYUSAGE_MICROSOFT_COMMERCIAL_CODE_SIGNING = "microsoftcommercialcodesigning"
+	KEYWORD_EXT_KEYUSAGE_MICROSOFT_KERNEL_CODE_SIGNING     = "microsoftkernelcodesigning"
+)
+
+const (
+	KEYWORD_MD2_WITH_RSA       = "md2withrsa"
+	KEYWORD_MD5_WITH_RSA       = "md5withrsa"
+	KEYWORD_SHA1_WITH_RSA      = "sha1withrsa"
+	KEYWORD_SHA256_WITH_RSA    = "sha256withrsa"
+	KEYWORD_SHA384_WITH_RSA    = "sha384withrsa"
+	KEYWORD_SHA512_WITH_RSA    = "sha512withrsa"
+	KEYWORD_DSA_WITH_SHA1      = "dsawithsha1"
+	KEYWORD_DSA_WITH_SHA256    = "dsawithsha256"
+	KEYWORD_ECDSA_WITH_SHA1    = "ecdsawithsha1"
+	KEYWORD_ECDSA_WITH_SHA256  = "ecdsawithsha256"
+	KEYWORD_ECDSA_WITH_SHA384  = "ecdsawithsha384"
+	KEYWORD_ECDSA_WITH_SHA512  = "ecdsawithsha512"
+	KEYWORD_SHA256_WITH_RSAPSS = "sha256withrsapss"
+	KEYWORD_SHA384_WITH_RSAPSS = "sha384withrsapss"
+	KEYWORD_SHA512_WITH_RSAPSS = "sha512withrsapss"
+	KEYWORD_PURE_ED25519       = "puered25519"
+)
+
+const (
+	KEYWORD_DIGITAL_SIGNATURE  = "digitalsignature"
+	KEYWORD_CONTENT_COMMITMENT = "contentcommitment"
+	KEYWORD_KEY_ENCIPHERMENT   = "keyencipherment"
+	KEYWORD_DATA_ENCIPHERMENT  = "dataencipherment"
+	KEYWORD_KEY_AGREEMENT      = "keyagreement"
+	KEYWORD_CERT_SIGN          = "certsign"
+	KEYWORD_CRL_SIGN           = "crlsign"
+	KEYWORD_ENCIPHER_ONLY      = "encipheronly"
+	KEYWORD_DECIPHER_ONLY      = "decipheronly"
+)
+
+const (
+	KEYWORD_EXT_KEY_USAGE                  = "extkeyusage"
+	KEYWORD_AUTHORITY_KEY_ID               = "authoritykeyid"
+	KEYWORD_BASIC_CONSTRAINTS_VALID        = "basicconstraintsvalid"
+	KEYWORD_CRL_DISTRIBUTION_POINTS        = "crldistributionpoints"
+	KEYWORD_DNS_NAMES                      = "dnsnames"
+	KEYWORD_EMAIL_ADDRESSES                = "emailaddresses"
+	KEYWORD_EXCLUDED_DNS_DOMAINS           = "excludeddnsdomains"
+	KEYWORD_EXCLUDED_EMAIL_ADDRESSES       = "excludedemailaddresses"
+	KEYWORD_EXCLUDED_IP_RANGES             = "excludedipranges"
+	KEYWORD_EXCLUDED_URI_DOMAINS           = "excludeduridomains"
+	KEYWORD_IP_ADDRESSES                   = "ipaddresses"
+	KEYWORD_IS_CA                          = "isca"
+	KEYWORD_ISSUING_CERTIFICATE_URL        = "issuingcertificateurl"
+	KEYWORD_KEY_USAGE                      = "keyusage"
+	KEYWORD_MAX_PATH_LEN                   = "maxpathlen"
+	KEYWORD_MAX_PATH_LEN_ZERO              = "maxpathlenzero"
+	KEYWORD_NOT_AFTER                      = "notafter"
+	KEYWORD_NOT_BEFORE                     = "notbefore"
+	KEYWORD_O_C_S_P_SERVER                 = "ocspserver"
+	KEYWORD_PERMITTED_DNS_DOMAINS          = "permitteddnsdomains"
+	KEYWORD_PERMITTED_DNS_DOMAINS_CRITICAL = "permitteddnsdomainscritical"
+	KEYWORD_PERMITTED_EMAIL_ADDRESSES      = "permittedemailaddresses"
+	KEYWORD_PERMITTED_IP_RANGES            = "permittedipranges"
+	KEYWORD_PERMITTED_URI_DOMAINS          = "permitteduridomains"
+	KEYWORD_POLICY_IDENTIFIERS             = "policyidentifiers"
+	KEYWORD_POLICIES                       = "policies"
+	KEYWORD_SERIAL_NUMBER                  = "serialnumber"
+	KEYWORD_SIGNATURE_ALGORITHM            = "signaturealgorithm"
+	KEYWORD_SUBJECT                        = "subject"
+	KEYWORD_SUBJECT_KEY_ID                 = "subjectkeyid"
+	KEYWORD_URIS                           = "uris"
+	KEYWORD_UNKNOWN_EXT_KEY_USAGE          = "unknownextkeyusage"
+)
+
+var extKeyUsageValue = []struct {
+	extKeyUsage x509.ExtKeyUsage
+	key         string
+}{
+	{x509.ExtKeyUsageAny, KEYWORD_EXT_KEYUSAGE_ANY},
+	{x509.ExtKeyUsageServerAuth, KEYWORD_EXT_KEYUSAGE_SERVER_AUTH},
+	{x509.ExtKeyUsageClientAuth, KEYWORD_EXT_KEYUSAGE_CLIENT_AUTH},
+	{x509.ExtKeyUsageCodeSigning, KEYWORD_EXT_KEYUSAGE_CODE_SIGNING},
+	{x509.ExtKeyUsageEmailProtection, KEYWORD_EXT_KEYUSAGE_EMAIL_PROTECTION},
+	{x509.ExtKeyUsageIPSECEndSystem, KEYWORD_EXT_KEYUSAGE_IPSEC_END_SYSTEM},
+	{x509.ExtKeyUsageIPSECTunnel, KEYWORD_EXT_KEYUSAGE_IPSEC_TUNNEL},
+	{x509.ExtKeyUsageIPSECUser, KEYWORD_EXT_KEYUSAGE_IPSEC_USER},
+	{x509.ExtKeyUsageTimeStamping, KEYWORD_EXT_KEYUSAGE_TIME_STAMPING},
+	{x509.ExtKeyUsageOCSPSigning, KEYWORD_EXT_KEYUSAGE_OCSP_SIGNING},
+	{x509.ExtKeyUsageMicrosoftServerGatedCrypto, KEYWORD_EXT_KEYUSAGE_MICROSOFT_SERVER_GATED_CRYPTO},
+	{x509.ExtKeyUsageNetscapeServerGatedCrypto, KEYWORD_EXT_KEYUSAGE_NETSCAPE_SERVER_GATED_CRYPTO},
+	{x509.ExtKeyUsageMicrosoftCommercialCodeSigning, KEYWORD_EXT_KEYUSAGE_MICROSOFT_COMMERCIAL_CODE_SIGNING},
+	{x509.ExtKeyUsageMicrosoftKernelCodeSigning, KEYWORD_EXT_KEYUSAGE_MICROSOFT_KERNEL_CODE_SIGNING},
+}
+
+var keyUsageValue = []struct {
+	value x509.KeyUsage
+	key   string
+}{
+	{x509.KeyUsageDigitalSignature, KEYWORD_DIGITAL_SIGNATURE},
+	{x509.KeyUsageContentCommitment, KEYWORD_CONTENT_COMMITMENT},
+	{x509.KeyUsageKeyEncipherment, KEYWORD_KEY_ENCIPHERMENT},
+	{x509.KeyUsageDataEncipherment, KEYWORD_DATA_ENCIPHERMENT},
+	{x509.KeyUsageKeyAgreement, KEYWORD_KEY_AGREEMENT},
+	{x509.KeyUsageCertSign, KEYWORD_CERT_SIGN},
+	{x509.KeyUsageCRLSign, KEYWORD_CRL_SIGN},
+	{x509.KeyUsageEncipherOnly, KEYWORD_ENCIPHER_ONLY},
+	{x509.KeyUsageDecipherOnly, KEYWORD_DECIPHER_ONLY},
+}
+
+const (
+	KEYWORD_DNSNAME                      = "dnsname"
+	KEYWORD_INTERMEDIATES                = "intermediates"
+	KEYWORD_ROOTS                        = "roots"
+	KEYWORD_CURRENTTIME                  = "currenttime"
+	KEYWORD_MAX_CONSTRAINTS_COMPARISIONS = "maxconstraintscomparisions"
+)

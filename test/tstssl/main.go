@@ -656,6 +656,60 @@ func X509parse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+func X509vfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var tempx509 *x509.Certificate
+	var x509bytes []byte
+	var vfyopt x509.VerifyOptions
+	var f string
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("to verify ")
+		return
+	}
+
+	f = ns.GetString("vfyopt")
+	if len(f) == 0 {
+		err = dbgutil.FormatError("need vfyopt set")
+		return
+	}
+	vfyopt, err = get_x509_verify_options(f)
+	if err != nil {
+		return
+	}
+
+	for _, f = range sarr {
+		x509bytes, err = read_pem_or_der(f)
+		if err != nil {
+			return
+		}
+		tempx509, err = x509.ParseCertificate(x509bytes)
+		if err != nil {
+			return
+		}
+
+		_, err = tempx509.Verify(vfyopt)
+		if err != nil {
+			return
+		}
+
+		fmt.Printf("%s verified\n", f)
+	}
+
+	err = nil
+	return
+}
+
 func init() {
 	Genkeycert_handler(nil, nil, nil)
 	Pemtoder_handler(nil, nil, nil)
@@ -666,6 +720,7 @@ func init() {
 	Rsagen_handler(nil, nil, nil)
 	X509create_handler(nil, nil, nil)
 	X509parse_handler(nil, nil, nil)
+	X509vfy_handler(nil, nil, nil)
 }
 func main() {
 	var commandline string
@@ -678,6 +733,7 @@ func main() {
 		"output|o" : null,
 		"certfile" : null,
 		"keyfile" : null,
+		"vfyopt" : null,
 		"genkeycert<Genkeycert_handler>##[rsabits] to generate keyfile and certfile default rsabits 2048##" : {
 			"$" : "?"
 		},
@@ -703,6 +759,9 @@ func main() {
 			"$" : 1
 		},
 		"x509parse<X509parse_handler>##pemfile ... to parse x509.Certificate##" : {
+			"$" : "+"
+		},
+		"x509vfy<X509vfy_handler>##pemfile ... to parse in vfyopt file##" : {
 			"$" : "+"
 		}
 
