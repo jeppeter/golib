@@ -698,7 +698,7 @@ func X509vfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 			return
 		}
 
-		_, err = Verify_call(tempx509, vfyopt)
+		_, err = Verify_Certificate(tempx509, vfyopt)
 		//_, err = tempx509.Verify(vfyopt)
 		if err != nil {
 			return

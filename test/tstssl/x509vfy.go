@@ -157,15 +157,15 @@ func get_x509_verify_options(cfgfile string) (retv VerifyOptionsF, err error) {
 	return
 }
 
-func hasNameConstraints_func(c *x509.Certificate) bool {
+func hasNameConstraints_Certificate(c *x509.Certificate) bool {
 	return oidInExtensions(oidExtensionNameConstraints, c.Extensions)
 }
 
-func hasSANExtension_func(c *x509.Certificate) bool {
+func hasSANExtension_Certificate(c *x509.Certificate) bool {
 	return oidInExtensions(oidExtensionSubjectAltName, c.Extensions)
 }
 
-func getSANExtension_func(c *x509.Certificate) []byte {
+func getSANExtension_Certificate(c *x509.Certificate) []byte {
 	for _, e := range c.Extensions {
 		if e.Id.Equal(oidExtensionSubjectAltName) {
 			return e.Value
@@ -179,7 +179,7 @@ func getSANExtension_func(c *x509.Certificate) []byte {
 // form of name, suitable for passing to the match function. The total number
 // of comparisons is tracked in the given count and should not exceed the given
 // limit.
-func checkNameConstraints_func(c *x509.Certificate, count *int,
+func checkNameConstraints_Certificate(c *x509.Certificate, count *int,
 	maxConstraintComparisons int,
 	nameType string,
 	name string,
@@ -352,7 +352,7 @@ func boringAllowCert_func(c *x509.Certificate) bool {
 
 // isValid performs validity checks on c given that it is a candidate to append
 // to the chain in currentChain.
-func isValid_func(c *x509.Certificate, certType int, currentChain []*x509.Certificate, opts *VerifyOptionsF) error {
+func isValid_Certificate(c *x509.Certificate, certType int, currentChain []*x509.Certificate, opts *VerifyOptionsF) error {
 	if len(c.UnhandledCriticalExtensions) > 0 {
 		return x509.UnhandledCriticalExtension{}
 	}
@@ -395,15 +395,15 @@ func isValid_func(c *x509.Certificate, certType int, currentChain []*x509.Certif
 	}
 
 	if (certType == intermediateCertificate || certType == rootCertificate) &&
-		hasNameConstraints_func(c) {
+		hasNameConstraints_Certificate(c) {
 		toCheck := []*x509.Certificate{}
 		for _, c := range currentChain {
-			if hasSANExtension_func(c) {
+			if hasSANExtension_Certificate(c) {
 				toCheck = append(toCheck, c)
 			}
 		}
 		for _, sanCert := range toCheck {
-			err := forEachSAN(getSANExtension_func(sanCert), func(tag int, data []byte) error {
+			err := forEachSAN(getSANExtension_Certificate(sanCert), func(tag int, data []byte) error {
 				switch tag {
 				case nameTypeEmail:
 					name := string(data)
@@ -412,7 +412,7 @@ func isValid_func(c *x509.Certificate, certType int, currentChain []*x509.Certif
 						return fmt.Errorf("x509: cannot parse rfc822Name %q", mailbox)
 					}
 
-					if err := checkNameConstraints_func(c, &comparisonCount, maxConstraintComparisons, "email address", name, mailbox,
+					if err := checkNameConstraints_Certificate(c, &comparisonCount, maxConstraintComparisons, "email address", name, mailbox,
 						func(parsedName, constraint any) (bool, error) {
 							return matchEmailConstraint_func(parsedName.(rfc2821MailboxF), constraint.(string))
 						}, c.PermittedEmailAddresses, c.ExcludedEmailAddresses); err != nil {
@@ -425,7 +425,7 @@ func isValid_func(c *x509.Certificate, certType int, currentChain []*x509.Certif
 						return fmt.Errorf("x509: cannot parse dnsName %q", name)
 					}
 
-					if err := checkNameConstraints_func(c, &comparisonCount, maxConstraintComparisons, "DNS name", name, name,
+					if err := checkNameConstraints_Certificate(c, &comparisonCount, maxConstraintComparisons, "DNS name", name, name,
 						func(parsedName, constraint any) (bool, error) {
 							return matchDomainConstraint_func(parsedName.(string), constraint.(string))
 						}, c.PermittedDNSDomains, c.ExcludedDNSDomains); err != nil {
@@ -439,7 +439,7 @@ func isValid_func(c *x509.Certificate, certType int, currentChain []*x509.Certif
 						return fmt.Errorf("x509: internal error: URI SAN %q failed to parse", name)
 					}
 
-					if err := checkNameConstraints_func(c, &comparisonCount, maxConstraintComparisons, "URI", name, uri,
+					if err := checkNameConstraints_Certificate(c, &comparisonCount, maxConstraintComparisons, "URI", name, uri,
 						func(parsedName, constraint any) (bool, error) {
 							return matchURIConstraint_func(parsedName.(*url.URL), constraint.(string))
 						}, c.PermittedURIDomains, c.ExcludedURIDomains); err != nil {
@@ -452,7 +452,7 @@ func isValid_func(c *x509.Certificate, certType int, currentChain []*x509.Certif
 						return fmt.Errorf("x509: internal error: IP SAN %x failed to parse", data)
 					}
 
-					if err := checkNameConstraints_func(c, &comparisonCount, maxConstraintComparisons, "IP address", ip.String(), ip,
+					if err := checkNameConstraints_Certificate(c, &comparisonCount, maxConstraintComparisons, "IP address", ip.String(), ip,
 						func(parsedName, constraint any) (bool, error) {
 							return matchIPConstraint_func(parsedName.(net.IP), constraint.(*net.IPNet))
 						}, c.PermittedIPRanges, c.ExcludedIPRanges); err != nil {
@@ -622,7 +622,7 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 			return
 		}
 
-		err = isValid_func(candidate.cert, certType, currentChain, opts)
+		err = isValid_Certificate(candidate.cert, certType, currentChain, opts)
 		if err != nil {
 			if hintErr == nil {
 				hintErr = err
@@ -754,7 +754,7 @@ NextCert:
 // Certificates other than c in the returned chains should not be modified.
 //
 // WARNING: this function doesn't do any revocation checking.
-func Verify_call(c *x509.Certificate, opts VerifyOptionsF) (chains [][]*x509.Certificate, err error) {
+func Verify_Certificate(c *x509.Certificate, opts VerifyOptionsF) (chains [][]*x509.Certificate, err error) {
 	// Platform-specific verification needs the ASN.1 contents so
 	// this makes the behavior consistent across platforms.
 	if len(c.Raw) == 0 {
@@ -774,7 +774,7 @@ func Verify_call(c *x509.Certificate, opts VerifyOptionsF) (chains [][]*x509.Cer
 		return nil, errNoRootError
 	}
 
-	err = isValid_func(c, leafCertificate, nil, &opts)
+	err = isValid_Certificate(c, leafCertificate, nil, &opts)
 	if err != nil {
 		return
 	}
