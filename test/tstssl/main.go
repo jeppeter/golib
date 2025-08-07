@@ -660,7 +660,7 @@ func X509vfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var sarr []string
 	var tempx509 *x509.Certificate
 	var x509bytes []byte
-	var vfyopt x509.VerifyOptions
+	var vfyopt VerifyOptionsF
 	var f string
 	err = nil
 	if ns == nil {
@@ -698,7 +698,8 @@ func X509vfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 			return
 		}
 
-		_, err = tempx509.Verify(vfyopt)
+		_, err = Verify_call(tempx509, vfyopt)
+		//_, err = tempx509.Verify(vfyopt)
 		if err != nil {
 			return
 		}

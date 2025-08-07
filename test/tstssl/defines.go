@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"errors"
 	"math/big"
 	"time"
 )
@@ -306,4 +307,18 @@ const (
 	KEYWORD_ROOTS                        = "roots"
 	KEYWORD_CURRENTTIME                  = "currenttime"
 	KEYWORD_MAX_CONSTRAINTS_COMPARISIONS = "maxconstraintscomparisions"
+)
+
+// errNotParsed is returned when a certificate without ASN.1 contents is
+// verified. Platform-specific verification needs the ASN.1 contents.
+var errNotParsed = errors.New("x509: missing ASN.1 contents; use ParseCertificate")
+
+// errNotParsed is returned when a certificate without ASN.1 contents is
+// verified. Platform-specific verification needs the ASN.1 contents.
+var errNoRootError = errors.New("x509: no root set")
+
+const (
+	leafCertificate = iota
+	intermediateCertificate
+	rootCertificate
 )
