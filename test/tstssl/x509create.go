@@ -2,25 +2,26 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"crypto"
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
+	cryptorand "crypto/rand"
+	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"crypto/elliptic"
-	"crypto/rsa"
-	cryptorand "crypto/rand"
 	"encoding/asn1"
 	"errors"
-	"net"
-	"net/url"
 	"fmt"
-	"io"
-	"math/big"
 	"golang.org/x/crypto/cryptobyte"
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
+	"io"
+	"logutil"
+	"math/big"
+	"net"
+	"net/url"
 )
 
 func oidFromECDHCurve(curve ecdh.Curve) (asn1.ObjectIdentifier, bool) {
@@ -38,7 +39,6 @@ func oidFromECDHCurve(curve ecdh.Curve) (asn1.ObjectIdentifier, bool) {
 	return nil, false
 }
 
-
 func oidFromNamedCurve(curve elliptic.Curve) (asn1.ObjectIdentifier, bool) {
 	switch curve {
 	case elliptic.P224():
@@ -53,7 +53,6 @@ func oidFromNamedCurve(curve elliptic.Curve) (asn1.ObjectIdentifier, bool) {
 
 	return nil, false
 }
-
 
 func marshalPublicKey(pub any) (publicKeyBytes []byte, publicKeyAlgorithm pkix.AlgorithmIdentifier, err error) {
 	switch pub := pub.(type) {
@@ -112,7 +111,6 @@ func marshalPublicKey(pub any) (publicKeyBytes []byte, publicKeyAlgorithm pkix.A
 	return publicKeyBytes, publicKeyAlgorithm, nil
 }
 
-
 // signingParamsForKey returns the signature algorithm and its Algorithm
 // Identifier to use for signing, based on the key type. If sigAlgo is not zero
 // then it overrides the default.
@@ -169,7 +167,6 @@ func signingParamsForKey(key crypto.Signer, sigAlgo x509.SignatureAlgorithm) (x5
 
 	return 0, ai, errors.New("x509: unknown SignatureAlgorithm")
 }
-
 
 func subjectBytes(cert *x509.Certificate) ([]byte, error) {
 	if len(cert.RawSubject) > 0 {
@@ -263,8 +260,6 @@ func marshalExtKeyUsage(extUsages []x509.ExtKeyUsage, unknownUsages []asn1.Objec
 	return ext, err
 }
 
-
-
 func marshalBasicConstraints(isCA bool, maxPathLen int, maxPathLenZero bool) (pkix.Extension, error) {
 	ext := pkix.Extension{Id: oidExtensionBasicConstraints, Critical: true}
 	// Leaving MaxPathLen as zero indicates that no maximum path
@@ -311,7 +306,6 @@ func marshalSANs(dnsNames, emailAddresses []string, ipAddresses []net.IP, uris [
 	}
 	return asn1.Marshal(rawValues)
 }
-
 
 func marshalCertificatePolicies(policies []x509.OID, policyIdentifiers []asn1.ObjectIdentifier) (pkix.Extension, error) {
 	ext := pkix.Extension{Id: oidExtensionCertificatePolicies}
@@ -556,17 +550,16 @@ func buildCertExtensions(template *x509.Certificate, subjectIsEmpty bool, author
 	return append(ret[:n], template.ExtraExtensions...), nil
 }
 
-
 func hash_func(algo x509.SignatureAlgorithm) crypto.Hash {
 	for _, details := range signatureAlgorithmDetails {
 		if details.algo == algo {
 			return details.hash
 		}
 	}
-	return crypto.Hash(0)	
+	return crypto.Hash(0)
 }
 
-func  is_RSAPSS(algo x509.SignatureAlgorithm) bool {
+func is_RSAPSS(algo x509.SignatureAlgorithm) bool {
 	for _, details := range signatureAlgorithmDetails {
 		if details.algo == algo {
 			return details.isRSAPSS
@@ -578,7 +571,6 @@ func  is_RSAPSS(algo x509.SignatureAlgorithm) bool {
 func signaturePublicKeyAlgoMismatchError(expectedPubKeyAlgo x509.PublicKeyAlgorithm, pubKey any) error {
 	return fmt.Errorf("x509: signature algorithm specifies an %s public key, but have public key of type %T", expectedPubKeyAlgo.String(), pubKey)
 }
-
 
 // checkSignature verifies that signature is a valid signature over signed from
 // a crypto.PublicKey.
@@ -645,7 +637,6 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 	}
 	return x509.ErrUnsupportedAlgorithm
 }
-
 
 func signTBS(tbs []byte, key crypto.Signer, sigAlg x509.SignatureAlgorithm, rand io.Reader) ([]byte, error) {
 	signed := tbs
@@ -756,6 +747,8 @@ func createCertificate(rand io.Reader, template, parent *x509.Certificate, pub, 
 		//   length, and number of unused bits).
 		h := sha1.Sum(publicKeyBytes)
 		subjectKeyId = h[:]
+		logutil.DebugBuffer(subjectKeyId, "SubjectKeyId")
+		logutil.DebugBuffer(publicKeyBytes, "publicKeyBytes")
 	}
 
 	// Check that the signer's public key matches the private key, if available.
