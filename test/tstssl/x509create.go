@@ -640,6 +640,7 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 
 func signTBS(tbs []byte, key crypto.Signer, sigAlg x509.SignatureAlgorithm, rand io.Reader) ([]byte, error) {
 	signed := tbs
+	logutil.DebugBuffer(tbs, "tbs buffer")
 	hashFunc := hash_func(sigAlg)
 	if hashFunc != 0 {
 		h := hashFunc.New()
@@ -659,6 +660,9 @@ func signTBS(tbs []byte, key crypto.Signer, sigAlg x509.SignatureAlgorithm, rand
 	if err != nil {
 		return nil, err
 	}
+
+	logutil.DebugBuffer(signed, "signed value")
+	logutil.DebugBuffer(signature, "signature")
 
 	// Check the signature to ensure the crypto.Signer behaved correctly.
 	if err := checkSignature(sigAlg, tbs, signature, key.Public(), true); err != nil {
