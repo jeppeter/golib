@@ -486,6 +486,7 @@ func main() {
 		"certfile" : null,
 		"keyfile" : null,
 		"vfyopt" : null,
+		"digesttype" : "sha256",
 		"genkeycert<Genkeycert_handler>##[rsabits] to generate keyfile and certfile default rsabits 2048##" : {
 			"$" : "?"
 		},

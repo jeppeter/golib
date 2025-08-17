@@ -5,7 +5,6 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	"dbgutil"
 	"encoding/pem"
@@ -16,20 +15,21 @@ import (
 	"strconv"
 )
 
-func rsa_sign_sha256(keyfile string, indata []byte) (signdata []byte, err error) {
+func rsa_sign_hash(keyfile string,digesttype string, indata []byte) (signdata []byte, err error) {
 	var hashed []byte
 	var rsakey *rsa.PrivateKey
+	var hashalgo crypto.Hash
 
 	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
 		return
 	}
 
-	hasher := sha256.New()
-	hasher.Write(indata)
-
-	hashed = hasher.Sum(nil)
-	signdata, err = rsa.SignPKCS1v15(nil, rsakey, crypto.SHA256, hashed)
+	hashed,hashalgo , err = get_crypto_hash(indata,digesttype)
+	if err != nil {
+		return
+	}
+	signdata, err = rsa.SignPKCS1v15(nil, rsakey, hashalgo, hashed)
 	if err != nil {
 		return
 	}
@@ -43,6 +43,7 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var signfile string
 	var signdata []byte
 	var indata []byte
+	var digesttype string
 	err = nil
 	if ns == nil {
 		return nil
@@ -59,6 +60,8 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 		return
 	}
 
+	digesttype = ns.GetString("digesttype")
+
 	keyfile = sarr[0]
 	input = sarr[1]
 	signfile = sarr[2]
@@ -69,7 +72,7 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 		return
 	}
 
-	signdata, err = rsa_sign_sha256(keyfile, indata)
+	signdata, err = rsa_sign_hash(keyfile,digesttype, indata)
 	if err != nil {
 		return
 	}
@@ -82,10 +85,11 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
-func rsa_pss_sign_sha256(keyfile string, indata []byte, psslen int) (signdata []byte, err error) {
+func rsa_pss_sign_hash(keyfile string, indata []byte,digesttype string, psslen int) (signdata []byte, err error) {
 	var hashed []byte
 	var rsakey *rsa.PrivateKey
 	var pssopt *rsa.PSSOptions
+	var hashalgo crypto.Hash
 
 	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
@@ -93,16 +97,16 @@ func rsa_pss_sign_sha256(keyfile string, indata []byte, psslen int) (signdata []
 	}
 
 
-	hasher := sha256.New()
-	hasher.Write(indata)
-
-	hashed = hasher.Sum(nil)
+	hashed,hashalgo,err = get_crypto_hash(indata,digesttype)
+	if err != nil {
+		return
+	}
 
 	pssopt = &rsa.PSSOptions{}
 	pssopt.SaltLength = psslen
 	pssopt.Hash = crypto.SHA256
 
-	signdata, err = rsa.SignPSS(rand.Reader, rsakey, crypto.SHA256, hashed, pssopt)
+	signdata, err = rsa.SignPSS(rand.Reader, rsakey, hashalgo, hashed, pssopt)
 	if err != nil {
 		return
 	}
@@ -117,6 +121,7 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	var signdata []byte
 	var indata []byte
 	var psslen int
+	var digesttype string
 	err = nil
 	if ns == nil {
 		return nil
@@ -133,6 +138,7 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 		return
 	}
 
+	digesttype = ns.GetString("digesttype")
 	psslen = ns.GetInt("psslength")
 
 	keyfile = sarr[0]
@@ -145,7 +151,7 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 		return
 	}
 
-	signdata, err = rsa_pss_sign_sha256(keyfile, indata, psslen)
+	signdata, err = rsa_pss_sign_hash(keyfile, indata,digesttype, psslen)
 	if err != nil {
 		return
 	}
@@ -158,10 +164,11 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
-func rsa_verify_sha256(keyfile string, indata []byte, signdata []byte) (err error) {
+func rsa_verify_hash(keyfile string, indata []byte,digesttype string, signdata []byte) (err error) {
 	var hashed []byte
 	var pubkey *rsa.PublicKey
 	var rsakey *rsa.PrivateKey
+	var hashalgo crypto.Hash
 
 	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
@@ -170,12 +177,12 @@ func rsa_verify_sha256(keyfile string, indata []byte, signdata []byte) (err erro
 
 	pubkey = &rsakey.PublicKey
 
-	hasher := sha256.New()
-	hasher.Write(indata)
+	hashed,hashalgo,err = get_crypto_hash(indata,digesttype)
+	if err != nil {
+		return
+	}
 
-	hashed = hasher.Sum(nil)
-
-	err = rsa.VerifyPKCS1v15(pubkey, crypto.SHA256, hashed, signdata)
+	err = rsa.VerifyPKCS1v15(pubkey, hashalgo, hashed, signdata)
 	if err != nil {
 		err = dbgutil.FormatError("verify error %s", err.Error())
 		return
@@ -189,6 +196,7 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	var sarr []string
 	var keyfile string
 	var signfile string
+	var digesttype string
 
 	err = nil
 	if ns == nil {
@@ -201,10 +209,12 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	}
 
 	sarr = ns.GetArray("subnargs")
-	if len(sarr) < 1 {
-		err = dbgutil.FormatError("need TAG")
+	if len(sarr) < 3 {
+		err = dbgutil.FormatError("need keyfile datafile signfile")
 		return
 	}
+
+	digesttype = ns.GetString("digesttype")
 
 	keyfile = sarr[0]
 	input = sarr[1]
@@ -221,7 +231,7 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 		return
 	}
 
-	err = rsa_verify_sha256(keyfile, indata, signdata)
+	err = rsa_verify_hash(keyfile, indata,digesttype, signdata)
 	if err != nil {
 		return
 	}
@@ -230,11 +240,12 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	return
 }
 
-func rsa_pss_verify_sha256(keyfile string, indata []byte, signdata []byte, psslen int) (err error) {
+func rsa_pss_verify_hash(keyfile string, indata []byte, signdata []byte,digesttype string, psslen int) (err error) {
 	var hashed []byte
 	var pubkey *rsa.PublicKey
 	var rsakey *rsa.PrivateKey
 	var pssopt *rsa.PSSOptions
+	var hashalgo crypto.Hash
 
 	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
@@ -244,16 +255,16 @@ func rsa_pss_verify_sha256(keyfile string, indata []byte, signdata []byte, pssle
 
 	pubkey = &rsakey.PublicKey
 
-	hasher := sha256.New()
-	hasher.Write(indata)
-
-	hashed = hasher.Sum(nil)
+	hashed,hashalgo,err = get_crypto_hash(indata,digesttype)
+	if err != nil {
+		return
+	}
 
 	pssopt = &rsa.PSSOptions{}
 	pssopt.SaltLength = psslen
 	pssopt.Hash = crypto.SHA256
 
-	err = rsa.VerifyPSS(pubkey, crypto.SHA256, hashed, signdata, pssopt)
+	err = rsa.VerifyPSS(pubkey, hashalgo, hashed, signdata, pssopt)
 	if err != nil {
 		err = dbgutil.FormatError("verify error %s", err.Error())
 		return
@@ -268,6 +279,7 @@ func Rsapssvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	var keyfile string
 	var signfile string
 	var psslen int
+	var digesttype string
 
 	err = nil
 	if ns == nil {
@@ -280,10 +292,12 @@ func Rsapssvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	}
 
 	sarr = ns.GetArray("subnargs")
-	if len(sarr) < 1 {
-		err = dbgutil.FormatError("need TAG")
+	if len(sarr) < 3 {
+		err = dbgutil.FormatError("need keyfile datafile signfile")
 		return
 	}
+
+	digesttype = ns.GetString("digesttype")
 	psslen = ns.GetInt("psslength")
 
 	keyfile = sarr[0]
@@ -301,7 +315,7 @@ func Rsapssvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = rsa_pss_verify_sha256(keyfile, indata, signdata, psslen)
+	err = rsa_pss_verify_hash(keyfile, indata, signdata,digesttype, psslen)
 	if err != nil {
 		return
 	}
