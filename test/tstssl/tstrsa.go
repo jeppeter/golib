@@ -13,25 +13,15 @@ import (
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"logutil"
-	"reflect"
 	"strconv"
 )
 
-func rsa_sign_sha256(keydata []byte, indata []byte) (signdata []byte, err error) {
+func rsa_sign_sha256(keyfile string, indata []byte) (signdata []byte, err error) {
 	var hashed []byte
-	var pkany any
 	var rsakey *rsa.PrivateKey
 
-	pkany, err = x509.ParsePKCS8PrivateKey(keydata)
+	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
-		err = dbgutil.FormatError("keydata not valid rsa %s", err.Error())
-		return
-	}
-	switch pkany.(type) {
-	case *rsa.PrivateKey:
-		rsakey = pkany.(*rsa.PrivateKey)
-	default:
-		err = dbgutil.FormatError("key is not rsakey type [%s]", reflect.TypeOf(pkany))
 		return
 	}
 
@@ -53,7 +43,6 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var signfile string
 	var signdata []byte
 	var indata []byte
-	var keydata []byte
 	err = nil
 	if ns == nil {
 		return nil
@@ -74,21 +63,13 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	input = sarr[1]
 	signfile = sarr[2]
 
-	keydata, err = read_pem_or_der(keyfile)
-	if err != nil {
-		return
-	}
-
-	if err != nil {
-		return
-	}
 
 	indata, err = fileop.ReadFileBytes(input)
 	if err != nil {
 		return
 	}
 
-	signdata, err = rsa_sign_sha256(keydata, indata)
+	signdata, err = rsa_sign_sha256(keyfile, indata)
 	if err != nil {
 		return
 	}
@@ -101,24 +82,16 @@ func Rsasign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
-func rsa_pss_sign_sha256(keydata []byte, indata []byte, psslen int) (signdata []byte, err error) {
+func rsa_pss_sign_sha256(keyfile string, indata []byte, psslen int) (signdata []byte, err error) {
 	var hashed []byte
-	var pkany any
 	var rsakey *rsa.PrivateKey
 	var pssopt *rsa.PSSOptions
 
-	pkany, err = x509.ParsePKCS8PrivateKey(keydata)
+	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
-		err = dbgutil.FormatError("keydata not valid rsa %s", err.Error())
 		return
 	}
-	switch pkany.(type) {
-	case *rsa.PrivateKey:
-		rsakey = pkany.(*rsa.PrivateKey)
-	default:
-		err = dbgutil.FormatError("key is not rsakey type [%s]", reflect.TypeOf(pkany))
-		return
-	}
+
 
 	hasher := sha256.New()
 	hasher.Write(indata)
@@ -143,7 +116,6 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	var signfile string
 	var signdata []byte
 	var indata []byte
-	var keydata []byte
 	var psslen int
 	err = nil
 	if ns == nil {
@@ -167,21 +139,13 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	input = sarr[1]
 	signfile = sarr[2]
 
-	keydata, err = read_pem_or_der(keyfile)
-	if err != nil {
-		return
-	}
-
-	if err != nil {
-		return
-	}
 
 	indata, err = fileop.ReadFileBytes(input)
 	if err != nil {
 		return
 	}
 
-	signdata, err = rsa_pss_sign_sha256(keydata, indata, psslen)
+	signdata, err = rsa_pss_sign_sha256(keyfile, indata, psslen)
 	if err != nil {
 		return
 	}
@@ -194,22 +158,13 @@ func Rsapsssign_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
-func rsa_verify_sha256(keydata []byte, indata []byte, signdata []byte) (err error) {
+func rsa_verify_sha256(keyfile string, indata []byte, signdata []byte) (err error) {
 	var hashed []byte
 	var pubkey *rsa.PublicKey
-	var pkany any
 	var rsakey *rsa.PrivateKey
 
-	pkany, err = x509.ParsePKCS8PrivateKey(keydata)
+	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
-		err = dbgutil.FormatError("keydata not valid rsa %s", err.Error())
-		return
-	}
-	switch pkany.(type) {
-	case *rsa.PrivateKey:
-		rsakey = pkany.(*rsa.PrivateKey)
-	default:
-		err = dbgutil.FormatError("key is not rsakey type [%s]", reflect.TypeOf(pkany))
 		return
 	}
 
@@ -234,7 +189,6 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	var sarr []string
 	var keyfile string
 	var signfile string
-	var keydata []byte
 
 	err = nil
 	if ns == nil {
@@ -256,10 +210,6 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	input = sarr[1]
 	signfile = sarr[2]
 
-	keydata, err = read_pem_or_der(keyfile)
-	if err != nil {
-		return
-	}
 
 	indata, err = fileop.ReadFileBytes(input)
 	if err != nil {
@@ -271,7 +221,7 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 		return
 	}
 
-	err = rsa_verify_sha256(keydata, indata, signdata)
+	err = rsa_verify_sha256(keyfile, indata, signdata)
 	if err != nil {
 		return
 	}
@@ -280,25 +230,17 @@ func Rsavfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	return
 }
 
-func rsa_pss_verify_sha256(keydata []byte, indata []byte, signdata []byte, psslen int) (err error) {
+func rsa_pss_verify_sha256(keyfile string, indata []byte, signdata []byte, psslen int) (err error) {
 	var hashed []byte
 	var pubkey *rsa.PublicKey
-	var pkany any
 	var rsakey *rsa.PrivateKey
 	var pssopt *rsa.PSSOptions
 
-	pkany, err = x509.ParsePKCS8PrivateKey(keydata)
+	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
-		err = dbgutil.FormatError("keydata not valid rsa %s", err.Error())
 		return
 	}
-	switch pkany.(type) {
-	case *rsa.PrivateKey:
-		rsakey = pkany.(*rsa.PrivateKey)
-	default:
-		err = dbgutil.FormatError("key is not rsakey type [%s]", reflect.TypeOf(pkany))
-		return
-	}
+
 
 	pubkey = &rsakey.PublicKey
 
@@ -325,7 +267,6 @@ func Rsapssvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	var sarr []string
 	var keyfile string
 	var signfile string
-	var keydata []byte
 	var psslen int
 
 	err = nil
@@ -349,10 +290,6 @@ func Rsapssvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	input = sarr[1]
 	signfile = sarr[2]
 
-	keydata, err = read_pem_or_der(keyfile)
-	if err != nil {
-		return
-	}
 
 	indata, err = fileop.ReadFileBytes(input)
 	if err != nil {
@@ -364,7 +301,7 @@ func Rsapssvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	err = rsa_pss_verify_sha256(keydata, indata, signdata, psslen)
+	err = rsa_pss_verify_sha256(keyfile, indata, signdata, psslen)
 	if err != nil {
 		return
 	}
