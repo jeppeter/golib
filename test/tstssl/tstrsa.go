@@ -104,7 +104,7 @@ func rsa_pss_sign_hash(keyfile string, indata []byte,digesttype string, psslen i
 
 	pssopt = &rsa.PSSOptions{}
 	pssopt.SaltLength = psslen
-	pssopt.Hash = crypto.SHA256
+	pssopt.Hash = hashalgo
 
 	signdata, err = rsa.SignPSS(rand.Reader, rsakey, hashalgo, hashed, pssopt)
 	if err != nil {
@@ -262,7 +262,7 @@ func rsa_pss_verify_hash(keyfile string, indata []byte, signdata []byte,digestty
 
 	pssopt = &rsa.PSSOptions{}
 	pssopt.SaltLength = psslen
-	pssopt.Hash = crypto.SHA256
+	pssopt.Hash = hashalgo
 
 	err = rsa.VerifyPSS(pubkey, hashalgo, hashed, signdata, pssopt)
 	if err != nil {
