@@ -5,6 +5,7 @@ import (
 	"crypto/x509/pkix"
 	"fmt"
 	"net"
+	"net/url"
 	"reflect"
 )
 
@@ -12,6 +13,65 @@ func format_tabs(tabs int) {
 	var i int
 	for i = 0; i < tabs; i += 1 {
 		fmt.Printf("    ")
+	}
+	return
+}
+
+func display_strings(arrs []string, note string, tabs int) {
+	format_tabs(tabs)
+	fmt.Printf("%s", note)
+	var i int
+	for i = 0; i < len(arrs); i += 1 {
+		if (i % 4) == 0 {
+			fmt.Printf("\n")
+			format_tabs(tabs)
+			fmt.Printf("0x%04x", i)
+		}
+		fmt.Printf(" %s", arrs[i])
+	}
+	fmt.Printf("\n")
+}
+
+func display_buffer(buf []byte, note string, tabs int) {
+	var i, lasti int
+	fmt.Printf("%s buffer [%d:0x%x]", note, len(buf), len(buf))
+	lasti = 0
+	for i = 0; i < len(buf); i += 1 {
+		if (i % 16) == 0 {
+			if i > 0 {
+				fmt.Printf("    ")
+				for lasti < i {
+					if buf[lasti] >= byte(' ') && buf[lasti] <= byte('~') {
+						fmt.Printf("%c", buf[lasti])
+					} else {
+						fmt.Printf(".")
+					}
+
+					lasti += 1
+				}
+				fmt.Printf("\n")
+			}
+			fmt.Printf("0x%08x ", i)
+		}
+		fmt.Printf(" 0x%02x", buf[i])
+	}
+
+	if lasti != i {
+		for (i % 16) != 0 {
+			fmt.Printf("     ")
+			i += 1
+		}
+		fmt.Printf("    ")
+		for lasti < len(buf) {
+			if buf[lasti] >= byte(' ') && buf[lasti] <= byte('~') {
+				fmt.Printf("%c", buf[lasti])
+			} else {
+				fmt.Printf(".")
+			}
+
+			lasti += 1
+		}
+		fmt.Printf("\n")
 	}
 	return
 }
@@ -111,6 +171,17 @@ func debug_pkix_name(n *pkix.Name, note string, tabs int) {
 	return
 }
 
+func display_url(u *url.URL, note string, tabs int) {
+	format_tabs(tabs)
+	fmt.Printf("%s %s\n", note, u.String())
+}
+
+func display_urls(us []*url.URL, note string, tabs int) {
+	for i := 0; i < len(us); i += 1 {
+		display_url(us[i], fmt.Sprintf("%s[%d]", note, i), tabs+1)
+	}
+}
+
 func display_ips(ips []net.IP, note string, tabs int) {
 	if len(ips) > 0 {
 		format_tabs(tabs)
@@ -187,4 +258,48 @@ func display_x509_cert(cert *x509.Certificate) {
 	fmt.Printf("URIs %v\n", cert.URIs)
 	fmt.Printf("UnknownExtKeyUsage %v\n", cert.UnknownExtKeyUsage)
 	return
+}
+
+func display_pkix_attrvalue(val *pkix.AttributeTypeAndValue, tabs int, note string) {
+	format_tabs(tabs)
+	fmt.Printf("%s type %s value %v", note, val.Type.String(), val.Value)
+}
+
+func display_attri_set(set *pkix.AttributeTypeAndValueSET, note string, tabs int) {
+	format_tabs(tabs)
+	fmt.Printf("%s ObjectIdentifier %s", note, set.Type.String())
+	var idx int
+	var ns string
+
+	for idx = 0; idx < len(set.Value); idx += 1 {
+		ns = fmt.Sprintf("%s[%d]", note, idx)
+		display_attr(set.Value[idx], ns, tabs+1)
+	}
+	return
+}
+
+func display_attri_array(set []pkix.AttributeTypeAndValueSET, note string, tabs int) {
+	var ns string
+	var cval *pkix.AttributeTypeAndValueSET
+	var i int
+	for i = 0; i < len(set); i += 1 {
+		cval = &set[i]
+		ns = fmt.Sprintf("%s[%d]", note, i)
+		display_attri_set(cval, ns, tabs+1)
+	}
+}
+
+func display_extension(curset *pkix.Extension, note string, tabs int) {
+	display_buffer(curset.Value, fmt.Sprintf("%s.Id %s .Critical %v", note, curset.Id.String(), curset.Critical), tabs)
+}
+
+func display_extensions(ext []pkix.Extension, note string, tabs int) {
+	var ns string
+	var i int
+	var curv *pkix.Extension
+	for i = 0; i < len(ext); i += 1 {
+		curv = &ext[i]
+		ns = fmt.Sprintf("%s[%d]", note, i)
+		display_extension(curv, ns, tabs+1)
+	}
 }

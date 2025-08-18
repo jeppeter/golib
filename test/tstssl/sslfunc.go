@@ -1,23 +1,23 @@
 package main
 
 import (
-	"dbgutil"
-	"crypto/x509"
-	"crypto/rsa"
-	"reflect"
-	"crypto/sha256"
-	"crypto/sha1"
-	"crypto/md5"
-	"crypto/sha512"
-	"hash"
 	"crypto"
+	"crypto/md5"
+	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
+	"crypto/x509"
+	"dbgutil"
+	"hash"
+	"reflect"
 )
 
-func get_rsa_private(keyfile string) (rsakey *rsa.PrivateKey,err error) {
+func get_rsa_private(keyfile string) (rsakey *rsa.PrivateKey, err error) {
 	var pkany any
 	var keydata []byte
 
-	keydata , err = read_pem_or_der(keyfile)
+	keydata, err = read_pem_or_der(keyfile)
 	if err != nil {
 		return
 	}
@@ -59,7 +59,7 @@ func get_crypto_hash(origdata []byte, hashtype string) (hashed []byte, hashalgo 
 		hasher = sha512.New384()
 		hashalgo = crypto.SHA384
 	} else {
-		err = dbgutil.FormatError("not support hashtype {}",hashtype)
+		err = dbgutil.FormatError("not support hashtype {}", hashtype)
 		return
 	}
 	hasher.Write(origdata)

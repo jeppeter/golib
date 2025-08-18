@@ -234,9 +234,28 @@ func X509reqvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
+func dump_x509_req(req *x509.CertificateRequest) {
+	display_buffer(req.Raw, "Raw", 0)
+	display_buffer(req.RawTBSCertificateRequest, "RawTBSCertificateRequest", 0)
+	display_buffer(req.RawSubjectPublicKeyInfo, "RawSubjectPublicKeyInfo", 0)
+	display_buffer(req.RawSubject, "RawSubject", 0)
+	fmt.Println("Version %d", req.Version)
+	display_buffer(req.Signature, "Signature", 0)
+	fmt.Println("SignatureAlgorithm %d", req.SignatureAlgorithm)
+	fmt.Println("PublicKeyAlgorithm %d", req.PublicKeyAlgorithm)
+	debug_pkix_name(&req.Subject, "Subject", 0)
+	display_attri_array(req.Attributes, "Attributes", 0)
+	display_extensions(req.Extensions, "Extensions", 0)
+	display_extensions(req.ExtraExtensions, "ExtraExtensions", 0)
+	display_strings(req.DNSNames, "DNSNames", 0)
+	display_strings(req.EmailAddresses, "EmailAddresses", 0)
+	display_ips(req.IPAddresses, "IPAddresses", 0)
+	display_urls(req.URIs, "URIs", 0)
+}
+
 func X509reqparse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
-	//var _tempx509 *x509.CertificateRequest
+	var req *x509.CertificateRequest
 	var x509bytes []byte
 	var f string
 	err = nil
@@ -260,10 +279,11 @@ func X509reqparse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx
 		if err != nil {
 			return
 		}
-		_, err = Data_ParseCertificateRequest(x509bytes)
+		req, err = Data_ParseCertificateRequest(x509bytes)
 		if err != nil {
 			return
 		}
+		dump_x509_req(req)
 	}
 
 	err = nil

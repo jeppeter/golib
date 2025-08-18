@@ -629,6 +629,43 @@ def genenum_handler(args,parser):
 	sys.exit(0)
 	return
 
+
+REQ_KEYS=[
+'Version',
+'SignatureAlgorithm',
+'PublicKeyAlgorithm',
+'Subject'
+]
+
+REQ_MAPS = {
+	
+}
+
+def genreq_handler(args,parser):
+	set_logging(args)
+	defines = []
+	outcodes = ''
+	logging.info('ccc')
+
+	for k in REQ_KEYS:
+		types = REQ_MAPS[k]
+		logging.info('[%s]=[%s]'%(k,types))
+		funcname = 'format_%s_code'%(types)
+		m = importlib.import_module(__name__)
+		val = getattr(m,funcname)
+		kd,code = val(k)
+		defines.append(kd)
+		outcodes += format_tabline(1,'')
+		outcodes += code
+	write_file(outcodes,args.output)
+	defs = 'const (\n'
+	for d in defines:
+		defs += format_tabline(1,'%s'%(d))
+	defs += ')\n'
+	sys.stdout.write('%s'%(defs))
+	sys.exit(0)
+	return
+
 def main():
     commandline='''
     {
@@ -642,6 +679,9 @@ def main():
         },
         "genenum<genenum_handler>##enumname to generate enum with Partial##" : {
         	"$" : 1
+        },
+        "genreq<genreq_handler>##to format code for x509req##" : {
+        	"$" : 0
         }
     }
     '''
