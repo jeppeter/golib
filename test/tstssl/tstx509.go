@@ -233,11 +233,48 @@ func X509reqvfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
+func X509reqparse_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	//var _tempx509 *x509.CertificateRequest
+	var x509bytes []byte
+	var f string
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("to verify ")
+		return
+	}
+
+	for _, f = range sarr {
+		x509bytes, err = read_pem_or_der(f)
+		if err != nil {
+			return
+		}
+		_, err = Data_ParseCertificateRequest(x509bytes)
+		if err != nil {
+			return
+		}
+	}
+
+	err = nil
+	return
+}
+
 func init() {
 	X509create_handler(nil, nil, nil)
 	X509parse_handler(nil, nil, nil)
 	X509vfy_handler(nil, nil, nil)
 	X509reqvfy_handler(nil, nil, nil)
+	X509reqparse_handler(nil, nil, nil)
 }
 
 func load_x509_handler(parser *extargsparse.ExtArgsParse) (err error) {
@@ -252,6 +289,9 @@ func load_x509_handler(parser *extargsparse.ExtArgsParse) (err error) {
 			"$":"+"
 		},
 		"x509reqvfy<X509reqvfy_handler>##pemfile ... to verify CertificateRequest##":{
+			"$" : "+"
+		},
+		"x509reqparse<X509reqparse_handler>##pemfile ... to decode CertificateRequest##" : {
 			"$" : "+"
 		}
 	}`
