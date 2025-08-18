@@ -603,6 +603,7 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 		if !hashType.Available() {
 			return x509.ErrUnsupportedAlgorithm
 		}
+		logutil.DebugBuffer(signed, "orig signed")
 		h := hashType.New()
 		h.Write(signed)
 		signed = h.Sum(nil)
@@ -614,8 +615,13 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 			return signaturePublicKeyAlgoMismatchError(pubKeyAlgo, pub)
 		}
 		if is_RSAPSS(algo) {
+			logutil.DebugBuffer(signed, "signed")
+			logutil.DebugBuffer(signature, "signature")
+			logutil.Debug("rsa.PSSSaltLengthEqualsHash %d", rsa.PSSSaltLengthEqualsHash)
 			return rsa.VerifyPSS(pub, hashType, signed, signature, &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
 		} else {
+			logutil.DebugBuffer(signed, "signed")
+			logutil.DebugBuffer(signature, "signature")
 			return rsa.VerifyPKCS1v15(pub, hashType, signed, signature)
 		}
 	case *ecdsa.PublicKey:
