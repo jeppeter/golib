@@ -19,16 +19,15 @@ import (
 
 func get_extra_names(valarr []interface{}, note string) (retv []pkix.AttributeTypeAndValue, err error) {
 	var curmap map[string]interface{}
-	var idx, jdx int
+	var idx int
 	var ok bool
 	var carr []interface{}
-	var curoid asn1.ObjectIdentifier
 	var curattr pkix.AttributeTypeAndValue
-	var curi int
 	var vali int
 	var iarr asn1.RawValue
 	var valmap map[string]interface{}
 	var intval interface{}
+	var curs string
 	retv = []pkix.AttributeTypeAndValue{}
 	for idx = 0; idx < len(valarr); idx += 1 {
 		curmap, ok = valarr[idx].(map[string]interface{})
@@ -37,24 +36,18 @@ func get_extra_names(valarr []interface{}, note string) (retv []pkix.AttributeTy
 			return
 		}
 
-		carr, ok = curmap[KEYWORD_TYPE].([]interface{})
+		curs, ok = curmap[KEYWORD_TYPE].(string)
 		if !ok {
 			err = dbgutil.FormatError("[%d].[%s] not array", idx, KEYWORD_TYPE)
 			return
 		}
 
 		curattr = pkix.AttributeTypeAndValue{}
-		curoid = asn1.ObjectIdentifier{}
-		for jdx = 0; jdx < len(carr); jdx += 1 {
-			curi, err = get_int_value(carr[jdx], fmt.Sprintf("[%s].[%d]", KEYWORD_TYPE, jdx))
-			if err != nil {
-				return
-			}
-			logutil.Debug("curi %d", curi)
-			curoid = append(curoid, curi)
-		}
 
-		curattr.Type = curoid
+		curattr.Type, err = get_oid_by_str_value(curs, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_TYPE))
+		if err != nil {
+			return
+		}
 		valmap, ok = curmap[KEYWORD_VALUE].(map[string]interface{})
 		if !ok {
 			curattr.Value = nil
