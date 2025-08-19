@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -170,6 +171,7 @@ func get_pkix_extensions_value(valarr []interface{}, note string) (retv []pkix.E
 	var ok bool
 	var critical bool
 	var oidarr []interface{}
+	var curs string
 	retv = []pkix.Extension{}
 	for idx = 0; idx < len(valarr); idx += 1 {
 		curmap, ok = valarr[idx].(map[string]interface{})
@@ -177,13 +179,13 @@ func get_pkix_extensions_value(valarr []interface{}, note string) (retv []pkix.E
 			err = dbgutil.FormatError("%s.[%d] not valid map", note, idx)
 			return
 		}
-		oidarr, ok = curmap[KEYWORD_ID].([]interface{})
+		curs, ok = curmap[KEYWORD_ID].(string)
 		if !ok {
-			err = dbgutil.FormatError("%s.[%d].[%s] not valid []interface{}", note, idx, KEYWORD_ID)
+			err = dbgutil.FormatError("%s.[%d].[%s] not valid string", note, idx, KEYWORD_ID)
 			return
 		}
 		curext = pkix.Extension{}
-		curext.Id, err = get_objoid_array(oidarr, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_ID))
+		curext.Id, err = get_oid_by_str_value(curs, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_ID))
 		if err != nil {
 			return
 		}
@@ -311,6 +313,30 @@ func get_bytes_value(valarr []interface{}, note string) (retv []byte, err error)
 	return
 }
 
+func get_oid_by_str_value(s string, note string) (retv asn1.ObjectIdentifier, err error) {
+	var carr []string
+	var idx int
+	var vali int
+	carr = strings.SplitN(s, ".", -1)
+	if len(carr) == 0 {
+		err = dbgutil.FormatError("%s [%s] not valid", note, s)
+		return
+	}
+	retv = asn1.ObjectIdentifier{}
+
+	for idx = 0; idx < len(carr); idx += 1 {
+		vali, err = strconv.Atoi(carr[idx])
+		if err != nil {
+			err = dbgutil.FormatError("%s.[%s] not valid ", note, s)
+			return
+		}
+
+		retv = append(retv, vali)
+	}
+	err = nil
+	return
+}
+
 func get_objoid_array(valarr []interface{}, note string) (retv asn1.ObjectIdentifier, err error) {
 	var idx int
 	var valf float64
@@ -381,16 +407,16 @@ func get_ip_value(val []interface{}, note string) (retv []net.IP, err error) {
 func get_objoids_value(val []interface{}, note string) (retv []asn1.ObjectIdentifier, err error) {
 	var idx int
 	var curoid asn1.ObjectIdentifier
-	var curinter []interface{}
+	var curs string
 	var ok bool
 	retv = []asn1.ObjectIdentifier{}
 	for idx = 0; idx < len(val); idx += 1 {
-		curinter, ok = val[idx].([]interface{})
+		curs, ok = val[idx].(string)
 		if !ok {
 			err = dbgutil.FormatError("[%s].[%d] not array type", note, idx)
 			return
 		}
-		curoid, err = get_objoid_array(curinter, fmt.Sprintf("[%s].[%d]", note, idx))
+		curoid, err = get_oid_by_str_value(curs, fmt.Sprintf("[%s].[%d]", note, idx))
 		if err != nil {
 			return
 		}
