@@ -181,6 +181,12 @@ const (
 	KEYWORD_VALUE            = "value"
 	KEYWORD_TAG              = "tag"
 	KEYWORD_CONTENT          = "content"
+	KEYWORD_ID               = "id"
+	KEYWORD_CRITICAL         = "critical"
+	KEYWORD_VERSION          = "version"
+	KEYWORD_ATTRIBUTES       = "attributes"
+	KEYWORD_EXTENSIONS       = "extensions"
+	KEYWORD_EXTRA_EXTENSIONS = "extraextensions"
 )
 
 const (

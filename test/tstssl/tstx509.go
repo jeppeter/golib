@@ -332,6 +332,64 @@ func Bitstrdec_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	return
 }
 
+func Reqcreate_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var outfile string
+	var nbytes []byte
+	var keyfile string
+	var jsonfile string
+	var privkey *rsa.PrivateKey
+	var certreq *x509.CertificateRequest
+	var capem *bytes.Buffer
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("need json file")
+		return
+	}
+
+	keyfile = ns.GetString("keyfile")
+	privkey, err = get_rsa_private(keyfile)
+	if err != nil {
+		return
+	}
+
+	jsonfile = sarr[0]
+	certreq, err = parse_x509_req_json(jsonfile)
+	if err != nil {
+		return
+	}
+
+	nbytes, err = x509.CreateCertificateRequest(rand.Reader, certreq, privkey)
+	if err != nil {
+		err = dbgutil.FormatError("can not create CertificateRequest error %s", err.Error())
+		return
+	}
+
+	capem = new(bytes.Buffer)
+	block := &pem.Block{
+		Type:  "CERTIFICATE REQUEST",
+		Bytes: nbytes,
+	}
+	err = pem.Encode(capem, block)
+	outfile = ns.GetString("output")
+	_, err = fileop.WriteFileBytes(outfile, capem.Bytes())
+	if err != nil {
+		return
+	}
+	err = nil
+	return
+}
+
 func init() {
 	X509create_handler(nil, nil, nil)
 	X509parse_handler(nil, nil, nil)
@@ -339,6 +397,7 @@ func init() {
 	X509reqvfy_handler(nil, nil, nil)
 	X509reqparse_handler(nil, nil, nil)
 	Bitstrdec_handler(nil, nil, nil)
+	Reqcreate_handler(nil, nil, nil)
 }
 
 func load_x509_handler(parser *extargsparse.ExtArgsParse) (err error) {

@@ -229,9 +229,9 @@ def format_tabline(tab,l):
 	return s
 
 
-def format_strings_code(name):
+def format_strings_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []string{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []string{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse", %s)'%(keyword))
@@ -239,18 +239,18 @@ def format_strings_code(name):
 	runcode += format_tabline(2, 'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
-	runcode += format_tabline(2,'x509temp.%s = arrs'%(name))
+	runcode += format_tabline(2,'%s.%s = arrs'%(varname,name))
 	runcode += format_tabline(1,'}')
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_int_code(name):
+def format_int_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = 0'%(name))
+	runcode = format_tabline(1,'%s.%s = 0'%(varname,name))
 	runcode += format_tabline(1,'intval, ok = mapv[%s]'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse", %s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s, err = get_int_value(intval,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s, err = get_int_value(intval,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -258,9 +258,9 @@ def format_int_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_keyusage_code(name):
+def format_keyusage_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = 0'%(name))
+	runcode = format_tabline(1,'%s.%s = 0'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse", %s)'%(keyword))
@@ -268,7 +268,7 @@ def format_keyusage_code(name):
 	runcode += format_tabline(2, 'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
-	runcode += format_tabline(2,'x509temp.%s, err = get_keyusage_value(arrs,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s, err = get_keyusage_value(arrs,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -276,13 +276,13 @@ def format_keyusage_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_bytes_code(name):
+def format_bytes_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []byte{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []byte{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse", %s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s, err = get_bytes_value(valarr,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s, err = get_bytes_value(valarr,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -290,24 +290,24 @@ def format_bytes_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_bool_code(name):
+def format_bool_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = false'%(name))
+	runcode = format_tabline(1,'%s.%s = false'%(varname,name))
 	runcode += format_tabline(1,'valb, ok = mapv[%s].(bool)'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s = valb'%(name))
+	runcode += format_tabline(2,'%s.%s = valb'%(varname,name))
 	runcode += format_tabline(1,'}')
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_ipnet_code(name):
+def format_ipnet_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []*net.IPNet{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []*net.IPNet{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_netip_value(valarr, %s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_netip_value(valarr, %s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -315,13 +315,13 @@ def format_ipnet_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_ip_code(name):
+def format_ip_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []net.IP{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []net.IP{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_ip_value(valarr, %s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_ip_value(valarr, %s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -329,13 +329,13 @@ def format_ip_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_time_code(name):
+def format_time_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = time.Now()'%(name))
+	runcode = format_tabline(1,'%s.%s = time.Now()'%(varname,name))
 	runcode += format_tabline(1,'vals, ok = mapv[%s].(string)'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_time_value(vals, %s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_time_value(vals, %s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -343,13 +343,13 @@ def format_time_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_timeafter_code(name):
+def format_timeafter_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = time.Now().AddDate(20,0,0)'%(name))
+	runcode = format_tabline(1,'%s.%s = time.Now().AddDate(20,0,0)'%(varname,name))
 	runcode += format_tabline(1,'vals, ok = mapv[%s].(string)'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_time_value(vals, %s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_time_value(vals, %s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -358,12 +358,12 @@ def format_timeafter_code(name):
 	return kdefine,runcode
 
 
-def format_bigint_code(name):
+def format_bigint_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = big.NewInt(0)'%(name))
+	runcode = format_tabline(1,'%s.%s = big.NewInt(0)'%(varname,name))
 	runcode += format_tabline(1,'vals, ok = mapv[%s].(string)'%(keyword))
 	runcode += format_tabline(1,'if ok {')
-	runcode += format_tabline(2,'x509temp.%s , err = get_bigint_value(vals,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_bigint_value(vals,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -371,13 +371,13 @@ def format_bigint_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_pkixname_code(name):
+def format_pkixname_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = pkix.Name{}'%(name))
+	runcode = format_tabline(1,'%s.%s = pkix.Name{}'%(varname,name))
 	runcode += format_tabline(1,'valmap, ok = mapv[%s].(map[string]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_pkixname_value(valmap,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_pkixname_value(valmap,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -385,13 +385,13 @@ def format_pkixname_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_objoids_code(name):
+def format_objoids_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []asn1.ObjectIdentifier{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []asn1.ObjectIdentifier{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_objoids_value(valarr,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_objoids_value(valarr,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -399,27 +399,9 @@ def format_objoids_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_oids_code(name):
+def format_oids_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []x509.OID{}'%(name))
-	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
-	runcode += format_tabline(1,'if ok {')
-	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
-	runcode += format_tabline(2, 'if err != nil {')
-	runcode += format_tabline(3,'return')
-	runcode += format_tabline(2,'}')
-	runcode += format_tabline(2,'x509temp.%s , err = get_oids_value(arrs,%s)'%(name,keyword))
-	runcode += format_tabline(2,'if err != nil {')
-	runcode += format_tabline(3,'return')
-	runcode += format_tabline(2,'}')
-	runcode += format_tabline(1,'}')
-	kdefine = '%s = "%s"'%(keyword,name.lower())
-	return kdefine,runcode
-
-def format_urls_code(name):
-	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []*url.URL{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []x509.OID{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
@@ -427,7 +409,7 @@ def format_urls_code(name):
 	runcode += format_tabline(2, 'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
-	runcode += format_tabline(2,'x509temp.%s , err = get_urls_value(arrs,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_oids_value(arrs,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -435,9 +417,9 @@ def format_urls_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_extkeyusage_code(name):
+def format_urls_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = []x509.ExtKeyUsage{}'%(name))
+	runcode = format_tabline(1,'%s.%s = []*url.URL{}'%(varname,name))
 	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
@@ -445,7 +427,7 @@ def format_extkeyusage_code(name):
 	runcode += format_tabline(2, 'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
-	runcode += format_tabline(2,'x509temp.%s , err = get_key_ext_usage(arrs,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_urls_value(arrs,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -453,13 +435,31 @@ def format_extkeyusage_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
-def format_algorithm_code(name):
+def format_extkeyusage_code(name,varname='x509temp'):
 	keyword = format_keyword(name)
-	runcode = format_tabline(1,'x509temp.%s = x509.SHA256WithRSA'%(name))
+	runcode = format_tabline(1,'%s.%s = []x509.ExtKeyUsage{}'%(varname,name))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
+	runcode += format_tabline(1,'if ok {')
+	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
+	runcode += format_tabline(2,'arrs, err = trans_inter_to_string(valarr,%s)'%(keyword))
+	runcode += format_tabline(2, 'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
+	runcode += format_tabline(2,'%s.%s , err = get_key_ext_usage(arrs,%s)'%(varname,name,keyword))
+	runcode += format_tabline(2,'if err != nil {')
+	runcode += format_tabline(3,'return')
+	runcode += format_tabline(2,'}')
+	runcode += format_tabline(1,'}')
+	kdefine = '%s = "%s"'%(keyword,name.lower())
+	return kdefine,runcode
+
+def format_algorithm_code(name,varname='x509temp'):
+	keyword = format_keyword(name)
+	runcode = format_tabline(1,'%s.%s = x509.SHA256WithRSA'%(varname,name))
 	runcode += format_tabline(1,'vals, ok = mapv[%s].(string)'%(keyword))
 	runcode += format_tabline(1,'if ok {')
 	runcode += format_tabline(2,'logutil.Debug("[%%s] parse",%s)'%(keyword))
-	runcode += format_tabline(2,'x509temp.%s , err = get_algorithm_value(vals,%s)'%(name,keyword))
+	runcode += format_tabline(2,'%s.%s , err = get_algorithm_value(vals,%s)'%(varname,name,keyword))
 	runcode += format_tabline(2,'if err != nil {')
 	runcode += format_tabline(3,'return')
 	runcode += format_tabline(2,'}')
@@ -467,6 +467,35 @@ def format_algorithm_code(name):
 	kdefine = '%s = "%s"'%(keyword,name.lower())
 	return kdefine,runcode
 
+
+def format_attribute_set_code(name,varname='x509temp'):
+	keyword = format_keyword(name)
+	runcode = format_tabline(1,'%s.%s = []pkix.AttributeTypeAndValueSET{}'%(varname,name))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
+	runcode += format_tabline(1,'if ok {')
+	runcode += format_tabline(1,'logutil.Debug("[%%s] parse",%s)'%(keyword))
+	runcode += format_tabline(1,'%s.%s, err = get_attribute_set_value(valarr,%s)'%(varname,name,keyword))
+	runcode += format_tabline(1,'if err != nil {')
+	runcode += format_tabline(2,'return')
+	runcode += format_tabline(1,'}')
+	runcode += format_tabline(1,'}')
+	kdefine = '%s = "%s"'%(keyword,name.lower())
+	return kdefine,runcode
+
+
+def format_pkix_extensions_code(name,varname='x509temp'):
+	keyword = format_keyword(name)
+	runcode = format_tabline(1,'%s.%s = []pkix.Extension{}'%(varname,name))
+	runcode += format_tabline(1,'valarr, ok = mapv[%s].([]interface{})'%(keyword))
+	runcode += format_tabline(1,'if ok {')
+	runcode += format_tabline(1,'logutil.Debug("[%%s] parse",%s)'%(keyword))
+	runcode += format_tabline(1,'%s.%s, err = get_pkix_extensions_value(valarr,%s)'%(varname,name,keyword))
+	runcode += format_tabline(1,'if err != nil {')
+	runcode += format_tabline(2,'return')
+	runcode += format_tabline(1,'}')
+	runcode += format_tabline(1,'}')
+	kdefine = '%s = "%s"'%(keyword,name.lower())
+	return kdefine,runcode
 
 
 KEYWORDS = ['ExtKeyUsage',
@@ -632,20 +661,55 @@ def genenum_handler(args,parser):
 
 REQ_KEYS=[
 'Version',
-'SignatureAlgorithm',
-'PublicKeyAlgorithm',
-'Subject'
+'Subject',
+'Attributes',
+'Extensions',
+'ExtraExtensions',
+'DNSNames',
+'EmailAddresses',
+'IPAddresses',
+'URIs'
 ]
 
 REQ_MAPS = {
-	
+	'Version' : 'int',
+	'Subject' : 'pkixname',
+	'Attributes': 'attribute_set',
+	'Extensions' : 'pkix_extensions',
+	'ExtraExtensions' : 'pkix_extensions',
+	'DNSNames' : 'strings',
+	'EmailAddresses' : 'strings',
+	'IPAddresses' : 'ip',
+	'URIs' : 'urls'
 }
 
 def genreq_handler(args,parser):
 	set_logging(args)
+	varname = 'req'
 	defines = []
 	outcodes = ''
-	logging.info('ccc')
+
+	outcodes = format_tabline(0,'func parse_x509_req_json(jsonfile string) (%s *x509.CertificateRequest,err error) {'%(varname))
+	outcodes += format_tabline(1,'var s string')
+	outcodes += format_tabline(1,'var mapv map[string]interface{}')
+	outcodes += format_tabline(1,'var intval interface{}')
+	outcodes += format_tabline(1,'var ok bool')
+	outcodes += format_tabline(1,'var valmap map[string]interface{}')
+	outcodes += format_tabline(1,'var valarr []interface{}')
+	outcodes += format_tabline(1,'var arrs []string')
+	outcodes += format_tabline(1,'s , err= fileop.ReadFile(jsonfile)')
+	outcodes += format_tabline(1,'if err != nil {')
+	outcodes += format_tabline(2,'return')
+	outcodes += format_tabline(1,'}')
+
+	outcodes += format_tabline(1,'')
+	outcodes += format_tabline(1,'mapv, err = jsonext.GetJsonMap(s)')
+	outcodes += format_tabline(1,'if err != nil {')
+	outcodes += format_tabline(2,'return')
+	outcodes += format_tabline(1,'}')
+
+	outcodes += format_tabline(1,'')
+	outcodes += format_tabline(1,'%s = &x509.CertificateRequest{}'%(varname))
 
 	for k in REQ_KEYS:
 		types = REQ_MAPS[k]
@@ -653,10 +717,15 @@ def genreq_handler(args,parser):
 		funcname = 'format_%s_code'%(types)
 		m = importlib.import_module(__name__)
 		val = getattr(m,funcname)
-		kd,code = val(k)
+		kd,code = val(k,varname)
 		defines.append(kd)
 		outcodes += format_tabline(1,'')
 		outcodes += code
+
+	outcodes += format_tabline(1,'')
+	outcodes += format_tabline(1,'err = nil')
+	outcodes += format_tabline(1,'return')
+	outcodes += format_tabline(0,'}')
 	write_file(outcodes,args.output)
 	defs = 'const (\n'
 	for d in defines:

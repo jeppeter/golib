@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, err error) {
+func get_extra_names(valarr []interface{}, note string) (retv []pkix.AttributeTypeAndValue, err error) {
 	var curmap map[string]interface{}
 	var idx, jdx int
 	var ok bool
@@ -102,6 +102,48 @@ func get_extra_names(valarr []interface{}) (retv []pkix.AttributeTypeAndValue, e
 	return
 }
 
+func get_attribute_set_value(inters []interface{}, note string) (retv []pkix.AttributeTypeAndValueSET, err error) {
+	var idx int
+	var curmap map[string]interface{}
+	var ok bool
+	var curkey pkix.AttributeTypeAndValueSET
+	var keyvalues []pkix.AttributeTypeAndValue
+	var valarr []interface{}
+	retv = []pkix.AttributeTypeAndValueSET{}
+	for idx = 0; idx < len(inters); idx += 1 {
+		curmap, ok = inters[idx].(map[string]interface{})
+		if !ok {
+			err = dbgutil.FormatError("%s.[%d] not valid map[string]interface{}", note, idx)
+			return
+		}
+		valarr, ok = curmap[KEYWORD_TYPE].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("%s.[%d].[%s] not valid string", note, idx, KEYWORD_TYPE)
+			return
+		}
+
+		curkey = pkix.AttributeTypeAndValueSET{}
+		curkey.Type, err = get_objoid_array(valarr, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_TYPE))
+		if err != nil {
+			return
+		}
+		valarr, ok = curmap[KEYWORD_VALUE].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("%s.[%d].[%s] not valid array", note, idx, KEYWORD_VALUE)
+			return
+		}
+
+		keyvalues, err = get_extra_names(valarr, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_VALUE))
+		if err != nil {
+			return
+		}
+		curkey.Value = [][]pkix.AttributeTypeAndValue{keyvalues}
+		retv = append(retv, curkey)
+	}
+	err = nil
+	return
+}
+
 func get_array_string(mapv map[string]interface{}, key string) (retv []string) {
 	//var ok bool
 	var err error
@@ -118,6 +160,52 @@ func get_array_string(mapv map[string]interface{}, key string) (retv []string) {
 	for idx = 0; idx < len(valarr); idx += 1 {
 		retv = append(retv, valarr[idx].(string))
 	}
+	return
+}
+
+func get_pkix_extensions_value(valarr []interface{}, note string) (retv []pkix.Extension, err error) {
+	var idx int
+	var curmap map[string]interface{}
+	var curext pkix.Extension
+	var ok bool
+	var critical bool
+	var oidarr []interface{}
+	retv = []pkix.Extension{}
+	for idx = 0; idx < len(valarr); idx += 1 {
+		curmap, ok = valarr[idx].(map[string]interface{})
+		if !ok {
+			err = dbgutil.FormatError("%s.[%d] not valid map", note, idx)
+			return
+		}
+		oidarr, ok = curmap[KEYWORD_ID].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("%s.[%d].[%s] not valid []interface{}", note, idx, KEYWORD_ID)
+			return
+		}
+		curext = pkix.Extension{}
+		curext.Id, err = get_objoid_array(oidarr, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_ID))
+		if err != nil {
+			return
+		}
+
+		critical, ok = curmap[KEYWORD_CRITICAL].(bool)
+		if !ok {
+			critical = false
+		}
+		curext.Critical = critical
+
+		oidarr, ok = curmap[KEYWORD_VALUE].([]interface{})
+		if !ok {
+			err = dbgutil.FormatError("%s.[%d].[%s] not array", note, idx, KEYWORD_VALUE)
+			return
+		}
+		curext.Value, err = get_bytes_value(oidarr, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_VALUE))
+		if err != nil {
+			return
+		}
+		retv = append(retv, curext)
+	}
+	err = nil
 	return
 }
 
@@ -152,7 +240,7 @@ func get_pkixname_value(mapv map[string]interface{}, note string) (name pkix.Nam
 
 	valarr, ok = mapv[KEYWROD_EXTRANAMES].([]interface{})
 	if ok {
-		name.ExtraNames, err = get_extra_names(valarr)
+		name.ExtraNames, err = get_extra_names(valarr, KEYWROD_EXTRANAMES)
 		if err != nil {
 			return
 		}
@@ -762,4 +850,124 @@ func get_certificate_file(f string) (x509temp x509.Certificate, err error) {
 	err = nil
 	return
 
+}
+
+func parse_x509_req_json(jsonfile string) (req *x509.CertificateRequest, err error) {
+	var s string
+	var mapv map[string]interface{}
+	var intval interface{}
+	var ok bool
+	var valmap map[string]interface{}
+	var valarr []interface{}
+	var arrs []string
+	s, err = fileop.ReadFile(jsonfile)
+	if err != nil {
+		return
+	}
+
+	mapv, err = jsonext.GetJsonMap(s)
+	if err != nil {
+		return
+	}
+
+	req = &x509.CertificateRequest{}
+
+	req.Version = 0
+	intval, ok = mapv[KEYWORD_VERSION]
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_VERSION)
+		req.Version, err = get_int_value(intval, KEYWORD_VERSION)
+		if err != nil {
+			return
+		}
+	}
+
+	req.Subject = pkix.Name{}
+	valmap, ok = mapv[KEYWORD_SUBJECT].(map[string]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_SUBJECT)
+		req.Subject, err = get_pkixname_value(valmap, KEYWORD_SUBJECT)
+		if err != nil {
+			return
+		}
+	}
+
+	req.Attributes = []pkix.AttributeTypeAndValueSET{}
+	valarr, ok = mapv[KEYWORD_ATTRIBUTES].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_ATTRIBUTES)
+		req.Attributes, err = get_attribute_set_value(valarr, KEYWORD_ATTRIBUTES)
+		if err != nil {
+			return
+		}
+	}
+
+	req.Extensions = []pkix.Extension{}
+	valarr, ok = mapv[KEYWORD_EXTENSIONS].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_EXTENSIONS)
+		req.Extensions, err = get_pkix_extensions_value(valarr, KEYWORD_EXTENSIONS)
+		if err != nil {
+			return
+		}
+	}
+
+	req.ExtraExtensions = []pkix.Extension{}
+	valarr, ok = mapv[KEYWORD_EXTRA_EXTENSIONS].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_EXTRA_EXTENSIONS)
+		req.ExtraExtensions, err = get_pkix_extensions_value(valarr, KEYWORD_EXTRA_EXTENSIONS)
+		if err != nil {
+			return
+		}
+	}
+
+	req.DNSNames = []string{}
+	valarr, ok = mapv[KEYWORD_DNS_NAMES].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_DNS_NAMES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_DNS_NAMES)
+		if err != nil {
+			return
+		}
+		req.DNSNames = arrs
+	}
+
+	req.EmailAddresses = []string{}
+	valarr, ok = mapv[KEYWORD_EMAIL_ADDRESSES].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_EMAIL_ADDRESSES)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_EMAIL_ADDRESSES)
+		if err != nil {
+			return
+		}
+		req.EmailAddresses = arrs
+	}
+
+	req.IPAddresses = []net.IP{}
+	valarr, ok = mapv[KEYWORD_IP_ADDRESSES].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_IP_ADDRESSES)
+		req.IPAddresses, err = get_ip_value(valarr, KEYWORD_IP_ADDRESSES)
+		if err != nil {
+			return
+		}
+	}
+
+	req.URIs = []*url.URL{}
+	valarr, ok = mapv[KEYWORD_URIS].([]interface{})
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_URIS)
+		arrs, err = trans_inter_to_string(valarr, KEYWORD_URIS)
+		if err != nil {
+			return
+		}
+		req.URIs, err = get_urls_value(arrs, KEYWORD_URIS)
+		if err != nil {
+			return
+		}
+	}
+
+	err = nil
+	return
 }
