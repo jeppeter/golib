@@ -369,7 +369,8 @@ func Reqcreate_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 		return
 	}
 
-	nbytes, err = x509.CreateCertificateRequest(rand.Reader, certreq, privkey)
+	nbytes, err = inner_CreateCertificateRequest(rand.Reader, certreq, privkey)
+	//nbytes, err = x509.CreateCertificateRequest(rand.Reader, certreq, privkey)
 	if err != nil {
 		err = dbgutil.FormatError("can not create CertificateRequest error %s", err.Error())
 		return

@@ -184,11 +184,14 @@ func get_pkix_extensions_value(valarr []interface{}, note string) (retv []pkix.E
 			return
 		}
 
+		logutil.Debug("%s.[%d].[%s] = [%s]", note, idx, KEYWORD_ID, curext.Id)
+
 		critical, ok = curmap[KEYWORD_CRITICAL].(bool)
 		if !ok {
 			critical = false
 		}
 		curext.Critical = critical
+		logutil.Debug("%s.[%d].[%s] = [%v]", note, idx, KEYWORD_CRITICAL, curext.Critical)
 
 		oidarr, ok = curmap[KEYWORD_VALUE].([]interface{})
 		if !ok {
@@ -199,6 +202,7 @@ func get_pkix_extensions_value(valarr []interface{}, note string) (retv []pkix.E
 		if err != nil {
 			return
 		}
+		logutil.DebugBuffer(curext.Value, "%s.[%d].[%s]", note, idx, KEYWORD_VALUE)
 		retv = append(retv, curext)
 	}
 	err = nil

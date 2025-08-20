@@ -603,7 +603,6 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 		if !hashType.Available() {
 			return x509.ErrUnsupportedAlgorithm
 		}
-		logutil.DebugBuffer(signed, "orig signed")
 		h := hashType.New()
 		h.Write(signed)
 		signed = h.Sum(nil)
@@ -615,13 +614,8 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 			return signaturePublicKeyAlgoMismatchError(pubKeyAlgo, pub)
 		}
 		if is_RSAPSS(algo) {
-			logutil.DebugBuffer(signed, "signed")
-			logutil.DebugBuffer(signature, "signature")
-			logutil.Debug("rsa.PSSSaltLengthEqualsHash %d", rsa.PSSSaltLengthEqualsHash)
 			return rsa.VerifyPSS(pub, hashType, signed, signature, &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
 		} else {
-			logutil.DebugBuffer(signed, "signed")
-			logutil.DebugBuffer(signature, "signature")
 			return rsa.VerifyPKCS1v15(pub, hashType, signed, signature)
 		}
 	case *ecdsa.PublicKey:
@@ -646,7 +640,6 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 
 func signTBS(tbs []byte, key crypto.Signer, sigAlg x509.SignatureAlgorithm, rand io.Reader) ([]byte, error) {
 	signed := tbs
-	logutil.DebugBuffer(tbs, "tbs buffer")
 	hashFunc := hash_func(sigAlg)
 	if hashFunc != 0 {
 		h := hashFunc.New()
@@ -666,9 +659,6 @@ func signTBS(tbs []byte, key crypto.Signer, sigAlg x509.SignatureAlgorithm, rand
 	if err != nil {
 		return nil, err
 	}
-
-	logutil.DebugBuffer(signed, "signed value")
-	logutil.DebugBuffer(signature, "signature")
 
 	// Check the signature to ensure the crypto.Signer behaved correctly.
 	if err := checkSignature(sigAlg, tbs, signature, key.Public(), true); err != nil {
