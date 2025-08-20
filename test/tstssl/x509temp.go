@@ -210,6 +210,7 @@ func get_pkixname_value(mapv map[string]interface{}, note string) (name pkix.Nam
 	var valarr []interface{}
 	var valinter interface{}
 	var ok bool
+	var vals string
 	name = pkix.Name{}
 
 	name.Country = get_array_string(mapv, KEYWORD_COUNTRY)
@@ -220,11 +221,15 @@ func get_pkixname_value(mapv map[string]interface{}, note string) (name pkix.Nam
 	name.Organization = get_array_string(mapv, KEYWORD_ORGANIZATION)
 	name.OrganizationalUnit = get_array_string(mapv, KEYWORD_ORGANIZATIONUNIT)
 
-	valinter, ok = mapv[KEYWORD_COMMONNAME]
+	vals, ok = mapv[KEYWORD_COMMONNAME].(string)
 	if ok {
-		name.CommonName = valinter.(string)
+		name.CommonName = vals
 	} else {
-		name.CommonName = ""
+		valinter, ok = mapv[KEYWORD_COMMONNAME]
+		if ok {
+			err = dbgutil.FormatError("%s.[%s] not valid string", note, KEYWORD_COMMONNAME)
+			return
+		}
 	}
 
 	valinter, ok = mapv[KEYWORD_SERIALNUMBER]
