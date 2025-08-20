@@ -103,6 +103,7 @@ func get_attribute_set_value(inters []interface{}, note string) (retv []pkix.Att
 	var curkey pkix.AttributeTypeAndValueSET
 	var keyvalues []pkix.AttributeTypeAndValue
 	var valarr []interface{}
+	var vals string
 	retv = []pkix.AttributeTypeAndValueSET{}
 	for idx = 0; idx < len(inters); idx += 1 {
 		curmap, ok = inters[idx].(map[string]interface{})
@@ -110,14 +111,14 @@ func get_attribute_set_value(inters []interface{}, note string) (retv []pkix.Att
 			err = dbgutil.FormatError("%s.[%d] not valid map[string]interface{}", note, idx)
 			return
 		}
-		valarr, ok = curmap[KEYWORD_TYPE].([]interface{})
+		vals, ok = curmap[KEYWORD_TYPE].(string)
 		if !ok {
 			err = dbgutil.FormatError("%s.[%d].[%s] not valid string", note, idx, KEYWORD_TYPE)
 			return
 		}
 
 		curkey = pkix.AttributeTypeAndValueSET{}
-		curkey.Type, err = get_objoid_array(valarr, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_TYPE))
+		curkey.Type, err = get_oid_by_str_value(vals, fmt.Sprintf("%s.[%d].[%s]", note, idx, KEYWORD_TYPE))
 		if err != nil {
 			return
 		}
