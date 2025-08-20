@@ -658,6 +658,58 @@ def genenum_handler(args,parser):
 	sys.exit(0)
 	return
 
+def genenumserde_handler(args,parser):
+	set_logging(args)
+	enumname = args.subnargs[0]
+	s = read_file(args.input)
+	mexpr = re.compile('^\\s*([a-zA-Z0-9]+)')
+	sarr = re.split('\n',s)
+	members = []
+	for l in sarr:
+		l = l.rstrip('\r')
+		m = mexpr.findall(l)
+		if m is not None and len(m) > 0:
+			members.append(m[0])
+
+
+	outs = format_tabline(0,'impl serde::ser::Serialize for %s{'%(enumname))
+	outs += format_tabline(1,'fn serialize<S>(&self,serializer: S) -> Result<S::Ok, S::Error> where S: serde::ser::Serializer {')
+	outs += format_tabline(2,'match *self{')
+	for m in members:
+		outs += format_tabline(3,'%s::%s => {'%(enumname,m))
+		outs += format_tabline(4,'return serializer.serialize_str("%s");'%(m.lower()))
+		outs += format_tabline(3,'},')
+	outs += format_tabline(2,'}')
+	outs += format_tabline(1,'}')
+	outs += format_tabline(0,'}')
+
+	outs += format_tabline(0,'')
+	outs += format_tabline(0,'impl<\'de: \'a, \'a> serde::de::Deserialize<\'de> for %s {'%(enumname))
+	outs += format_tabline(1,'fn deserialize<D>(deserializer :D) -> Result<Self, D::Error>')
+	outs += format_tabline(2,'where D: serde::de::Deserializer<\'de> {')
+	outs += format_tabline(3,'let vs :StringVisitor = StringVisitor("".to_string());')
+	outs += format_tabline(3,'let ores = deserializer.deserialize_str(vs);')
+	outs += format_tabline(3,'let mut retv :Self = %s::%s;'%(enumname,members[0]))
+	outs += format_tabline(3,'if ores.is_ok() {')
+	outs += format_tabline(4,'let cmps = ores.unwrap();')
+	idx = 0
+	for m in members:
+		if idx == 0:
+			outs += format_tabline(4,'if cmps == "%s" {'%(m.lower()))
+		else:
+			outs += format_tabline(4,'} else if cmps == "%s" {'%(m.lower()))
+		outs += format_tabline(5,'retv = %s::%s'%(enumname,m))
+		idx += 1
+	if idx > 0:
+		outs += format_tabline(4,'}')
+	outs += format_tabline(3,'}')
+	outs += format_tabline(2,'return Ok(retv);')
+	outs += format_tabline(1,'}')
+	outs += format_tabline(0,'}')
+	write_file(outs,args.output)
+	sys.exit(0)
+	return
+
 
 REQ_KEYS=[
 'Version',
@@ -751,6 +803,9 @@ def main():
         },
         "genreq<genreq_handler>##to format code for x509req##" : {
         	"$" : 0
+        },
+        "genenumserde<genenumserde_handler>##enumname to generate enum with serde trait##" : {
+        	"$" : 1
         }
     }
     '''
