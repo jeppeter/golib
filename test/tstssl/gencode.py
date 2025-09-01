@@ -714,6 +714,7 @@ def genenumserde_handler(args,parser):
 REQ_KEYS=[
 'Version',
 'Subject',
+'SignatureAlgorithm',
 'Attributes',
 'Extensions',
 'ExtraExtensions',
@@ -727,6 +728,7 @@ REQ_MAPS = {
 	'Version' : 'int',
 	'Subject' : 'pkixname',
 	'Attributes': 'attribute_set',
+	'SignatureAlgorithm': 'algorithm',
 	'Extensions' : 'pkix_extensions',
 	'ExtraExtensions' : 'pkix_extensions',
 	'DNSNames' : 'strings',
@@ -749,6 +751,7 @@ def genreq_handler(args,parser):
 	outcodes += format_tabline(1,'var valmap map[string]interface{}')
 	outcodes += format_tabline(1,'var valarr []interface{}')
 	outcodes += format_tabline(1,'var arrs []string')
+	outcodes += format_tabline(1,'var vals string')
 	outcodes += format_tabline(1,'s , err= fileop.ReadFile(jsonfile)')
 	outcodes += format_tabline(1,'if err != nil {')
 	outcodes += format_tabline(2,'return')

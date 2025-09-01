@@ -889,6 +889,7 @@ func parse_x509_req_json(jsonfile string) (req *x509.CertificateRequest, err err
 	var valmap map[string]interface{}
 	var valarr []interface{}
 	var arrs []string
+	var vals string
 	s, err = fileop.ReadFile(jsonfile)
 	if err != nil {
 		return
@@ -916,6 +917,16 @@ func parse_x509_req_json(jsonfile string) (req *x509.CertificateRequest, err err
 	if ok {
 		logutil.Debug("[%s] parse", KEYWORD_SUBJECT)
 		req.Subject, err = get_pkixname_value(valmap, KEYWORD_SUBJECT)
+		if err != nil {
+			return
+		}
+	}
+
+	req.SignatureAlgorithm = x509.SHA256WithRSA
+	vals, ok = mapv[KEYWORD_SIGNATURE_ALGORITHM].(string)
+	if ok {
+		logutil.Debug("[%s] parse", KEYWORD_SIGNATURE_ALGORITHM)
+		req.SignatureAlgorithm, err = get_algorithm_value(vals, KEYWORD_SIGNATURE_ALGORITHM)
 		if err != nil {
 			return
 		}
