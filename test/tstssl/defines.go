@@ -180,7 +180,7 @@ const (
 	KEYWORD_TYPE             = "type"
 	KEYWORD_VALUE            = "value"
 	KEYWORD_TAG              = "tag"
-	KEYWORD_CONTENT          = "content"
+	KEYWORD_CONTENT          = "data"
 	KEYWORD_ID               = "id"
 	KEYWORD_CRITICAL         = "critical"
 	KEYWORD_VERSION          = "version"
