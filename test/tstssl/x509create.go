@@ -312,13 +312,25 @@ func marshalCertificatePolicies(policies []x509.OID, policyIdentifiers []asn1.Ob
 
 	b := cryptobyte.NewBuilder(make([]byte, 0, 128))
 	b.AddASN1(cryptobyte_asn1.SEQUENCE, func(child *cryptobyte.Builder) {
-		if false {
-		} else {
-			for _, v := range policyIdentifiers {
-				child.AddASN1(cryptobyte_asn1.SEQUENCE, func(child *cryptobyte.Builder) {
-					child.AddASN1ObjectIdentifier(v)
+
+		for _, v := range policies {
+			child.AddASN1(cryptobyte_asn1.SEQUENCE, func(child *cryptobyte.Builder) {
+				child.AddASN1(cryptobyte_asn1.OBJECT_IDENTIFIER, func(child *cryptobyte.Builder) {
+					var vb []byte
+					vb, _ = v.MarshalBinary()
+					if len(vb) == 0 {
+						child.SetError(errors.New("invalid policy object identifier"))
+						return
+					}
+					child.AddBytes(vb)
 				})
-			}
+			})
+		}
+
+		for _, v := range policyIdentifiers {
+			child.AddASN1(cryptobyte_asn1.SEQUENCE, func(child *cryptobyte.Builder) {
+				child.AddASN1ObjectIdentifier(v)
+			})
 		}
 	})
 
@@ -412,8 +424,8 @@ func buildCertExtensions(template *x509.Certificate, subjectIsEmpty bool, author
 		n++
 	}
 
-	usePolicies := false
-	if ((!usePolicies && len(template.PolicyIdentifiers) > 0) || (usePolicies && len(template.Policies) > 0)) &&
+	//usePolicies := false
+	if ((len(template.PolicyIdentifiers) > 0) || (len(template.Policies) > 0)) &&
 		!oidInExtensions(oidExtensionCertificatePolicies, template.ExtraExtensions) {
 		ret[n], err = marshalCertificatePolicies(template.Policies, template.PolicyIdentifiers)
 		if err != nil {
