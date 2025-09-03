@@ -12,20 +12,20 @@ import (
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"logutil"
-	"reflect"
 )
 
 func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
 	var rsakey *rsa.PrivateKey
+	var rootx509 *x509.Certificate = nil
 	var tempx509 x509.Certificate
 	var pubkey *rsa.PublicKey
 	var capem *bytes.Buffer
+	var pembytes []byte
 	var cabytes []byte
 	var cafile string
 	var keyfile string
-	var rsabytes []byte
-	var pkany any
+	var rootrsa *rsa.PrivateKey = nil
 	err = nil
 	if ns == nil {
 		return nil
@@ -48,21 +48,8 @@ func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 		return
 	}
 
-	rsabytes, err = read_pem_or_der(keyfile)
+	rsakey, err = get_rsa_private(keyfile)
 	if err != nil {
-		return
-	}
-
-	pkany, err = x509.ParsePKCS8PrivateKey(rsabytes)
-	if err != nil {
-		err = dbgutil.FormatError("[%s] not valid rsa %s", keyfile, err.Error())
-		return
-	}
-	switch pkany.(type) {
-	case *rsa.PrivateKey:
-		rsakey = pkany.(*rsa.PrivateKey)
-	default:
-		err = dbgutil.FormatError("key is not rsakey type [%s]", reflect.TypeOf(pkany))
 		return
 	}
 
@@ -71,9 +58,36 @@ func X509create_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 		return
 	}
 
+	if len(sarr) > 1 && len(sarr) < 3 {
+		err = dbgutil.FormatError("need root.pem and root.rsa file")
+		return
+	}
+
 	pubkey = &(rsakey.PublicKey)
+
+	if len(sarr) > 1 {
+
+		pembytes, err = read_pem_or_der(sarr[1])
+		if err != nil {
+			return
+		}
+		rootx509, err = parseCertificate(pembytes)
+		if err != nil {
+			return
+		}
+
+		rootrsa, err = get_rsa_private(sarr[2])
+		if err != nil {
+			return
+		}
+
+	} else {
+		rootrsa = rsakey
+		rootx509 = &tempx509
+	}
+
 	//cabytes, err = x509.CreateCertificate(rand.Reader, &tempx509, &tempx509, pubkey, rsakey)
-	cabytes, err = createCertificate(rand.Reader, &tempx509, &tempx509, pubkey, rsakey)
+	cabytes, err = createCertificate(rand.Reader, &tempx509, rootx509, pubkey, rootrsa)
 	if err != nil {
 		err = dbgutil.FormatError("output certificate %s", err.Error())
 		return
@@ -403,8 +417,8 @@ func init() {
 
 func load_x509_handler(parser *extargsparse.ExtArgsParse) (err error) {
 	var commandline = `{
-		"x509create<X509create_handler>##jsonfile to set x509 from template file by keyfile##":{
-			"$":1
+		"x509create<X509create_handler>##jsonfile [rootx509 rootrsa] to set x509 from template file by keyfile##":{
+			"$":"+"
 		},
 		"x509parse<X509parse_handler>##pemfile ... to parse x509.Certificate##":{
 			"$":"+"
