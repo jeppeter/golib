@@ -226,15 +226,15 @@ const (
 )
 
 const (
-	KEYWORD_DIGITAL_SIGNATURE  = "digitalsignature"
-	KEYWORD_CONTENT_COMMITMENT = "contentcommitment"
-	KEYWORD_KEY_ENCIPHERMENT   = "keyencipherment"
-	KEYWORD_DATA_ENCIPHERMENT  = "dataencipherment"
-	KEYWORD_KEY_AGREEMENT      = "keyagreement"
-	KEYWORD_CERT_SIGN          = "certsign"
-	KEYWORD_CRL_SIGN           = "crlsign"
-	KEYWORD_ENCIPHER_ONLY      = "encipheronly"
-	KEYWORD_DECIPHER_ONLY      = "decipheronly"
+	KEYWORD_DIGITAL_SIGNATURE  = "keyusagedigitalsignature"
+	KEYWORD_CONTENT_COMMITMENT = "keyusagecontentcommitment"
+	KEYWORD_KEY_ENCIPHERMENT   = "keyusagekeyencipherment"
+	KEYWORD_DATA_ENCIPHERMENT  = "keyusagedataencipherment"
+	KEYWORD_KEY_AGREEMENT      = "keyusagekeyagreement"
+	KEYWORD_CERT_SIGN          = "keyusagecertsign"
+	KEYWORD_CRL_SIGN           = "keyusagecrlsign"
+	KEYWORD_ENCIPHER_ONLY      = "keyusageencipheronly"
+	KEYWORD_DECIPHER_ONLY      = "keyusagedecipheronly"
 )
 
 const (
