@@ -270,6 +270,7 @@ func marshalBasicConstraints(isCA bool, maxPathLen int, maxPathLenZero bool) (pk
 	}
 	var err error
 	ext.Value, err = asn1.Marshal(basicConstraints{isCA, maxPathLen})
+	logutil.Debug("isCA %v maxPathLen %d maxPathLenZero %v ext.Value %v", isCA, maxPathLen, maxPathLenZero, ext.Value)
 	return ext, err
 }
 
