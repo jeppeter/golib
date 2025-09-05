@@ -190,20 +190,20 @@ const (
 )
 
 const (
-	KEYWORD_EXT_KEYUSAGE_ANY                               = "any"
-	KEYWORD_EXT_KEYUSAGE_SERVER_AUTH                       = "serverauth"
-	KEYWORD_EXT_KEYUSAGE_CLIENT_AUTH                       = "clientauth"
-	KEYWORD_EXT_KEYUSAGE_CODE_SIGNING                      = "codesigning"
-	KEYWORD_EXT_KEYUSAGE_EMAIL_PROTECTION                  = "emailprotection"
-	KEYWORD_EXT_KEYUSAGE_IPSEC_END_SYSTEM                  = "ipsecencsystem"
-	KEYWORD_EXT_KEYUSAGE_IPSEC_TUNNEL                      = "ipsectunnel"
-	KEYWORD_EXT_KEYUSAGE_IPSEC_USER                        = "ipsecuser"
-	KEYWORD_EXT_KEYUSAGE_TIME_STAMPING                     = "timestamping"
-	KEYWORD_EXT_KEYUSAGE_OCSP_SIGNING                      = "ocspsigning"
-	KEYWORD_EXT_KEYUSAGE_MICROSOFT_SERVER_GATED_CRYPTO     = "microsoftservergatedcrypto"
-	KEYWORD_EXT_KEYUSAGE_NETSCAPE_SERVER_GATED_CRYPTO      = "netscapeserergatedcrypto"
-	KEYWORD_EXT_KEYUSAGE_MICROSOFT_COMMERCIAL_CODE_SIGNING = "microsoftcommercialcodesigning"
-	KEYWORD_EXT_KEYUSAGE_MICROSOFT_KERNEL_CODE_SIGNING     = "microsoftkernelcodesigning"
+	KEYWORD_EXT_KEYUSAGE_ANY                               = "extkeyusageany"
+	KEYWORD_EXT_KEYUSAGE_SERVER_AUTH                       = "extkeyusageserverauth"
+	KEYWORD_EXT_KEYUSAGE_CLIENT_AUTH                       = "extkeyusageclientauth"
+	KEYWORD_EXT_KEYUSAGE_CODE_SIGNING                      = "extkeyusagecodesigning"
+	KEYWORD_EXT_KEYUSAGE_EMAIL_PROTECTION                  = "extkeyusageemailprotection"
+	KEYWORD_EXT_KEYUSAGE_IPSEC_END_SYSTEM                  = "extkeyusageipsecencsystem"
+	KEYWORD_EXT_KEYUSAGE_IPSEC_TUNNEL                      = "extkeyusageipsectunnel"
+	KEYWORD_EXT_KEYUSAGE_IPSEC_USER                        = "extkeyusageipsecuser"
+	KEYWORD_EXT_KEYUSAGE_TIME_STAMPING                     = "extkeyusagetimestamping"
+	KEYWORD_EXT_KEYUSAGE_OCSP_SIGNING                      = "extkeyusageocspsigning"
+	KEYWORD_EXT_KEYUSAGE_MICROSOFT_SERVER_GATED_CRYPTO     = "extkeyusagemicrosoftservergatedcrypto"
+	KEYWORD_EXT_KEYUSAGE_NETSCAPE_SERVER_GATED_CRYPTO      = "extkeyusagenetscapeserergatedcrypto"
+	KEYWORD_EXT_KEYUSAGE_MICROSOFT_COMMERCIAL_CODE_SIGNING = "extkeyusagemicrosoftcommercialcodesigning"
+	KEYWORD_EXT_KEYUSAGE_MICROSOFT_KERNEL_CODE_SIGNING     = "extkeyusagemicrosoftkernelcodesigning"
 )
 
 const (
