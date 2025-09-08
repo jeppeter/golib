@@ -1,14 +1,13 @@
 {
 	"issuer" : {
 		"country" : ["us"],
-		"common_name" : ["intern ca"],
-		"commonname" : "intern ca"		
+		"common_name" : ["root ca"],
+		"commonname" : "root ca"		
 	},
 	"subject" : {
 		"country" : ["us"],
-		"common_name" : ["child ca"],
-		"commonname" : "child ca"
+		"common_name" : ["intern2 ca"],
+		"commonname" : "intern2 ca"
 	},
 	"signaturealgorithm" : "sha256withrsapss"
-
 }

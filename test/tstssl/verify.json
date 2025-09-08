@@ -1,0 +1,4 @@
+{
+	"roots" : [".\\root.pem"],
+	"intermediates" : [".\\intern.pem",".\\intern2.pem"]
+}
