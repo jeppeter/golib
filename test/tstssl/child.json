@@ -1,0 +1,14 @@
+{
+	"issuer" : {
+		"country" : ["us"],
+		"common_name" : ["root ca"],
+		"commonname" : "root ca"		
+	},
+	"subject" : {
+		"country" : ["us"],
+		"common_name" : ["child ca"],
+		"commonname" : "child ca"
+	},
+	"signaturealgorithm" : "sha256withrsapss"
+
+}

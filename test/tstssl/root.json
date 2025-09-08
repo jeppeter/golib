@@ -1,0 +1,8 @@
+{
+	"subject" : {
+		"country" : ["us"],
+		"common_name" : ["root ca"],
+		"commonname" : "root ca"
+	},
+	"signaturealgorithm" : "sha256withrsapss"
+}
