@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
+	"logutil"
 	"sync"
 )
 
@@ -119,19 +120,24 @@ func (s *CertPool) findPotentialParents(cert *x509.Certificate) []potentialParen
 	//   AKID present, SKID missing / AKID missing, SKID present
 	//   AKID and SKID don't match
 	var matchingKeyID, oneKeyID, mismatchKeyID []potentialParent
+	logutil.DebugBuffer(cert.RawIssuer, "RawIssuer")
 	for _, c := range s.byName[string(cert.RawIssuer)] {
 		candidate, constraint, err := s.cert(c)
 		if err != nil {
 			continue
 		}
 		kidMatch := bytes.Equal(candidate.SubjectKeyId, cert.AuthorityKeyId)
+		logutil.Debug("candidate %p kidMatch %v", candidate, kidMatch)
 		switch {
 		case kidMatch:
+			logutil.Debug("matchingKeyID")
 			matchingKeyID = append(matchingKeyID, potentialParent{candidate, constraint})
 		case (len(candidate.SubjectKeyId) == 0 && len(cert.AuthorityKeyId) > 0) ||
 			(len(candidate.SubjectKeyId) > 0 && len(cert.AuthorityKeyId) == 0):
+			logutil.Debug("oneKeyID")
 			oneKeyID = append(oneKeyID, potentialParent{candidate, constraint})
 		default:
+			logutil.Debug("mismatchKeyID")
 			mismatchKeyID = append(mismatchKeyID, potentialParent{candidate, constraint})
 		}
 	}

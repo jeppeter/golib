@@ -603,6 +603,37 @@ func (e UnknownAuthorityError_s) Error() string {
 	return s
 }
 
+// CheckSignatureFrom verifies that the signature on c is a valid signature from parent.
+//
+// This is a low-level API that performs very limited checks, and not a full
+// path verifier. Most users should use [Certificate.Verify] instead.
+func Certificate_CheckSignatureFrom(c *x509.Certificate, parent *x509.Certificate) error {
+	// RFC 5280, 4.2.1.9:
+	// "If the basic constraints extension is not present in a version 3
+	// certificate, or the extension is present but the cA boolean is not
+	// asserted, then the certified public key MUST NOT be used to verify
+	// certificate signatures."
+	if parent.Version == 3 && !parent.BasicConstraintsValid ||
+		parent.BasicConstraintsValid && !parent.IsCA {
+		logutil.DebugBuffer(parent.RawIssuer, "parent.RawIssuer")
+		logutil.DebugBuffer(parent.RawSubject, "parent.RawSubject")
+		logutil.Error("parent.BasicConstraintsValid %v parent.IsCA %v", parent.BasicConstraintsValid, parent.IsCA)
+		return x509.ConstraintViolationError{}
+	}
+
+	if parent.KeyUsage != 0 && (parent.KeyUsage&x509.KeyUsageCertSign) == 0 {
+		logutil.Error(" ")
+		return x509.ConstraintViolationError{}
+	}
+
+	if parent.PublicKeyAlgorithm == x509.UnknownPublicKeyAlgorithm {
+		logutil.Error(" ")
+		return x509.ErrUnsupportedAlgorithm
+	}
+
+	return checkSignature(c.SignatureAlgorithm, c.RawTBSCertificate, c.Signature, parent.PublicKey, false)
+}
+
 // maxChainSignatureChecks is the maximum number of CheckSignatureFrom calls
 // that an invocation of buildChains will (transitively) make. Most chains are
 // less than 15 certificates long, so this leaves space for multiple chains and
@@ -634,7 +665,7 @@ func buildChains_Certificate(c *x509.Certificate, currentChain []*x509.Certifica
 		}
 
 		logutil.Debug(" ")
-		if err := c.CheckSignatureFrom(candidate.cert); err != nil {
+		if err := Certificate_CheckSignatureFrom(c, candidate.cert); err != nil {
 			logutil.Debug(" ")
 			if hintErr == nil {
 				hintErr = err

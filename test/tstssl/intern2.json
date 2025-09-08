@@ -9,5 +9,7 @@
 		"common_name" : ["intern2 ca"],
 		"commonname" : "intern2 ca"
 	},
+	"basicconstraintsvalid" : true,
+	"isca" : true,
 	"signaturealgorithm" : "sha256withrsapss"
 }

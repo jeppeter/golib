@@ -4,5 +4,7 @@
 		"common_name" : ["root ca"],
 		"commonname" : "root ca"
 	},
+	"basicconstraintsvalid" : true,
+	"isca" : true,
 	"signaturealgorithm" : "sha256withrsapss"
 }

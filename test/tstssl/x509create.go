@@ -602,6 +602,7 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 	switch hashType {
 	case crypto.Hash(0):
 		if pubKeyAlgo != x509.Ed25519 {
+			logutil.Error(" ")
 			return x509.ErrUnsupportedAlgorithm
 		}
 	case crypto.MD5:
@@ -609,11 +610,13 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 	case crypto.SHA1:
 		// SHA-1 signatures are only allowed for CRLs and CSRs.
 		if !allowSHA1 {
+			logutil.Error(" ")
 			return x509.InsecureAlgorithmError(algo)
 		}
 		fallthrough
 	default:
 		if !hashType.Available() {
+			logutil.Error(" ")
 			return x509.ErrUnsupportedAlgorithm
 		}
 		h := hashType.New()
@@ -624,6 +627,7 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 	switch pub := publicKey.(type) {
 	case *rsa.PublicKey:
 		if pubKeyAlgo != x509.RSA {
+			logutil.Error(" ")
 			return signaturePublicKeyAlgoMismatchError(pubKeyAlgo, pub)
 		}
 		if is_RSAPSS(algo) {
@@ -648,6 +652,7 @@ func checkSignature(algo x509.SignatureAlgorithm, signed, signature []byte, publ
 		}
 		return
 	}
+	logutil.Error(" ")
 	return x509.ErrUnsupportedAlgorithm
 }
 
