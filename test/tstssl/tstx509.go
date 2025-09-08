@@ -155,6 +155,7 @@ func X509vfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var x509bytes []byte
 	var vfyopt VerifyOptionsF
 	var f string
+	var certchain [][]*x509.Certificate
 	err = nil
 	if ns == nil {
 		return nil
@@ -191,13 +192,18 @@ func X509vfy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 			return
 		}
 
-		_, err = Verify_Certificate(tempx509, vfyopt)
+		certchain, err = Verify_Certificate(tempx509, vfyopt)
 		//_, err = tempx509.Verify(vfyopt)
 		if err != nil {
 			return
 		}
 
 		fmt.Printf("%s verified\n", f)
+		for k1, curchain := range certchain {
+			for k2, curcert := range curchain {
+				logutil.DebugBuffer(curcert.RawSubject, "[%d][%d] cert RawSubject", k1, k2)
+			}
+		}
 	}
 
 	err = nil
