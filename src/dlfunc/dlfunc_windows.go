@@ -72,6 +72,10 @@ func make_input_var(num int, a ...uintptr) (retvar []uintptr) {
 	return
 }
 
+func (fptr *DllFunc) Name() string {
+	return fptr.procname
+}
+
 func (fptr *DllFunc) CallN(num int, a ...uintptr) (retval uintptr, err error) {
 
 	var errv syscall.Errno
