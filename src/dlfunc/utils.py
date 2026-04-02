@@ -134,7 +134,7 @@ def genlxfunc_handler(args,parser):
         i += 1
 
     outs += format_tab_line(1,'} else {')
-    outs += format_tab_line(2,'err = fmt.Errorf("%%d >= %d",num)')
+    outs += format_tab_line(2,'err = fmt.Errorf("%%d extend %d",num)'%(num))
     outs += format_tab_line(2,'return')
     outs += format_tab_line(1,'}')
 
