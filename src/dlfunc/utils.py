@@ -102,14 +102,17 @@ def format_tab_line(tab,s):
     return rets
 
 
-def genlxdlfuncall_handler(args,parser):
+def genlxfunc_handler(args,parser):
     set_logging(args)
     num = 10
-    prefix = 'func_ptr'
+    basename  = 'call'
+    bridgname = 'bridge'
     if len(args.subnargs) > 0:
         num = parse_int(args.subnargs[0])
     if len(args.subnargs) > 1:
-        prefix = args.subnargs[1]
+        basename = args.subnargs[1]
+    if len(args.subnargs) > 2:
+        bridgname = args.subnargs[2]
 
     i = 0
     outs = ''
@@ -118,21 +121,12 @@ def genlxdlfuncall_handler(args,parser):
             outs += format_tab_line(1,'if num == %d {'%(i))
         else:
             outs += format_tab_line(1,'} else if num == %d {'%(i))
-        curs = ' (*func('
-        j = 0
-        while j < i:
-            if j > 0:
-                curs += ' ,'
-            curs += '*C.char'
-            j += 1
-        curs += ') uintptr)'
 
-        outs += format_tab_line(2,'%s := %s fptr.funcptr'%(prefix,curs))
-        curs = 'retval = func_ptr('
+        outs += format_tab_line(2,'func_ptr := C.%s_%d_func_t(fptr.funcptr)'%(basename,i))
+        curs = 'retval = C.%s_call_%d(func_ptr'%(bridgname,i)
         j = 0
         while j < i:
-            if j > 0:
-                curs += ' ,'
+            curs += ' ,'
             curs += 'input_var[%d]'%(j)
             j += 1
         curs += ')'
@@ -148,6 +142,63 @@ def genlxdlfuncall_handler(args,parser):
     sys.exit(0)
     return
 
+def genccode_handler(args,parser):
+    set_logging(args)
+    num = 10
+    basename  = 'call'
+    bridgname = 'bridge'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        basename = args.subnargs[1]
+    if len(args.subnargs) > 2:
+        bridgname = args.subnargs[2]
+
+    outs = ''
+
+    #// typedef int (*call_0_func_t) ();
+    #//
+    #// int
+    #// bridge_call_0(call_0_func_t f)
+    #// {
+    #//      return f();
+    #// }
+    #//
+    i = 0
+    while i < num:
+        curs = ''
+        j = 0
+        while j < i:
+            if j > 0:
+                curs += ' ,'
+            curs += 'unsigned long'
+            j += 1
+        outs += format_tab_line(0,'// typedef int (*%s_%d_func_t)(%s);'%(basename,i,curs))
+        outs += format_tab_line(0,'// ')
+        outs += format_tab_line(0,'// int')
+        curs = ''
+        j = 0
+        while j < i:
+            curs += ' ,'
+            curs += 'unsigned long a%d'%(j)
+            j += 1
+        outs += format_tab_line(0,'// %s_call_%d(%s_%d_func_t f%s)'%(bridgname,i,basename,i,curs))
+        outs += format_tab_line(0,'// {')
+        j = 0
+        curs = ''
+        while j < i:
+            if j > 0:
+                curs += ','
+            curs += 'a%d'%(j)
+            j += 1
+        outs += format_tab_line(0,'//     return f(%s);'%(curs))
+        outs += format_tab_line(0,'// }')
+        outs += format_tab_line(0,'// ')
+        i += 1
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
 
 
 def main():
@@ -155,7 +206,10 @@ def main():
     {
         "input|i" : null,
         "output|o" : null,
-        "genlxfunc<genlxdlfuncall_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
+        "genlxfunc<genlxfunc_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
+            "$" : "*"
+        },
+        "genccode<genccode_handler>##num [prefix] to generate c code before import C##" : {
             "$" : "*"
         }
     }
