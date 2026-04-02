@@ -306,7 +306,7 @@ func (fptr *DllFunc) CallN(num int, a ...uintptr) (ret uintptr, err error) {
 		func_ptr := C.call_18_func_t(fptr.funcptr)
 		retval = C.bridge_call_18(func_ptr, input_var[0], input_var[1], input_var[2], input_var[3], input_var[4], input_var[5], input_var[6], input_var[7], input_var[8], input_var[9], input_var[10], input_var[11], input_var[12], input_var[13], input_var[14], input_var[15], input_var[16], input_var[17])
 	} else {
-		err = fmt.Errorf("%d extend 19", num)
+		err = fmt.Errorf("%d extend 18", num)
 		return
 	}
 
