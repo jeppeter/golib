@@ -156,9 +156,9 @@ def genccode_handler(args,parser):
 
     outs = ''
 
-    #// typedef int (*call_0_func_t) ();
+    #// typedef unsigned long (*call_0_func_t) ();
     #//
-    #// int
+    #// unsigned long
     #// bridge_call_0(call_0_func_t f)
     #// {
     #//      return f();
@@ -173,9 +173,9 @@ def genccode_handler(args,parser):
                 curs += ' ,'
             curs += 'unsigned long'
             j += 1
-        outs += format_tab_line(0,'// typedef int (*%s_%d_func_t)(%s);'%(basename,i,curs))
+        outs += format_tab_line(0,'// typedef unsigned long (*%s_%d_func_t)(%s);'%(basename,i,curs))
         outs += format_tab_line(0,'// ')
-        outs += format_tab_line(0,'// int')
+        outs += format_tab_line(0,'// unsigned long')
         curs = ''
         j = 0
         while j < i:

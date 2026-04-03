@@ -8,153 +8,153 @@ import (
 //#cgo LDFLAGS: -ldl
 //#include <dlfcn.h>
 //#include <stdlib.h>
-// typedef int (*call_0_func_t)();
+// typedef unsigned long (*call_0_func_t)();
 //
-// int
+// unsigned long
 // bridge_call_0(call_0_func_t f)
 // {
 //     return f();
 // }
 //
-// typedef int (*call_1_func_t)(unsigned long);
+// typedef unsigned long (*call_1_func_t)(unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_1(call_1_func_t f ,unsigned long a0)
 // {
 //     return f(a0);
 // }
 //
-// typedef int (*call_2_func_t)(unsigned long ,unsigned long);
+// typedef unsigned long (*call_2_func_t)(unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_2(call_2_func_t f ,unsigned long a0 ,unsigned long a1)
 // {
 //     return f(a0,a1);
 // }
 //
-// typedef int (*call_3_func_t)(unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_3_func_t)(unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_3(call_3_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2)
 // {
 //     return f(a0,a1,a2);
 // }
 //
-// typedef int (*call_4_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_4_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_4(call_4_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3)
 // {
 //     return f(a0,a1,a2,a3);
 // }
 //
-// typedef int (*call_5_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_5_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_5(call_5_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4)
 // {
 //     return f(a0,a1,a2,a3,a4);
 // }
 //
-// typedef int (*call_6_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_6_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_6(call_6_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5)
 // {
 //     return f(a0,a1,a2,a3,a4,a5);
 // }
 //
-// typedef int (*call_7_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_7_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_7(call_7_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6);
 // }
 //
-// typedef int (*call_8_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_8_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_8(call_8_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7);
 // }
 //
-// typedef int (*call_9_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_9_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_9(call_9_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8);
 // }
 //
-// typedef int (*call_10_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_10_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_10(call_10_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9);
 // }
 //
-// typedef int (*call_11_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_11_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_11(call_11_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10);
 // }
 //
-// typedef int (*call_12_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_12_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_12(call_12_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11);
 // }
 //
-// typedef int (*call_13_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_13_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_13(call_13_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11 ,unsigned long a12)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12);
 // }
 //
-// typedef int (*call_14_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_14_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_14(call_14_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11 ,unsigned long a12 ,unsigned long a13)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13);
 // }
 //
-// typedef int (*call_15_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_15_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_15(call_15_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11 ,unsigned long a12 ,unsigned long a13 ,unsigned long a14)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14);
 // }
 //
-// typedef int (*call_16_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_16_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_16(call_16_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11 ,unsigned long a12 ,unsigned long a13 ,unsigned long a14 ,unsigned long a15)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15);
 // }
 //
-// typedef int (*call_17_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_17_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_17(call_17_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11 ,unsigned long a12 ,unsigned long a13 ,unsigned long a14 ,unsigned long a15 ,unsigned long a16)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16);
 // }
 //
-// typedef int (*call_18_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
+// typedef unsigned long (*call_18_func_t)(unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long ,unsigned long);
 //
-// int
+// unsigned long
 // bridge_call_18(call_18_func_t f ,unsigned long a0 ,unsigned long a1 ,unsigned long a2 ,unsigned long a3 ,unsigned long a4 ,unsigned long a5 ,unsigned long a6 ,unsigned long a7 ,unsigned long a8 ,unsigned long a9 ,unsigned long a10 ,unsigned long a11 ,unsigned long a12 ,unsigned long a13 ,unsigned long a14 ,unsigned long a15 ,unsigned long a16 ,unsigned long a17)
 // {
 //     return f(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17);
@@ -244,7 +244,7 @@ func (fptr *DllFunc) Name() string {
 func (fptr *DllFunc) CallN(num int, a ...uintptr) (ret uintptr, err error) {
 
 	var input_var []C.ulong
-	var retval C.int
+	var retval C.ulong
 
 	input_var = make_input_var(num, a...)
 

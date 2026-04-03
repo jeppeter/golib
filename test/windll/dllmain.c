@@ -324,3 +324,877 @@ int print_18(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int
     printf("a17 = %d\n",a17);
     return 0;
 }
+
+
+char* charfunc_0()
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_0\n");
+ 
+    totalv = 30;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_1(int a0)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_1\n");
+ 
+    printf("a0 = %d\n",a0);
+    totalv = a0;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_2(int a0, int a1)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_2\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    totalv = a0+a1;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_3(int a0, int a1, int a2)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_3\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    totalv = a0+a1+a2;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_4(int a0, int a1, int a2, int a3)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_4\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    totalv = a0+a1+a2+a3;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_5(int a0, int a1, int a2, int a3, int a4)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_5\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    totalv = a0+a1+a2+a3+a4;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_6(int a0, int a1, int a2, int a3, int a4, int a5)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_6\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    totalv = a0+a1+a2+a3+a4+a5;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_7(int a0, int a1, int a2, int a3, int a4, int a5, int a6)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_7\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    totalv = a0+a1+a2+a3+a4+a5+a6;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_8(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_8\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_9(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_9\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_10(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_10\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_11(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_11\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_12(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_12\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_13(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_13\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    printf("a12 = %d\n",a12);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_14(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_14\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    printf("a12 = %d\n",a12);
+    printf("a13 = %d\n",a13);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_15(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_15\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    printf("a12 = %d\n",a12);
+    printf("a13 = %d\n",a13);
+    printf("a14 = %d\n",a14);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_16(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_16\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    printf("a12 = %d\n",a12);
+    printf("a13 = %d\n",a13);
+    printf("a14 = %d\n",a14);
+    printf("a15 = %d\n",a15);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_17(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_17\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    printf("a12 = %d\n",a12);
+    printf("a13 = %d\n",a13);
+    printf("a14 = %d\n",a14);
+    printf("a15 = %d\n",a15);
+    printf("a16 = %d\n",a16);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* charfunc_18(int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16, int a17)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call charfunc_18\n");
+ 
+    printf("a0 = %d\n",a0);
+    printf("a1 = %d\n",a1);
+    printf("a2 = %d\n",a2);
+    printf("a3 = %d\n",a3);
+    printf("a4 = %d\n",a4);
+    printf("a5 = %d\n",a5);
+    printf("a6 = %d\n",a6);
+    printf("a7 = %d\n",a7);
+    printf("a8 = %d\n",a8);
+    printf("a9 = %d\n",a9);
+    printf("a10 = %d\n",a10);
+    printf("a11 = %d\n",a11);
+    printf("a12 = %d\n",a12);
+    printf("a13 = %d\n",a13);
+    printf("a14 = %d\n",a14);
+    printf("a15 = %d\n",a15);
+    printf("a16 = %d\n",a16);
+    printf("a17 = %d\n",a17);
+    totalv = a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15+a16+a17;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_0()
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_0\n");
+ 
+    totalv = 30;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_1(char* a0)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_1\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    totalv = 1;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_2(char* a0, char* a1)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_2\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    totalv = 2;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_3(char* a0, char* a1, char* a2)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_3\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    totalv = 3;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_4(char* a0, char* a1, char* a2, char* a3)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_4\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    totalv = 4;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_5(char* a0, char* a1, char* a2, char* a3, char* a4)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_5\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    totalv = 5;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_6(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_6\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    totalv = 6;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_7(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_7\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    totalv = 7;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_8(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_8\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    totalv = 8;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_9(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_9\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    totalv = 9;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_10(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_10\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    totalv = 10;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_11(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_11\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    totalv = 11;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_12(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_12\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    totalv = 12;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_13(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11, char* a12)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_13\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    printf("a12 = [%s] %p\n",a12,a12);
+    totalv = 13;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_14(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11, char* a12, char* a13)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_14\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    printf("a12 = [%s] %p\n",a12,a12);
+    printf("a13 = [%s] %p\n",a13,a13);
+    totalv = 14;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_15(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11, char* a12, char* a13, char* a14)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_15\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    printf("a12 = [%s] %p\n",a12,a12);
+    printf("a13 = [%s] %p\n",a13,a13);
+    printf("a14 = [%s] %p\n",a14,a14);
+    totalv = 15;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_16(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11, char* a12, char* a13, char* a14, char* a15)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_16\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    printf("a12 = [%s] %p\n",a12,a12);
+    printf("a13 = [%s] %p\n",a13,a13);
+    printf("a14 = [%s] %p\n",a14,a14);
+    printf("a15 = [%s] %p\n",a15,a15);
+    totalv = 16;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_17(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11, char* a12, char* a13, char* a14, char* a15, char* a16)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_17\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    printf("a12 = [%s] %p\n",a12,a12);
+    printf("a13 = [%s] %p\n",a13,a13);
+    printf("a14 = [%s] %p\n",a14,a14);
+    printf("a15 = [%s] %p\n",a15,a15);
+    printf("a16 = [%s] %p\n",a16,a16);
+    totalv = 17;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}
+
+
+char* strfunc_18(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, char* a6, char* a7, char* a8, char* a9, char* a10, char* a11, char* a12, char* a13, char* a14, char* a15, char* a16, char* a17)
+{
+    int totalv;
+    char* pret=NULL;
+    printf("call strfunc_18\n");
+ 
+    printf("a0 = [%s] %p\n",a0,a0);
+    printf("a1 = [%s] %p\n",a1,a1);
+    printf("a2 = [%s] %p\n",a2,a2);
+    printf("a3 = [%s] %p\n",a3,a3);
+    printf("a4 = [%s] %p\n",a4,a4);
+    printf("a5 = [%s] %p\n",a5,a5);
+    printf("a6 = [%s] %p\n",a6,a6);
+    printf("a7 = [%s] %p\n",a7,a7);
+    printf("a8 = [%s] %p\n",a8,a8);
+    printf("a9 = [%s] %p\n",a9,a9);
+    printf("a10 = [%s] %p\n",a10,a10);
+    printf("a11 = [%s] %p\n",a11,a11);
+    printf("a12 = [%s] %p\n",a12,a12);
+    printf("a13 = [%s] %p\n",a13,a13);
+    printf("a14 = [%s] %p\n",a14,a14);
+    printf("a15 = [%s] %p\n",a15,a15);
+    printf("a16 = [%s] %p\n",a16,a16);
+    printf("a17 = [%s] %p\n",a17,a17);
+    totalv = 18;
+     
+    pret = (char*) malloc(totalv);
+    printf("pret %p\n",pret);
+    return pret;
+}

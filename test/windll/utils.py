@@ -166,6 +166,161 @@ def genfunc_handler(args,parser):
 	return
 
 
+def genchardecl_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'charfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+
+    i = 0
+    outs = ''
+    while i < num:
+        outs += 'WINLIB_API char* %s_%d('%(prefix,i)
+        j = 0
+        while j < i:
+            if j > 0:
+                outs += ', '
+            outs += 'int a%d'%(j)
+            j += 1
+        outs += ');\n'
+        i += 1
+
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
+
+def gencharfunc_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'charfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+
+    i = 0
+    outs = ''
+    while i < num:
+        if i > 0:
+            outs += '\n\n'
+        outs += 'char* %s_%d('%(prefix,i)
+        j = 0
+        while j < i:
+            if j > 0:
+                outs += ', '
+            outs += 'int a%d'%(j)
+            j += 1
+        outs += ')\n'
+        outs += format_tab_line(0,'{')
+        outs += format_tab_line(1,'int totalv;')
+        outs += format_tab_line(1,'char* pret=NULL;')
+        outs += format_tab_line(1,'printf("call %s_%d\\n");'%(prefix,i))
+        outs += format_tab_line(0,' ')
+        j = 0
+        while j < i:
+            outs += format_tab_line(1,'printf("a%d = %%d\\n",a%d);'%(j,j))
+            j += 1
+        curs = ''
+        j = 0
+        while j < i:
+            if j > 0:
+                curs += '+'
+            curs += 'a%d'%(j)
+            j += 1
+        if i > 0:
+            outs += format_tab_line(1,'totalv = %s;'%(curs))
+        else:
+            outs += format_tab_line(1,'totalv = 30;')
+        outs += format_tab_line(1,' ')
+        outs += format_tab_line(1,'pret = (char*) malloc(totalv);')
+        outs += format_tab_line(1,'printf("pret %p\\n",pret);')
+        outs += format_tab_line(1,'return pret;')
+        outs += format_tab_line(0,'}')
+        i += 1
+
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
+
+def genstrdecl_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'strfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+
+    i = 0
+    outs = ''
+    while i < num:
+        outs += 'WINLIB_API char* %s_%d('%(prefix,i)
+        j = 0
+        while j < i:
+            if j > 0:
+                outs += ', '
+            outs += 'char* a%d'%(j)
+            j += 1
+        outs += ');\n'
+        i += 1
+
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
+
+def genstrfunc_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'strfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+
+    i = 0
+    outs = ''
+    while i < num:
+        if i > 0:
+            outs += '\n\n'
+        outs += 'char* %s_%d('%(prefix,i)
+        j = 0
+        while j < i:
+            if j > 0:
+                outs += ', '
+            outs += 'char* a%d'%(j)
+            j += 1
+        outs += ')\n'
+        outs += format_tab_line(0,'{')
+        outs += format_tab_line(1,'int totalv;')
+        outs += format_tab_line(1,'char* pret=NULL;')
+        outs += format_tab_line(1,'printf("call %s_%d\\n");'%(prefix,i))
+        outs += format_tab_line(0,' ')
+        j = 0
+        while j < i:
+            outs += format_tab_line(1,'printf("a%d = [%%s] %%p\\n",a%d,a%d);'%(j,j,j))
+            j += 1
+        if i > 0:
+            outs += format_tab_line(1,'totalv = %d;'%(i))
+        else:
+            outs += format_tab_line(1,'totalv = 30;')
+        outs += format_tab_line(1,' ')
+        outs += format_tab_line(1,'pret = (char*) malloc(totalv);')
+        outs += format_tab_line(1,'printf("pret %p\\n",pret);')
+        outs += format_tab_line(1,'return pret;')
+        outs += format_tab_line(0,'}')
+        i += 1
+
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
+
 def main():
     commandline='''
     {
@@ -176,6 +331,18 @@ def main():
         },
         "genfunc<genfunc_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
         	"$" : "*"
+        },
+        "genchardecl<genchardecl_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
+            "$" : "*"
+        },
+        "gencharfunc<gencharfunc_handler>##[num] [prefix] to generate char* functions##" : {
+            "$" : "*"
+        },
+        "genstrdecl<genstrdecl_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
+            "$" : "*"
+        },
+        "genstrfunc<genstrfunc_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
+            "$" : "*"
         }
     }
     '''
