@@ -129,40 +129,61 @@ def format_tab_line(tab,s):
 
 
 def gencfg_handler(args,parser):
-	set_logging(args)
-	s = read_file(args.input)
-	sarr = re.split('\n',s)
-	outs = ''
-	outs += '%s\n'%(s)
-	strexpr = re.compile('^\\s*type\\s+([^\\s]+)\\s+struct\\s+\\{$')
-	strname = None
-	mname = None
-	mtype = None
-	for l in sarr:
-		l = l.rstrip('\r\n')
-		m = strexpr.findall(l)
-		if m is not None and len(m) > 0:
-			strname = m[0]
-		else:
-			l = l.strip(' \t')
-			sarr = re.split('\\s+',l)
-			if len(sarr) >= 2:
-				mname = sarr[0]
-				mtype = sarr[1]
-				outs += format_tab_line(0,'// format %s type %s set'%(mname,mtype))
-				outs += format_tab_line(0,'func (retp *%s) Set%s(val %s) *%s {'%(strname,mname,mtype,strname))
-				outs += format_tab_line(1,'retp.%s = val'%(mname))
-				outs += format_tab_line(1,'return retp')
-				outs += format_tab_line(0,'}')
-				outs += format_tab_line(0,' ')
-				outs += format_tab_line(0,'// get %s type %s value'%(mname,mtype))
-				outs += format_tab_line(0, 'func (retp *%s) Get%s() %s {'%(strname,mname,mtype) )
-				outs += format_tab_line(1,'return retp.%s'%(mname))
-				outs += format_tab_line(0,'}')
-				outs += format_tab_line(0,' ')
-	write_file(outs,args.output)
-	sys.exit(0)
-	return
+    set_logging(args)
+    s = read_file(args.input)
+    sarr = re.split('\n',s)
+    outs = ''
+    structs = ''
+
+    strexpr = re.compile('^\\s*type\\s+([^\\s]+)\\s+struct\\s+\\{$')
+    strname = None
+    mname = None
+    mtype = None
+    mjsonexpr = re.compile('.*`json\\s*:.*`')
+    for l in sarr:
+        l = l.rstrip('\r\n')
+        m = strexpr.findall(l)
+        if m is not None and len(m) > 0:
+            strname = m[0]
+            structs += '%s\n'%(l)
+        else:
+            cl = l.strip(' \t')
+            sarr = re.split('\\s+',cl)
+            if len(sarr) >= 2:
+                mname = sarr[0]
+                mtype = sarr[1]
+                outs += format_tab_line(0,'// format %s type %s set'%(mname,mtype))
+                outs += format_tab_line(0,'func (retp *%s) Set%s(val %s) *%s {'%(strname,mname,mtype,strname))
+                outs += format_tab_line(1,'retp.%s = val'%(mname))
+                outs += format_tab_line(1,'return retp')
+                outs += format_tab_line(0,'}')
+                outs += format_tab_line(0,' ')
+                outs += format_tab_line(0,'// get %s type %s value'%(mname,mtype))
+                outs += format_tab_line(0, 'func (retp *%s) Get%s() %s {'%(strname,mname,mtype) )
+                outs += format_tab_line(1,'return retp.%s'%(mname))
+                outs += format_tab_line(0,'}')
+                outs += format_tab_line(0,' ')
+                # now to make sure the
+                nl = None
+                if sarr[0][0] >= 'A' and sarr[0][0] <= 'Z':
+                    if not mjsonexpr.match(l):
+                        lname = mname.lower()
+                        nl = format_tab_line(1,'%s %s `json:"%s"`'%(mname,mtype,lname))
+                        nl = nl.rstrip('\r\n')
+                if nl is not None:
+                    structs += '%s\n'%(nl)
+                else:
+                    structs += '%s\n'%(l)
+
+            else:
+                structs += '%s\n'%(l)
+    nouts = ''
+    nouts += structs
+    nouts += format_tab_line(0,'')
+    nouts += outs
+    write_file(nouts,args.output)
+    sys.exit(0)
+    return
 
 
 
