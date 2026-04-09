@@ -89,3 +89,8 @@ func (retp *SockChannel) WriteJson(jsons string, mills int) (err error) {
 	err = nil
 	return
 }
+
+func (retp *SockChannel) Close() {
+	retp.cli.Close()
+	return
+}
