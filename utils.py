@@ -185,6 +185,55 @@ def gencfg_handler(args,parser):
     sys.exit(0)
     return
 
+def genjson_handler(args,parser):
+    set_logging(args)
+    s = read_file(args.input)
+    nsarr = re.split('\n',s)
+    outs = ''
+    structs = ''
+
+    startexpr = re.compile('^\\s*type\\s+([^\\s]+)\\s+struct\\s+\\{$')
+    endexpr = re.compile('^\\s*}\\s*$')
+    strname = None
+    mname = None
+    mtype = None
+    mjsonexpr = re.compile('.*`json\\s*:.*`')
+    outs = ''
+    ss = False
+    for l in nsarr:
+        l = l.rstrip('\r\n')
+        logging.info('l [%s]'%(l))
+        if not ss :
+            m = startexpr.findall(l)
+            if m is not None and len(m) > 0:
+                ss = True
+                logging.info('ss True')
+            outs += '%s\n'%(l)
+            logging.info('add [%s]'%(l))
+        else:
+            if endexpr.match(l):
+                ss = False
+                logging.info('ss False')
+                outs += '%s\n'%(l)
+                logging.info('add [%s]'%(l))
+            else:
+                cl = l.strip(' \t')
+                sarr = re.split('\\s+',cl)
+                if len(nsarr) >= 2:
+                    mname = sarr[0]
+                    mtype = sarr[1]
+                    if sarr[0][0] >= 'A' and sarr[0][0] <= 'Z':
+                        if mjsonexpr.match(l):
+                            outs += '%s\n'%(l)
+                            logging.info('add [%s]'%(l))
+                        else:
+                            lname = mname.lower()
+                            outs += format_tab_line(1,'%s `json:"%s"`'%(cl,lname))
+                            logging.info('add\n%s'%(format_tab_line(1,'%s `json:"%s"`'%(cl,lname))))
+                else:
+                    outs += '%s\n'%(l)
+    write_file(outs,args.output)
+    sys.exit(0)
 
 
 def main():
@@ -193,6 +242,9 @@ def main():
         "input|i" : null,
         "output|o" : null,
         "gencfg<gencfg_handler>##from input file go code to output go code##" : {
+            "$" : 0
+        },
+        "genjson<genjson_handler>##from input file go code to output go code for json encap##" : {
             "$" : 0
         }
     }
