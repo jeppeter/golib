@@ -1,0 +1,6 @@
+github.com/jeppeter/go-extargsparse v1.0.0 h1:PG7k73CKqUjcqDsiuwZI3UX7SHPYTW1AJ+CdvpItlaU=
+github.com/jeppeter/go-extargsparse v1.0.0/go.mod h1:vOq5TfP/uUCP0Z/t/oejZOAMuKkfDYwqnPDmpPzFieQ=
+github.com/jeppeter/log4go v0.0.0-20191224035337-ce096513aa1f h1:OaKHgso721n7CmXzHX2Z01OWfxhQBmbrPvxEUM7AelQ=
+github.com/jeppeter/log4go v0.0.0-20191224035337-ce096513aa1f/go.mod h1:etorYwlGXatrxnr1hA9XzAOOfsANKNobFEqzLUbxcsY=
+github.com/tebeka/atexit v0.3.0 h1:jleL99H7Ywt80oJKR+VWmJNnezcCOG0CuzcN3CIpsdI=
+github.com/tebeka/atexit v0.3.0/go.mod h1:WJmSUSmMT7WoR7etUOaGBVXk+f5/ZJ+67qwuedq7Fbs=
