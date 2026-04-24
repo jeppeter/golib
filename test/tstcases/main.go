@@ -10,9 +10,11 @@ import (
 	"logutil"
 	"npipepack"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 	"winpriv"
 	"winreg"
 )
@@ -33,6 +35,7 @@ func init() {
 	Enumkeys_handler(nil, nil, nil)
 	Enumvals_handler(nil, nil, nil)
 	Parsetime_handler(nil, nil, nil)
+	Pointerpass_handler(nil, nil, nil)
 }
 
 func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
@@ -85,6 +88,9 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 			"$" : 2
 		},
 		"parsetime<Parsetime_handler>##timestr to parse like 2020-01-01 12:20:12 format##" : {
+			"$" : "+"
+		},
+		"pointerpass<Pointerpass_handler>##vals ... to pass vals by pointer##" : {
 			"$" : "+"
 		}
 
@@ -714,6 +720,120 @@ func Parsetime_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	}
 	err = nil
 	return
+}
+
+type IntVal struct {
+	val int
+}
+
+func recv_func(chl *ProcChan, checkchl *ProcChan) {
+	var s string
+	var curi *IntVal = nil
+	var manyi []*IntVal = []*IntVal{}
+	var uv uintptr
+	var i64 int64
+	var err error
+	var ni *IntVal = nil
+	var matched bool
+	var i int
+	defer func() {
+		chl.Exitedchl <- 1
+	}()
+	for {
+		select {
+		case s = <-chl.Rcvchl:
+			i64, err = strconv.ParseInt(s, 0, 64)
+			if err != nil {
+				logutil.Error("parse [%s] error %s", s, err.Error())
+				return
+			}
+			uv = uintptr(i64)
+			curi = (*IntVal)(unsafe.Pointer(uv))
+			logutil.Debug("curi %p %d", curi, curi.val)
+			manyi = append(manyi, curi)
+			chl.Sendchl <- s
+		case s = <-checkchl.Rcvchl:
+			i64, err = strconv.ParseInt(s, 0, 64)
+			if err != nil {
+				logutil.Error("parse [%s] error %s", s, err.Error())
+				return
+			}
+			uv = uintptr(i64)
+			ni = (*IntVal)(unsafe.Pointer(uv))
+			matched = false
+			for i = 0; i < len(manyi); i += 1 {
+				if manyi[i] == ni {
+					matched = true
+					break
+				}
+			}
+
+			if !matched {
+				logutil.Debug("can not find %s", s)
+				return
+			}
+			logutil.Debug("find %s %p %d", s, ni, ni.val)
+			checkchl.Sendchl <- s
+		case <-chl.Exitchl:
+			return
+		}
+	}
+	return
+}
+
+func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var s string
+	var chl *ProcChan = nil
+	var checkchl *ProcChan = nil
+	var curi *IntVal
+	var fmts string
+	var news string
+
+	err = nil
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+	sarr = ns.GetArray("subnargs")
+	chl = NewProcChan(10, 10)
+	checkchl = NewProcChan(10, 10)
+	go recv_func(chl, checkchl)
+
+	defer func() {
+		chl.Exitchl <- 1
+		<-chl.Exitedchl
+	}()
+
+	for _, s = range sarr {
+		curi = &IntVal{}
+		curi.val, err = strconv.Atoi(s)
+		if err != nil {
+			err = dbgutil.FormatError("can not parse %s error %s", s, err.Error())
+			return
+		}
+
+		fmts = fmt.Sprintf("0x%x", uintptr(unsafe.Pointer(curi)))
+		logutil.Debug("fmts [%s]", fmts)
+		chl.Rcvchl <- fmts
+		news = <-chl.Sendchl
+		logutil.Debug("return %s", news)
+		curi = nil
+		runtime.GC()
+
+		checkchl.Rcvchl <- fmts
+		news = <-checkchl.Sendchl
+		logutil.Debug("check return %s", news)
+	}
+
+	err = nil
+	return
+
 }
 
 func main() {
