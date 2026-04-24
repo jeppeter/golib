@@ -45,6 +45,7 @@ func LoadRegCmdFlags(parser *extargsparse.ExtArgsParse) (err error) {
 		"regsubkey" : "SYSTEM\\CurrentControlSet\\Control\\Idvtools\\BTVMTOOL",
 		"regpath" : "routetable",
 		"regkey" : "HKLM",
+		"segfaultenable##in pointerpass sub routine to enable segfault when free ##" : false,
 		"ReadRegString<Readregstring_handler>## root path key to read registry root can be(HKLM|HKCU|HKCR|HKU|HKCC)##" : {
 			"$" : "+"
 		},
@@ -726,7 +727,7 @@ type IntVal struct {
 	val int
 }
 
-func recv_func(chl *ProcChan, checkchl *ProcChan) {
+func recv_func(chl *ProcChan, checkchl *ProcChan, freechl *ProcChan) {
 	var s string
 	var curi *IntVal = nil
 	var manyi []*IntVal = []*IntVal{}
@@ -774,6 +775,9 @@ func recv_func(chl *ProcChan, checkchl *ProcChan) {
 			}
 			logutil.Debug("find %s %p %d", s, ni, ni.val)
 			checkchl.Sendchl <- s
+		case s = <-freechl.Rcvchl:
+			manyi = []*IntVal{}
+			freechl.Sendchl <- s
 		case <-chl.Exitchl:
 			return
 		}
@@ -786,11 +790,15 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 	var s string
 	var chl *ProcChan = nil
 	var checkchl *ProcChan = nil
+	var freechl *ProcChan = nil
 	var curi *IntVal
 	var fmts string
 	var news string
 	var ci int
 	var cyclei int = 3000
+	var manyu []uintptr = []uintptr{}
+	var uv uintptr
+	var segfault bool = false
 
 	err = nil
 	if ns == nil {
@@ -804,13 +812,16 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 	}
 	sarr = ns.GetArray("subnargs")
 
+	segfault = ns.GetBool("segfaultenable")
+
 	cyclei, err = strconv.Atoi(sarr[0])
 	if err != nil {
 		return
 	}
 	chl = NewProcChan(10, 10)
 	checkchl = NewProcChan(10, 10)
-	go recv_func(chl, checkchl)
+	freechl = NewProcChan(10, 10)
+	go recv_func(chl, checkchl, freechl)
 
 	defer func() {
 		chl.Exitchl <- 1
@@ -825,23 +836,45 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 			return
 		}
 
-		fmts = fmt.Sprintf("0x%x", uintptr(unsafe.Pointer(curi)))
+		uv = uintptr(unsafe.Pointer(curi))
+		manyu = append(manyu, uv)
+
+		fmts = fmt.Sprintf("0x%x", uv)
 		logutil.Debug("fmts [%s]", fmts)
 		chl.Rcvchl <- fmts
 		news = <-chl.Sendchl
 		logutil.Debug("return %s", news)
 		curi = nil
+	}
+
+	runtime.GC()
+	for ci = 0; ci < cyclei; ci += 1 {
+		curi = &IntVal{}
+	}
+	runtime.GC()
+
+	for ci = 0; ci < len(manyu); ci += 1 {
+		fmts = fmt.Sprintf("0x%x", manyu[ci])
+		checkchl.Rcvchl <- fmts
+		news = <-checkchl.Sendchl
+	}
+
+	if segfault {
+		freechl.Rcvchl <- "free"
+		s = <-freechl.Sendchl
+
+		logutil.Debug("free get [%s]", s)
 		runtime.GC()
 		for ci = 0; ci < cyclei; ci += 1 {
 			curi = &IntVal{}
 		}
 		runtime.GC()
 
-		checkchl.Rcvchl <- fmts
-		news = <-checkchl.Sendchl
-		logutil.Debug("check return %s", news)
+		for ci = 0; ci < len(manyu); ci += 1 {
+			curi = (*IntVal)(unsafe.Pointer(manyu[ci]))
+			logutil.Debug("[%d] curi %p %d", ci, curi, curi.val)
+		}
 	}
-
 	err = nil
 	return
 
