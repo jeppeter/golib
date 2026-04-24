@@ -789,6 +789,8 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 	var curi *IntVal
 	var fmts string
 	var news string
+	var ci int
+	var cyclei int = 3000
 
 	err = nil
 	if ns == nil {
@@ -801,6 +803,11 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 		return
 	}
 	sarr = ns.GetArray("subnargs")
+
+	cyclei, err = strconv.Atoi(sarr[0])
+	if err != nil {
+		return
+	}
 	chl = NewProcChan(10, 10)
 	checkchl = NewProcChan(10, 10)
 	go recv_func(chl, checkchl)
@@ -810,7 +817,7 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 		<-chl.Exitedchl
 	}()
 
-	for _, s = range sarr {
+	for _, s = range sarr[1:] {
 		curi = &IntVal{}
 		curi.val, err = strconv.Atoi(s)
 		if err != nil {
@@ -824,6 +831,10 @@ func Pointerpass_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx 
 		news = <-chl.Sendchl
 		logutil.Debug("return %s", news)
 		curi = nil
+		runtime.GC()
+		for ci = 0; ci < cyclei; ci += 1 {
+			curi = &IntVal{}
+		}
 		runtime.GC()
 
 		checkchl.Rcvchl <- fmts
