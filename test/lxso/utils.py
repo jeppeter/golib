@@ -388,6 +388,7 @@ def gencallbackfunc_handler(args,parser):
     outs = ''
     idx = 0
     while idx < num:
+        outs += format_tab_line(0,' ')
         outs += format_tab_line(0,'// to call func %d params'%(idx))
         ins = ''
         jdx = 0
@@ -404,7 +405,15 @@ def gencallbackfunc_handler(args,parser):
                 ins += ','
             ins += 'a%d'%(jdx)
             jdx += 1
-        outs += format_tab_line(1,'return pfunc(%s);'%(ins))
+        outs += format_tab_line(1,'int retv;')
+
+        outs += format_tab_line(1,'retv = pfunc(%s);'%(ins))
+        jdx = 0
+        while jdx < idx:
+            outs += format_tab_line(1,'printf("C:a%d=[%%s]\\n",a%d);'%(jdx,jdx))
+            jdx += 1
+        outs += format_tab_line(1,'printf("C:retv=%d\\n",retv);')
+        outs += format_tab_line(1,'return retv;')
         outs += format_tab_line(0,'}')
         idx += 1
     write_file(outs,args.output)

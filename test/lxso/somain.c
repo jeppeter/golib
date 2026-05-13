@@ -1199,98 +1199,345 @@ char* strfunc_18(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, cha
 }
 
 
+ 
 // to call func 0 params
 int callbackfunc_0(callbackfunc_0_func_t pfunc)
 {
-    return pfunc();
+    int retv;
+    retv = pfunc();
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 1 params
 int callbackfunc_1(callbackfunc_1_func_t pfunc,char* a0)
 {
-    return pfunc(a0);
+    int retv;
+    printf("C:a0=[%s]\n",a0);
+    retv = pfunc(a0);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 2 params
 int callbackfunc_2(callbackfunc_2_func_t pfunc,char* a0,char* a1)
 {
-    return pfunc(a0,a1);
+    int retv;
+    retv = pfunc(a0,a1);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 3 params
 int callbackfunc_3(callbackfunc_3_func_t pfunc,char* a0,char* a1,char* a2)
 {
-    return pfunc(a0,a1,a2);
+    int retv;
+    retv = pfunc(a0,a1,a2);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 4 params
 int callbackfunc_4(callbackfunc_4_func_t pfunc,char* a0,char* a1,char* a2,char* a3)
 {
-    return pfunc(a0,a1,a2,a3);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 5 params
 int callbackfunc_5(callbackfunc_5_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4)
 {
-    return pfunc(a0,a1,a2,a3,a4);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 6 params
 int callbackfunc_6(callbackfunc_6_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 7 params
 int callbackfunc_7(callbackfunc_7_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 8 params
 int callbackfunc_8(callbackfunc_8_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 9 params
 int callbackfunc_9(callbackfunc_9_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 10 params
 int callbackfunc_10(callbackfunc_10_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 11 params
 int callbackfunc_11(callbackfunc_11_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 12 params
 int callbackfunc_12(callbackfunc_12_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 13 params
 int callbackfunc_13(callbackfunc_13_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 14 params
 int callbackfunc_14(callbackfunc_14_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 15 params
 int callbackfunc_15(callbackfunc_15_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 16 params
 int callbackfunc_16(callbackfunc_16_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:a15=[%s]\n",a15);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 17 params
 int callbackfunc_17(callbackfunc_17_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:a15=[%s]\n",a15);
+    printf("C:a16=[%s]\n",a16);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
+ 
 // to call func 18 params
 int callbackfunc_18(callbackfunc_18_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16,char* a17)
 {
-    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17);
+    int retv;
+    retv = pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:a15=[%s]\n",a15);
+    printf("C:a16=[%s]\n",a16);
+    printf("C:a17=[%s]\n",a17);
+    printf("C:retv=%d\n",retv);
+    return retv;
 }
