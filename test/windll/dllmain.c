@@ -1198,3 +1198,100 @@ char* strfunc_18(char* a0, char* a1, char* a2, char* a3, char* a4, char* a5, cha
     printf("pret %p\n",pret);
     return pret;
 }
+
+
+// to call func 0 params
+int callbackfunc_0(callbackfunc_0_func_t pfunc)
+{
+    return pfunc();
+}
+// to call func 1 params
+int callbackfunc_1(callbackfunc_1_func_t pfunc,char* a0)
+{
+    return pfunc(a0);
+}
+// to call func 2 params
+int callbackfunc_2(callbackfunc_2_func_t pfunc,char* a0,char* a1)
+{
+    return pfunc(a0,a1);
+}
+// to call func 3 params
+int callbackfunc_3(callbackfunc_3_func_t pfunc,char* a0,char* a1,char* a2)
+{
+    return pfunc(a0,a1,a2);
+}
+// to call func 4 params
+int callbackfunc_4(callbackfunc_4_func_t pfunc,char* a0,char* a1,char* a2,char* a3)
+{
+    return pfunc(a0,a1,a2,a3);
+}
+// to call func 5 params
+int callbackfunc_5(callbackfunc_5_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4)
+{
+    return pfunc(a0,a1,a2,a3,a4);
+}
+// to call func 6 params
+int callbackfunc_6(callbackfunc_6_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5);
+}
+// to call func 7 params
+int callbackfunc_7(callbackfunc_7_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6);
+}
+// to call func 8 params
+int callbackfunc_8(callbackfunc_8_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7);
+}
+// to call func 9 params
+int callbackfunc_9(callbackfunc_9_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8);
+}
+// to call func 10 params
+int callbackfunc_10(callbackfunc_10_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9);
+}
+// to call func 11 params
+int callbackfunc_11(callbackfunc_11_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10);
+}
+// to call func 12 params
+int callbackfunc_12(callbackfunc_12_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11);
+}
+// to call func 13 params
+int callbackfunc_13(callbackfunc_13_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12);
+}
+// to call func 14 params
+int callbackfunc_14(callbackfunc_14_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13);
+}
+// to call func 15 params
+int callbackfunc_15(callbackfunc_15_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14);
+}
+// to call func 16 params
+int callbackfunc_16(callbackfunc_16_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15);
+}
+// to call func 17 params
+int callbackfunc_17(callbackfunc_17_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16);
+}
+// to call func 18 params
+int callbackfunc_18(callbackfunc_18_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16,char* a17)
+{
+    return pfunc(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17);
+}

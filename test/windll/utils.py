@@ -321,6 +321,88 @@ def genstrfunc_handler(args,parser):
     return
 
 
+def gencallbackdecl_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'callbackfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+    idx = 0
+    outs = ''
+    ins = ''
+    while idx < num:
+        # to generate the declare
+        if len(outs) > 0:
+            outs += format_tab_line(0,' ')
+        outs += format_tab_line(0,'// to generate callback with %d'%(idx))
+        ins = ''
+        jdx = 0
+        while jdx < idx:
+            if len(ins) > 0:
+                ins += ','
+            ins += 'char* a%d'%(jdx)
+            jdx += 1
+        outs += format_tab_line(0,'typedef int (%s_%d_func_t)(%s);'%(prefix,idx,ins))
+        idx += 1
+
+    outs += format_tab_line(0,' ')
+    outs += format_tab_line(0,' ')
+    idx = 0
+    while idx < num:
+
+        ins = ''
+        jdx = 0
+        while jdx < idx:
+            ins += ','
+            ins += 'char* a%d'%(jdx)
+            jdx += 1
+        outs += format_tab_line(0,'WINLIB_API int %s_%d(%s_%d_func_t pfunc%s);'%(prefix,idx,prefix,idx,ins))
+
+        idx += 1
+
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
+
+def gencallbackfunc_handler(args,parser):
+    set_logging(args)
+    logging.info('call gencallbackfunc_handler')
+    num = 10
+    prefix = 'callbackfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+    outs = ''
+    idx = 0
+    while idx < num:
+        outs += format_tab_line(0,'// to call func %d params'%(idx))
+        ins = ''
+        jdx = 0
+        while jdx < idx:
+            ins += ','
+            ins += 'char* a%d'%(jdx)
+            jdx += 1
+        outs += format_tab_line(0,'int %s_%d(%s_%d_func_t pfunc%s)'%(prefix,idx,prefix,idx,ins))
+        outs += format_tab_line(0,'{')
+        ins = ''
+        jdx = 0
+        while jdx < idx:
+            if len(ins) > 0:
+                ins += ','
+            ins += 'a%d'%(jdx)
+            jdx += 1
+        outs += format_tab_line(1,'return pfunc(%s);'%(ins))
+        outs += format_tab_line(0,'}')
+        idx += 1
+    write_file(outs,args.output)
+    sys.exit(0)
+    return
+
+
 def main():
     commandline='''
     {
@@ -342,6 +424,12 @@ def main():
             "$" : "*"
         },
         "genstrfunc<genstrfunc_handler>##[num] [prefix] to generate function with default prefix print num default 10##" : {
+            "$" : "*"
+        },
+        "gencallbackdecl<gencallbackdecl_handler>##[num] [prefix] to generate function with call back functions##" : {
+            "$" : "*"
+        },
+        "gencallbackfunc<gencallbackfunc_handler>##[num] [prefix] to generate function with call back functions##" : {
             "$" : "*"
         }
     }
