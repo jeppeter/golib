@@ -147,6 +147,27 @@ int callbackfunc_17(callbackfunc_17_func_t pfunc,char* a0,char* a1,char* a2,char
 int callbackfunc_18(callbackfunc_18_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16,char* a17);
 
 
+typedef int (*stkcallbackfunc_func_t)(int size,char** pargs);
+int stkcallbackfunc_0(stkcallbackfunc_func_t pfunc);
+int stkcallbackfunc_1(stkcallbackfunc_func_t pfunc,char* a0);
+int stkcallbackfunc_2(stkcallbackfunc_func_t pfunc,char* a0,char* a1);
+int stkcallbackfunc_3(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2);
+int stkcallbackfunc_4(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3);
+int stkcallbackfunc_5(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4);
+int stkcallbackfunc_6(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5);
+int stkcallbackfunc_7(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6);
+int stkcallbackfunc_8(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7);
+int stkcallbackfunc_9(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8);
+int stkcallbackfunc_10(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9);
+int stkcallbackfunc_11(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10);
+int stkcallbackfunc_12(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11);
+int stkcallbackfunc_13(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12);
+int stkcallbackfunc_14(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13);
+int stkcallbackfunc_15(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14);
+int stkcallbackfunc_16(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15);
+int stkcallbackfunc_17(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16);
+
+
 #ifdef __cplusplus
 };
 #endif /* __cplusplus*/

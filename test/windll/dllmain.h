@@ -156,6 +156,26 @@ WINLIB_API int callbackfunc_17(callbackfunc_17_func_t pfunc,char* a0,char* a1,ch
 WINLIB_API int callbackfunc_18(callbackfunc_18_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16,char* a17);
 
 
+typedef int (*stkcallbackfunc_func_t)(int size,char** pargs);
+WINLIB_API int stkcallbackfunc_0(stkcallbackfunc_func_t pfunc);
+WINLIB_API int stkcallbackfunc_1(stkcallbackfunc_func_t pfunc,char* a0);
+WINLIB_API int stkcallbackfunc_2(stkcallbackfunc_func_t pfunc,char* a0,char* a1);
+WINLIB_API int stkcallbackfunc_3(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2);
+WINLIB_API int stkcallbackfunc_4(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3);
+WINLIB_API int stkcallbackfunc_5(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4);
+WINLIB_API int stkcallbackfunc_6(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5);
+WINLIB_API int stkcallbackfunc_7(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6);
+WINLIB_API int stkcallbackfunc_8(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7);
+WINLIB_API int stkcallbackfunc_9(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8);
+WINLIB_API int stkcallbackfunc_10(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9);
+WINLIB_API int stkcallbackfunc_11(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10);
+WINLIB_API int stkcallbackfunc_12(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11);
+WINLIB_API int stkcallbackfunc_13(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12);
+WINLIB_API int stkcallbackfunc_14(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13);
+WINLIB_API int stkcallbackfunc_15(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14);
+WINLIB_API int stkcallbackfunc_16(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15);
+WINLIB_API int stkcallbackfunc_17(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16);
+
 
 #ifdef __cplusplus
 };

@@ -1541,3 +1541,471 @@ int callbackfunc_18(callbackfunc_18_func_t pfunc,char* a0,char* a1,char* a2,char
     printf("C:retv=%d\n",retv);
     return retv;
 }
+
+
+int stkcallbackfunc_0(stkcallbackfunc_func_t pfunc)
+{
+    int ret;
+    ret = pfunc(0,NULL);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_1(stkcallbackfunc_func_t pfunc,char* a0)
+{
+    int ret;
+    char* stks[2];
+    stks[0]=a0;
+     
+    ret = pfunc(1,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_2(stkcallbackfunc_func_t pfunc,char* a0,char* a1)
+{
+    int ret;
+    char* stks[3];
+    stks[0]=a0;
+    stks[1]=a1;
+     
+    ret = pfunc(2,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_3(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2)
+{
+    int ret;
+    char* stks[4];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+     
+    ret = pfunc(3,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_4(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3)
+{
+    int ret;
+    char* stks[5];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+     
+    ret = pfunc(4,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_5(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4)
+{
+    int ret;
+    char* stks[6];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+     
+    ret = pfunc(5,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_6(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5)
+{
+    int ret;
+    char* stks[7];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+     
+    ret = pfunc(6,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_7(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6)
+{
+    int ret;
+    char* stks[8];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+     
+    ret = pfunc(7,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_8(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7)
+{
+    int ret;
+    char* stks[9];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+     
+    ret = pfunc(8,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_9(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8)
+{
+    int ret;
+    char* stks[10];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+     
+    ret = pfunc(9,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_10(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9)
+{
+    int ret;
+    char* stks[11];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+     
+    ret = pfunc(10,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_11(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10)
+{
+    int ret;
+    char* stks[12];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+     
+    ret = pfunc(11,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_12(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11)
+{
+    int ret;
+    char* stks[13];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+     
+    ret = pfunc(12,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_13(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12)
+{
+    int ret;
+    char* stks[14];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+     
+    ret = pfunc(13,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_14(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13)
+{
+    int ret;
+    char* stks[15];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+     
+    ret = pfunc(14,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_15(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14)
+{
+    int ret;
+    char* stks[16];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+    stks[14]=a14;
+     
+    ret = pfunc(15,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_16(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15)
+{
+    int ret;
+    char* stks[17];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+    stks[14]=a14;
+    stks[15]=a15;
+     
+    ret = pfunc(16,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:a15=[%s]\n",a15);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
+int stkcallbackfunc_17(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16)
+{
+    int ret;
+    char* stks[18];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+    stks[14]=a14;
+    stks[15]=a15;
+    stks[16]=a16;
+     
+    ret = pfunc(17,stks);
+    printf("C:a0=[%s]\n",a0);
+    printf("C:a1=[%s]\n",a1);
+    printf("C:a2=[%s]\n",a2);
+    printf("C:a3=[%s]\n",a3);
+    printf("C:a4=[%s]\n",a4);
+    printf("C:a5=[%s]\n",a5);
+    printf("C:a6=[%s]\n",a6);
+    printf("C:a7=[%s]\n",a7);
+    printf("C:a8=[%s]\n",a8);
+    printf("C:a9=[%s]\n",a9);
+    printf("C:a10=[%s]\n",a10);
+    printf("C:a11=[%s]\n",a11);
+    printf("C:a12=[%s]\n",a12);
+    printf("C:a13=[%s]\n",a13);
+    printf("C:a14=[%s]\n",a14);
+    printf("C:a15=[%s]\n",a15);
+    printf("C:a16=[%s]\n",a16);
+    printf("C:ret=%d\n",ret);
+    return ret;
+}
