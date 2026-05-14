@@ -1983,3 +1983,471 @@ int stkcallbackfunc_17(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,c
     printf("C:ret=%d\n",ret);
     return ret;
 }
+
+
+int datastkcallbackfunc_0(datastkcallbackfunc_func_t pfunc,void* args)
+{
+    int ret;
+    ret = pfunc(args,0,NULL);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_1(datastkcallbackfunc_func_t pfunc,void* args,char* a0)
+{
+    int ret;
+    char* stks[2];
+    stks[0]=a0;
+     
+    ret = pfunc(args,1,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_2(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1)
+{
+    int ret;
+    char* stks[3];
+    stks[0]=a0;
+    stks[1]=a1;
+     
+    ret = pfunc(args,2,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_3(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2)
+{
+    int ret;
+    char* stks[4];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+     
+    ret = pfunc(args,3,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_4(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3)
+{
+    int ret;
+    char* stks[5];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+     
+    ret = pfunc(args,4,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_5(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4)
+{
+    int ret;
+    char* stks[6];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+     
+    ret = pfunc(args,5,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_6(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5)
+{
+    int ret;
+    char* stks[7];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+     
+    ret = pfunc(args,6,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_7(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6)
+{
+    int ret;
+    char* stks[8];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+     
+    ret = pfunc(args,7,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_8(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7)
+{
+    int ret;
+    char* stks[9];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+     
+    ret = pfunc(args,8,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_9(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8)
+{
+    int ret;
+    char* stks[10];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+     
+    ret = pfunc(args,9,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_10(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9)
+{
+    int ret;
+    char* stks[11];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+     
+    ret = pfunc(args,10,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_11(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10)
+{
+    int ret;
+    char* stks[12];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+     
+    ret = pfunc(args,11,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_12(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11)
+{
+    int ret;
+    char* stks[13];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+     
+    ret = pfunc(args,12,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:a11=[%s]\n",__func__,a11);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_13(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12)
+{
+    int ret;
+    char* stks[14];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+     
+    ret = pfunc(args,13,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:a11=[%s]\n",__func__,a11);
+    printf("C:%s:a12=[%s]\n",__func__,a12);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_14(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13)
+{
+    int ret;
+    char* stks[15];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+     
+    ret = pfunc(args,14,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:a11=[%s]\n",__func__,a11);
+    printf("C:%s:a12=[%s]\n",__func__,a12);
+    printf("C:%s:a13=[%s]\n",__func__,a13);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_15(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14)
+{
+    int ret;
+    char* stks[16];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+    stks[14]=a14;
+     
+    ret = pfunc(args,15,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:a11=[%s]\n",__func__,a11);
+    printf("C:%s:a12=[%s]\n",__func__,a12);
+    printf("C:%s:a13=[%s]\n",__func__,a13);
+    printf("C:%s:a14=[%s]\n",__func__,a14);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_16(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15)
+{
+    int ret;
+    char* stks[17];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+    stks[14]=a14;
+    stks[15]=a15;
+     
+    ret = pfunc(args,16,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:a11=[%s]\n",__func__,a11);
+    printf("C:%s:a12=[%s]\n",__func__,a12);
+    printf("C:%s:a13=[%s]\n",__func__,a13);
+    printf("C:%s:a14=[%s]\n",__func__,a14);
+    printf("C:%s:a15=[%s]\n",__func__,a15);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}
+int datastkcallbackfunc_17(datastkcallbackfunc_func_t pfunc,void* args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16)
+{
+    int ret;
+    char* stks[18];
+    stks[0]=a0;
+    stks[1]=a1;
+    stks[2]=a2;
+    stks[3]=a3;
+    stks[4]=a4;
+    stks[5]=a5;
+    stks[6]=a6;
+    stks[7]=a7;
+    stks[8]=a8;
+    stks[9]=a9;
+    stks[10]=a10;
+    stks[11]=a11;
+    stks[12]=a12;
+    stks[13]=a13;
+    stks[14]=a14;
+    stks[15]=a15;
+    stks[16]=a16;
+     
+    ret = pfunc(args,17,stks);
+    printf("C:%s:a0=[%s]\n",__func__,a0);
+    printf("C:%s:a1=[%s]\n",__func__,a1);
+    printf("C:%s:a2=[%s]\n",__func__,a2);
+    printf("C:%s:a3=[%s]\n",__func__,a3);
+    printf("C:%s:a4=[%s]\n",__func__,a4);
+    printf("C:%s:a5=[%s]\n",__func__,a5);
+    printf("C:%s:a6=[%s]\n",__func__,a6);
+    printf("C:%s:a7=[%s]\n",__func__,a7);
+    printf("C:%s:a8=[%s]\n",__func__,a8);
+    printf("C:%s:a9=[%s]\n",__func__,a9);
+    printf("C:%s:a10=[%s]\n",__func__,a10);
+    printf("C:%s:a11=[%s]\n",__func__,a11);
+    printf("C:%s:a12=[%s]\n",__func__,a12);
+    printf("C:%s:a13=[%s]\n",__func__,a13);
+    printf("C:%s:a14=[%s]\n",__func__,a14);
+    printf("C:%s:a15=[%s]\n",__func__,a15);
+    printf("C:%s:a16=[%s]\n",__func__,a16);
+    printf("C:%s:ret=%d\n",__func__,ret);
+    return ret;
+}

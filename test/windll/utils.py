@@ -477,6 +477,73 @@ def genstkcallfunc_handler(args,parser):
     sys.exit(0)
     return
 
+def genptrstkcalldecl_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'datastkcallbackfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+    outs = ''
+    idx = 0
+    outs += format_tab_line(0,'typedef int (*%s_func_t)(void* args,int size,char** pargs);'%(prefix))
+    while idx < num:
+        ins = ''
+        jdx = 0
+        while jdx < idx:
+            ins += ','
+            ins += 'char* a%d'%(jdx)
+            jdx += 1
+        outs += format_tab_line(0,'WINLIB_API int %s_%d(%s_func_t pfunc,void*args%s);'%(prefix,idx,prefix,ins))
+        idx += 1
+    write_file(outs, args.output)
+    sys.exit(0)
+    return
+
+def genptrstkcallfunc_handler(args,parser):
+    set_logging(args)
+    num = 10
+    prefix = 'datastkcallbackfunc'
+    if len(args.subnargs) > 0:
+        num = parse_int(args.subnargs[0])
+    if len(args.subnargs) > 1:
+        prefix = args.subnargs[1]
+    outs = ''
+    idx = 0
+    while idx < num:
+        ins = ''
+        jdx = 0
+        while jdx < idx:
+            ins += ','
+            ins += 'char* a%d'%(jdx)
+            jdx += 1
+        outs += format_tab_line(0,'int %s_%d(%s_func_t pfunc,void* args%s)'%(prefix,idx,prefix,ins))
+        outs += format_tab_line(0,'{')
+        outs += format_tab_line(1,'int ret;')
+        if idx > 0:
+            outs += format_tab_line(1,'char* stks[%d];'%(idx +1))
+            jdx = 0
+            while jdx < idx:
+                outs += format_tab_line(1,'stks[%d]=a%d;'%(jdx,jdx))
+                jdx += 1
+            outs += format_tab_line(1,' ')
+            outs += format_tab_line(1,'ret = pfunc(args,%d,stks);'%(idx))
+            jdx = 0
+            while jdx < idx:
+                outs += format_tab_line(1,'printf("C:%%s:a%d=[%%s]\\n",__func__,a%d);'%(jdx,jdx))
+                jdx += 1
+        else:
+            outs += format_tab_line(1,'ret = pfunc(args,0,NULL);')
+        outs += format_tab_line(1,'printf("C:%s:ret=%d\\n",__func__,ret);')
+        outs += format_tab_line(1,'return ret;')
+        outs += format_tab_line(0,'}')
+        idx += 1
+    write_file(outs, args.output)
+    sys.exit(0)
+    return
+
+
 
 def main():
     commandline='''
@@ -511,6 +578,12 @@ def main():
             "$" : "*"
         },
         "genstkcallfunc<genstkcallfunc_handler>##[num] [prefix] to generate function declaration with callback for function##" : {
+            "$" : "*"
+        },
+        "gendatastkcalldecl<genptrstkcalldecl_handler>##[num] [prefix] to generate pointer for data function declaration with callback for function##" : {
+            "$" : "*"
+        },
+        "gendatastkcallfunc<genptrstkcallfunc_handler>##[num] [prefix] to generate pointer for data function declaration with callback for function##" : {
             "$" : "*"
         }
     }

@@ -167,6 +167,26 @@ int stkcallbackfunc_15(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,c
 int stkcallbackfunc_16(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15);
 int stkcallbackfunc_17(stkcallbackfunc_func_t pfunc,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15,char* a16);
 
+typedef int (*datastkcallbackfunc_func_t)(void* args,int size,char** pargs);
+int datastkcallbackfunc_0(datastkcallbackfunc_func_t pfunc,void*args);
+int datastkcallbackfunc_1(datastkcallbackfunc_func_t pfunc,void*args,char* a0);
+int datastkcallbackfunc_2(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1);
+int datastkcallbackfunc_3(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2);
+int datastkcallbackfunc_4(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3);
+int datastkcallbackfunc_5(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4);
+int datastkcallbackfunc_6(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5);
+int datastkcallbackfunc_7(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6);
+int datastkcallbackfunc_8(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7);
+int datastkcallbackfunc_9(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8);
+int datastkcallbackfunc_10(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9);
+int datastkcallbackfunc_11(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10);
+int datastkcallbackfunc_12(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11);
+int datastkcallbackfunc_13(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12);
+int datastkcallbackfunc_14(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13);
+int datastkcallbackfunc_15(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14);
+int datastkcallbackfunc_16(datastkcallbackfunc_func_t pfunc,void*args,char* a0,char* a1,char* a2,char* a3,char* a4,char* a5,char* a6,char* a7,char* a8,char* a9,char* a10,char* a11,char* a12,char* a13,char* a14,char* a15);
+
+
 
 #ifdef __cplusplus
 };
