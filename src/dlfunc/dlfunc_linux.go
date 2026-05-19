@@ -2,6 +2,7 @@ package dlfunc
 
 import (
 	"fmt"
+	"runtime"
 	"unsafe"
 )
 
@@ -189,6 +190,7 @@ func LoadDll(name string) (retptr *DllLib, err error) {
 	retptr = &DllLib{}
 	retptr.hdl = libptr
 	retptr.Name = name
+	runtime.SetFinalizer(retptr, (*DllLib).Close)
 	err = nil
 	return
 }
@@ -221,6 +223,7 @@ func (ptr *DllLib) GetFunc(procname string) (retptr *DllFunc, err error) {
 	retptr.funcptr = funcaddr
 	retptr.libptr = ptr
 	retptr.procname = procname
+	runtime.SetFinalizer(retptr, (*DllFunc).Close)
 	err = nil
 	return
 }
@@ -234,6 +237,13 @@ func make_input_var(num int, a ...uintptr) (retvar []C.ulong) {
 	for len(retvar) < num {
 		retvar = append(retvar, C.ulong(0))
 	}
+	return
+}
+
+func (fptr *DllFunc) Close() {
+	fptr.libptr = nil
+	fptr.funcptr = nil
+	fptr.procname = ""
 	return
 }
 

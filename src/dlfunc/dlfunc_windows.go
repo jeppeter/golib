@@ -2,6 +2,7 @@ package dlfunc
 
 import (
 	"fmt"
+	"runtime"
 	"syscall"
 	"unsafe"
 )
@@ -28,7 +29,7 @@ func LoadDll(name string) (retptr *DllLib, err error) {
 	retptr = &DllLib{}
 	retptr.hdl = hdl
 	retptr.Name = name
-
+	runtime.SetFinalizer(retptr, (*DllLib).Close)
 	err = nil
 	return
 }
@@ -56,7 +57,15 @@ func (ptr *DllLib) GetFunc(procname string) (retptr *DllFunc, err error) {
 	retptr.funcptr = unsafe.Pointer(funcaddr)
 	retptr.libptr = ptr
 	retptr.procname = procname
+	runtime.SetFinalizer(retptr, (*DllFunc).Close)
 	err = nil
+	return
+}
+
+func (fptr *DllFunc) Close() {
+	fptr.libptr = nil
+	fptr.funcptr = nil
+	fptr.procname = ""
 	return
 }
 
