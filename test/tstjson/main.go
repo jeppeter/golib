@@ -9,11 +9,60 @@ import (
 	"github.com/tebeka/atexit"
 	"jsonext"
 	"logutil"
+	"reflect"
 )
+
+type HuigouInfo struct {
+	SecurityCode       string  `json:"SECURITY_CODE"`
+	DeriveSecurity     string  `json:"DERIVE_SECURITY_CODE"`
+	SecurityName       string  `json:"SECURITY_NAME"`
+	ChangeDate         string  `json:"CHANGE_DATE"`
+	PersonName         string  `json:"PERSON_NAME"`
+	ChangeShares       int64   `json:"CHANGE_SHARES"`
+	AveragePrice       float64 `json:"AVERAGE_PRICE"`
+	ChangeAmount       float64 `json:"CHANGE_AMOUNT"`
+	ChangeReason       string  `json:"CHANGE_REASON"`
+	ChangeRatio        float64 `json:"CHANGE_RATIO"`
+	ChangeAfterHoldNum int64   `json:"CHANGE_AFTER_HOLDNUM"`
+	HoldType           string  `json:"HOLD_TYPE"`
+	DsePersonName      string  `json:"DSE_PERSON_NAME"`
+	PositionName       string  `json:"POSITION_NAME"`
+	PersonDseRelation  string  `json:"PERSON_DSE_RELATION"`
+	OrgCode            string  `json:"ORG_CODE"`
+	GGEid              string  `json:"GGEID"`
+	BeginHoldNum       int64   `json:"BEGIN_HOLD_NUM"`
+	EndHoldNum         int64   `json:"END_HOLD_NUM"`
+}
+
+func (hg *HuigouInfo) format_sql(typename string) (keys string, vals string, err error) {
+	var rf reflect.Value
+	var kname string
+	var val string
+	var kidx int = 0
+	var a *reflect.Value
+	var pt reflect.Type
+	var rf, vrf reflect.Value
+	err = nil
+	keys = "("
+	vals = "("
+
+	rf = reflect.ValueOf(a).Elem()
+	pt = rf.Type()
+	for i = 0; i < rf.NumField(); i += 1 {
+		kname = pt.Field(i).Name.ToLower()
+
+	}
+
+	keys += ")"
+	vals += ")"
+	return
+
+}
 
 func init() {
 	Testjsonload_handler(nil, nil, nil)
 	Repack_handler(nil, nil, nil)
+	Refvals_handler(nil, nil, nil)
 }
 
 type AliSmsConfig struct {
@@ -39,6 +88,9 @@ func LoadParser(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"repack<Repack_handler>##fname fromid fromval to repack##" : {
 			"$" : 3
+		},
+		"refvals<Refvals_handler>##infile to reflect values##" : {
+			"$" : 1
 		}
 	}`
 
@@ -186,6 +238,47 @@ func Repack_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	}
 
 	fmt.Printf("fname %s\n%s\nrepack\n%s\n", fname, string(fdata), outs)
+	err = nil
+	return
+}
+
+func Refvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var fname string
+	var fdata []byte
+	var outdata []byte
+	var retp *AliSmsConfig = nil
+	var fromptr *JsonFrom = nil
+	var outs string
+	var sarr []string
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 1 {
+		err = dbgutil.FormatError("need fname")
+		return
+	}
+
+	fname = sarr[0]
+	fdata, err = fileop.ReadFileBytes(fname)
+	if err != nil {
+		return
+	}
+
+	retp = &HuigouInfo{}
+
+	err = json.Unmarshal(fdata, retp)
+	if err != nil {
+		return
+	}
+
 	err = nil
 	return
 }

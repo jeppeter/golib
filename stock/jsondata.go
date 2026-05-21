@@ -32,6 +32,11 @@ type HuigouPage struct {
 	Count int64        `json:"count"`
 }
 
+func (hg *HuigouInfo) format_sql(typename string) (keys string, vals string, err error) {
+
+	return hg
+}
+
 func (hg *HuigouInfo) FormatInsert(dbname string) (outs string, err error) {
 	var keys string
 	var vals string
@@ -43,11 +48,17 @@ func (hg *HuigouInfo) FormatInsert(dbname string) (outs string, err error) {
 	keys += "changedate"
 	vals += fmt.Sprintf(`"%s"`, hg.ChangeDate)
 
+	keys += ",derivesecurity"
+	vals += fmt.Sprintf(`,"%s"`, hg.DeriveSecurity)
+
 	keys += ",securitycode"
 	vals += fmt.Sprintf(`,"%s"`, hg.SecurityCode)
 
-	keys += ",derivesecurity"
-	vals += fmt.Sprintf(`,"%s"`, hg.DeriveSecurity)
+	keys += ",securityname"
+	vals += fmt.Sprintf(`,"%s"`, hg.SecurityName)
+
+	keys += ",securityname"
+	vals += fmt.Sprintf(`,"%s"`, hg.SecurityName)
 
 	keys += ",changeshares"
 	vals += fmt.Sprintf(`, %d`, hg.ChangeShares)
