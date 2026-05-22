@@ -10,6 +10,10 @@ import (
 	"jsonext"
 	"logutil"
 	"reflect"
+	"regexp"
+	"strings"
+	"time"
+	"unsafe"
 )
 
 type HuigouInfo struct {
@@ -29,27 +33,93 @@ type HuigouInfo struct {
 	PositionName       string  `json:"POSITION_NAME"`
 	PersonDseRelation  string  `json:"PERSON_DSE_RELATION"`
 	OrgCode            string  `json:"ORG_CODE"`
-	GGEid              string  `json:"GGEID"`
+	GGEid              int64   `json:"GGEID"`
 	BeginHoldNum       int64   `json:"BEGIN_HOLD_NUM"`
 	EndHoldNum         int64   `json:"END_HOLD_NUM"`
 }
 
-func (hg *HuigouInfo) format_sql(typename string) (keys string, vals string, err error) {
-	var rf reflect.Value
+func (hg *HuigouInfo) get_epoch(s string) (rval int64, err error) {
+	var ntime time.Time
+	rval = 0
+
+	ntime, err = time.Parse(time.DateTime, s)
+	logutil.Debug("ntime %v s %s", ntime, s)
+	rval = ntime.Unix()
+
+	err = nil
+	return
+}
+
+func (hg *HuigouInfo) format_sql() (keys string, vals string, err error) {
 	var kname string
-	var val string
-	var kidx int = 0
-	var a *reflect.Value
 	var pt reflect.Type
 	var rf, vrf reflect.Value
+	var i int
+	var types string
+	var reg *regexp.Regexp
+	var bmatch bool
+	var iv64 int64
+	var fv64 float64
+	var s string
+	var ok bool
+
+	reg, err = regexp.Compile(".*date.*")
+
 	err = nil
 	keys = "("
 	vals = "("
 
-	rf = reflect.ValueOf(a).Elem()
+	rf = reflect.ValueOf(hg).Elem()
 	pt = rf.Type()
 	for i = 0; i < rf.NumField(); i += 1 {
-		kname = pt.Field(i).Name.ToLower()
+		kname = strings.ToLower(pt.Field(i).Name)
+		types = pt.Field(i).Type.String()
+
+		if i > 0 {
+			keys += ","
+			vals += ","
+		}
+
+		vrf = rf.Field(i)
+		vrf = reflect.NewAt(vrf.Type(), unsafe.Pointer(vrf.UnsafeAddr())).Elem()
+
+		if types == "int64" {
+			iv64, ok = vrf.Interface().(int64)
+			if !ok {
+				err = dbgutil.FormatError("%s not int64", kname)
+				return
+			}
+			keys += kname
+			vals += fmt.Sprintf("%d", iv64)
+		} else if types == "string" {
+			/**/
+			s, ok = vrf.Interface().(string)
+			if !ok {
+				err = dbgutil.FormatError("%s not string", kname)
+				return
+			}
+			bmatch = reg.MatchString(kname)
+			if bmatch {
+				iv64, err = hg.get_epoch(s)
+				if err != nil {
+					return
+				}
+				keys += kname
+				vals += fmt.Sprintf("%d", iv64)
+			} else {
+				keys += kname
+				vals += fmt.Sprintf(`"%s"`, s)
+			}
+
+		} else if types == "float64" {
+			fv64, ok = vrf.Interface().(float64)
+			if !ok {
+				err = dbgutil.FormatError("%s not float64", kname)
+				return
+			}
+			keys += kname
+			vals += fmt.Sprintf("%f", fv64)
+		}
 
 	}
 
@@ -245,11 +315,9 @@ func Repack_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 func Refvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var fname string
 	var fdata []byte
-	var outdata []byte
-	var retp *AliSmsConfig = nil
-	var fromptr *JsonFrom = nil
-	var outs string
 	var sarr []string
+	var keys, vals string
+	var retp *HuigouInfo
 	if ns == nil {
 		err = nil
 		return
@@ -278,6 +346,13 @@ func Refvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	if err != nil {
 		return
 	}
+
+	keys, vals, err = retp.format_sql()
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("keys \n%s\nvals\n%s\n", keys, vals)
 
 	err = nil
 	return
