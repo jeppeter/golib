@@ -50,7 +50,7 @@ func (hg *HuigouInfo) get_epoch(s string) (rval int64, err error) {
 	return
 }
 
-func (hg *HuigouInfo) format_create_table(table string) (outs string, err error) {
+func (hg *HuigouInfo) FormatCreateTable(table string) (outs string, err error) {
 	var kname string
 	var pt reflect.Type
 	var rf reflect.Value
@@ -97,7 +97,7 @@ func (hg *HuigouInfo) format_create_table(table string) (outs string, err error)
 	return
 }
 
-func (hg *HuigouInfo) format_sql() (keys string, vals string, err error) {
+func (hg *HuigouInfo) FormatInsert() (keys string, vals string, err error) {
 	var kname string
 	var pt reflect.Type
 	var rf, vrf reflect.Value
@@ -173,7 +173,6 @@ func (hg *HuigouInfo) format_sql() (keys string, vals string, err error) {
 	keys += ")"
 	vals += ")"
 	return
-
 }
 
 func init() {
@@ -395,12 +394,12 @@ func Refvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 		return
 	}
 
-	keys, vals, err = retp.format_sql()
+	keys, vals, err = retp.FormatInsert()
 	if err != nil {
 		return
 	}
 
-	creates, err = retp.format_create_table("huigou")
+	creates, err = retp.FormatCreateTable("huigou")
 	if err != nil {
 		return
 	}

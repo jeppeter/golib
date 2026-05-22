@@ -1,7 +1,15 @@
 package main
 
 import (
-	"json"
+	"dbgutil"
+	"fmt"
+	"logutil"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+	"unsafe"
 )
 
 type HuigouInfo struct {
@@ -31,7 +39,7 @@ func (hg *HuigouInfo) get_epoch(s string) (rval int64, err error) {
 	rval = 0
 
 	ntime, err = time.Parse(time.DateTime, s)
-	logutil.Debug("ntime %v s %s", ntime, s)
+	//logutil.Debug("ntime %v s %s", ntime, s)
 	rval = ntime.Unix()
 
 	err = nil
@@ -142,6 +150,7 @@ func (hg *HuigouInfo) FormatInsert() (keys string, vals string, err error) {
 				keys += kname
 				vals += fmt.Sprintf("%d", iv64)
 			} else {
+				s = strings.Replace(s, "\"", "", -1)
 				keys += kname
 				vals += fmt.Sprintf(`"%s"`, s)
 			}
@@ -161,6 +170,80 @@ func (hg *HuigouInfo) FormatInsert() (keys string, vals string, err error) {
 	keys += ")"
 	vals += ")"
 	return
+}
+
+func NewFromSqlResult(vals []string, cols []string) (retp *HuigouInfo, err error) {
+	var idx int = 0
+	var jdx int = 0
+	var matched bool
+	var pt reflect.Type
+	var rf, vrf reflect.Value
+	var colname, kname string
+	var types string
+	var iv64 int64
+	var fv64 float64
+
+	retp = &HuigouInfo{}
+
+	rf = reflect.ValueOf(retp).Elem()
+	pt = rf.Type()
+
+	for idx = 0; idx < len(cols); idx += 1 {
+		colname = cols[idx]
+		matched = false
+		for jdx = 0; jdx < rf.NumField(); jdx += 1 {
+			kname = strings.ToLower(pt.Field(jdx).Name)
+			if kname == colname {
+				/**/
+				types = pt.Field(jdx).Type.String()
+
+				vrf = rf.Field(jdx)
+				vrf = reflect.NewAt(vrf.Type(), unsafe.Pointer(vrf.UnsafeAddr())).Elem()
+
+				if types == "int64" {
+					/*now we should give the int*/
+					iv64, err = strconv.ParseInt(vals[idx], 10, 64)
+					if err != nil {
+						logutil.Error("parse [%s] %s error %s", kname, vals[idx], err.Error())
+						return
+					}
+					vrf.Set(reflect.ValueOf(iv64))
+				} else if types == "float64" {
+					fv64, err = strconv.ParseFloat(vals[idx], 64)
+					if err != nil {
+						logutil.Error("parse [%s] %s error %s", kname, vals[idx], err.Error())
+						return
+					}
+					vrf.Set(reflect.ValueOf(fv64))
+				} else if types == "string" {
+					if kname == "changedate" {
+						iv64, err = strconv.ParseInt(vals[idx], 10, 64)
+						if err != nil {
+							logutil.Error("parse [%s] %s error %s", kname, vals[idx], err.Error())
+							return
+						}
+
+						/*now to parse*/
+						var curtime time.Time
+						curtime = time.Unix(iv64, 0)
+						retp.ChangeDate = curtime.Format(time.DateTime)
+					} else {
+						vrf.Set(reflect.ValueOf(vals[idx]))
+					}
+				}
+
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			logutil.Debug("not matched %s", colname)
+		}
+	}
+
+	err = nil
+	return
 
 }
 
@@ -168,4 +251,35 @@ type HuigouPage struct {
 	Data  []HuigouInfo `json:"data"`
 	Pages int64        `json:"pages"`
 	Count int64        `json:"count"`
+}
+
+type HuigouCompact struct {
+	SecurityCode string   `json:"SECURITY_CODE"`
+	ChangeShares int64    `json:"CHANGE_SHARES"`
+	ChangeAmount float64  `json:"CHANGE_AMOUNT"`
+	ChangeDates  []string `json:"CHANGE_DATES"`
+}
+
+type HuigouCompactPage struct {
+	Data    map[string]*HuigouCompact `json:"data"`
+	Verbose int
+}
+
+func (hp *HuigouCompactPage) Close() {
+	hp.Data = make(map[string]*HuigouCompact)
+	return
+}
+
+type HuigouCompactArray []*HuigouCompact
+
+func (a HuigouCompactArray) Len() int {
+	return len(a)
+}
+
+func (a HuigouCompactArray) Less(i, j int) bool {
+	return a[i].ChangeAmount > a[j].ChangeAmount
+}
+
+func (a HuigouCompactArray) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
 }

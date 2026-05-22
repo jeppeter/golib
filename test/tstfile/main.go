@@ -7,11 +7,13 @@ import (
 	"github.com/tebeka/atexit"
 	"logutil"
 	"os"
+	"path/filepath"
 )
 
 func init() {
 	Tempfile_handler(nil, nil, nil)
 	Tempdir_handler(nil, nil, nil)
+	Walkdir_handler(nil, nil, nil)
 }
 
 func Tempfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -81,6 +83,34 @@ func Tempdir_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	return
 }
 
+func Walkdir_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var idx int
+	var curdir string
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+
+	for idx = 0; idx < len(sarr); idx += 1 {
+		curdir = sarr[idx]
+		err = filepath.Walk(curdir, func(curn string, info os.FileInfo, err2 error) error {
+			fmt.Printf("curdir [%s] curn %s\n", curdir, curn)
+			return nil
+		})
+	}
+	err = nil
+	return
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -95,6 +125,9 @@ func main() {
 			"$" : "+"
 		},
 		"tempdir<Tempdir_handler>##pattern to create file##" : {
+			"$" : "+"
+		},
+		"walkdir<Walkdir_handler>##dir... to scan dir##" : {
 			"$" : "+"
 		}
 
