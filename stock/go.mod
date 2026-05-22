@@ -12,7 +12,7 @@ require (
 	dbgutil v0.0.0-00010101000000-000000000000
 	fileop v0.0.0-00010101000000-000000000000
 	github.com/jeppeter/go-extargsparse v1.0.0
-	github.com/jeppeter/go-sqlite3dyn v1.0.1
+	github.com/jeppeter/go-sqlite3dyn v1.0.2
 	github.com/tebeka/atexit v0.3.0
 	logutil v0.0.0-00010101000000-000000000000
 )

@@ -87,6 +87,7 @@ func Walkdir_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var sarr []string
 	var idx int
 	var curdir string
+	var totaln int = 0
 	err = nil
 
 	if ns == nil {
@@ -103,10 +104,14 @@ func Walkdir_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	for idx = 0; idx < len(sarr); idx += 1 {
 		curdir = sarr[idx]
 		err = filepath.Walk(curdir, func(curn string, info os.FileInfo, err2 error) error {
+			if !info.IsDir() {
+				totaln += 1
+			}
 			fmt.Printf("curdir [%s] curn %s\n", curdir, curn)
 			return nil
 		})
 	}
+	fmt.Printf("totaln %d\n", totaln)
 	err = nil
 	return
 }

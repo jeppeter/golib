@@ -308,6 +308,7 @@ func get_pact_info(ptr uintptr, vals []string, cols []string) (err error) {
 	}
 
 	/*now we should check */
+	//logutil.Debug("pactpage %p", pactpage)
 	curpact, ok = pactpage.Data[info.SecurityCode]
 	if ok {
 		/*now to insert into */
