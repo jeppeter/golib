@@ -386,12 +386,12 @@ func Sqltime_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	stime = ns.GetString("starttime")
 	etime = ns.GetString("endtime")
 
-	st, err = time.Parse(time.DateTime, stime)
+	st, err = get_time_from_str(stime)
 	if err != nil {
 		err = dbgutil.FormatError("parse [%s] time error %s", stime, err.Error())
 		return
 	}
-	et, err = time.Parse(time.DateTime, etime)
+	et, err = get_time_from_str(etime)
 	if err != nil {
 		err = dbgutil.FormatError("parse [%s] time error %s", etime, err.Error())
 		return

@@ -38,7 +38,7 @@ func (hg *HuigouInfo) get_epoch(s string) (rval int64, err error) {
 	var ntime time.Time
 	rval = 0
 
-	ntime, err = time.Parse(time.DateTime, s)
+	ntime, err = get_time_from_str(s)
 	//logutil.Debug("ntime %v s %s", ntime, s)
 	rval = ntime.Unix()
 
