@@ -50,6 +50,53 @@ func (hg *HuigouInfo) get_epoch(s string) (rval int64, err error) {
 	return
 }
 
+func (hg *HuigouInfo) format_create_table(table string) (outs string, err error) {
+	var kname string
+	var pt reflect.Type
+	var rf reflect.Value
+	var i int
+	var types string
+	var reg *regexp.Regexp
+	var bmatch bool
+
+	reg, err = regexp.Compile(".*date.*")
+
+	err = nil
+	outs = ""
+	outs += fmt.Sprintf("create table %s (", table)
+
+	rf = reflect.ValueOf(hg).Elem()
+	pt = rf.Type()
+	for i = 0; i < rf.NumField(); i += 1 {
+		kname = strings.ToLower(pt.Field(i).Name)
+		types = pt.Field(i).Type.String()
+
+		if i > 0 {
+			outs += ","
+		}
+
+		if types == "int64" {
+			outs += fmt.Sprintf("%s int64", kname)
+		} else if types == "string" {
+			/**/
+			bmatch = reg.MatchString(kname)
+			if bmatch {
+				outs += fmt.Sprintf("%s int64", kname)
+			} else {
+				outs += fmt.Sprintf("%s text", kname)
+			}
+
+		} else if types == "float64" {
+			outs += fmt.Sprintf("%s double", kname)
+		}
+
+	}
+	outs += ")"
+
+	err = nil
+	return
+}
+
 func (hg *HuigouInfo) format_sql() (keys string, vals string, err error) {
 	var kname string
 	var pt reflect.Type
@@ -317,6 +364,7 @@ func Refvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 	var fdata []byte
 	var sarr []string
 	var keys, vals string
+	var creates string
 	var retp *HuigouInfo
 	if ns == nil {
 		err = nil
@@ -352,7 +400,13 @@ func Refvals_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inte
 		return
 	}
 
+	creates, err = retp.format_create_table("huigou")
+	if err != nil {
+		return
+	}
+
 	fmt.Printf("keys \n%s\nvals\n%s\n", keys, vals)
+	fmt.Printf("create sql\n%s\n", creates)
 
 	err = nil
 	return
