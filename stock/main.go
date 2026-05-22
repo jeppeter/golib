@@ -270,6 +270,7 @@ func Sqlcreate_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	}
 	conn, err = sqlite3dyn.ConnSqlite3(sarr[0])
 	if err != nil {
+		logutil.Error("open error")
 		return
 	}
 
@@ -280,6 +281,7 @@ func Sqlcreate_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx in
 	if err != nil {
 		return
 	}
+	logutil.Debug("sqls\n%s", sqls)
 	err = conn.Exec(sqls, uintptr(0), nil)
 	if err != nil {
 		return
