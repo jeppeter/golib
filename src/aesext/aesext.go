@@ -47,13 +47,27 @@ func AesDecEcb(ciphertext []byte, key []byte) (plaintext []byte, err error) {
 }
 
 func AesDecCbc(ciphertext []byte, key []byte, iv []byte) (plaintext []byte, err error) {
-	plaintext = []byte{}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return
+	}
+	dec := cipher.NewCBCDecrypter(block, iv)
+	plaintext = make([]byte, len(ciphertext))
+	dec.CryptBlocks(plaintext, ciphertext)
 	err = nil
 	return
 }
 
 func AesEncCbc(plaintext []byte, key []byte, iv []byte, blksize int) (ciphertext []byte, err error) {
-	ciphertext = []byte{}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return
+	}
+
+	enc := cipher.NewCBCEncrypter(block, iv)
+	nplain := Pad(plaintext, aes.BlockSize)
+	ciphertext = make([]byte, len(nplain))
+	enc.CryptBlocks(ciphertext, nplain)
 	err = nil
 	return
 }
