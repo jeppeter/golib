@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"dbgutil"
 	"encoding/pem"
@@ -397,6 +398,59 @@ func init() {
 	Rsapsssign_handler(nil, nil, nil)
 	Rsapssvfy_handler(nil, nil, nil)
 	Rsagen_handler(nil, nil, nil)
+	Rsadescr_handler(nil, nil, nil)
+}
+
+// DecryptWithPrivateKey decrypts data with private key
+func DecryptWithPrivateKey(ciphertext []byte, priv *rsa.PrivateKey) (plaintext []byte, err error) {
+	hash := sha1.New()
+	plaintext, err = rsa.DecryptOAEP(hash, rand.Reader, priv, ciphertext, nil)
+	if err != nil {
+		err = dbgutil.FormatError("decrypt error %s", err.Error())
+	}
+	return
+}
+
+func Rsadescr_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var keyfile string
+	var rsakey *rsa.PrivateKey = nil
+	var outfile string
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need keyfile datafile")
+		return
+	}
+
+	keyfile = sarr[0]
+	infile := sarr[1]
+	outfile = ns.GetString("output")
+	rsakey, err = get_rsa_private(keyfile)
+	if err != nil {
+		return
+	}
+	indata, err := fileop.ReadFileBytes(infile)
+	if err != nil {
+		return
+	}
+
+	outdata, err := DecryptWithPrivateKey(indata, rsakey)
+	if err != nil {
+		return
+	}
+
+	_, err = fileop.WriteFileBytes(outfile, outdata)
+	return
 }
 
 func load_rsa_command(parser *extargsparse.ExtArgsParse) (err error) {
@@ -417,6 +471,9 @@ func load_rsa_command(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"rsapssvfy<Rsapssvfy_handler>##privkeyfile inputfile signfile to verify data##" : {
 			"$" : 3
+		},
+		"rsadecr<Rsadescr_handler>##privkeyfile inputfile to decrypt data##" : {
+			"$" : 2
 		}
 
 	}`

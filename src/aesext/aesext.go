@@ -45,3 +45,15 @@ func AesDecEcb(ciphertext []byte, key []byte) (plaintext []byte, err error) {
 	err = nil
 	return
 }
+
+func AesDecCbc(ciphertext []byte, key []byte, iv []byte) (plaintext []byte, err error) {
+	plaintext = []byte{}
+	err = nil
+	return
+}
+
+func AesEncCbc(plaintext []byte, key []byte, iv []byte, blksize int) (ciphertext []byte, err error) {
+	ciphertext = []byte{}
+	err = nil
+	return
+}
