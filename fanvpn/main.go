@@ -1,7 +1,6 @@
 package main
 
 import (
-	"aesext"
 	"dbgutil"
 	"fmt"
 	"fileop"
@@ -15,11 +14,11 @@ import (
 
 func Decodejson_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
-	var key []byte
-	var iv []byte
-	var data []byte
-	var encbytes []byte
-	var ofile string
+	var pemstr string
+	var datastr string
+	var parser *VPNParse = nil
+	var cfg *VPNConfig = nil
+	var idx int
 	err = nil
 	if ns == nil {
 		return nil
@@ -31,38 +30,34 @@ func Decodejson_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	}
 
 	sarr = ns.GetArray("subnargs")
-	if len(sarr) < 3 {
-		err = dbgutil.FormatError("need aesfile ivfile datafile")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need pemfile jsonfile ...")
 		return
 	}
 
-	ofile = ns.GetString("output")
 
-	key, err = fileop.ReadFileBytes(sarr[0])
+	pemstr, err = fileop.ReadFile(sarr[0])
 	if err != nil {
 		return
 	}
 
-	iv, err = fileop.ReadFileBytes(sarr[1])
+	parser, err = NewVPNParse(pemstr)
 	if err != nil {
 		return
 	}
 
-
-	data, err = fileop.ReadFileBytes(sarr[2])
-	if err != nil {
-		return
+	for idx = 1; idx < len(sarr); idx += 1 {
+		datastr, err = fileop.ReadFile(sarr[idx])
+		if err != nil {
+			return
+		}
+		cfg, err = parser.GetConfig(datastr)
+		if err != nil {
+			return
+		}
+		cfg = cfg
 	}
 
-	encbytes, err = aesext.AesEncCbc(data,key,iv)
-	if err != nil {
-		return
-	}
-
-	_, err = fileop.WriteFileBytes(ofile,encbytes)
-	if err != nil {
-		return
-	}
 
 	err = nil
 	return
@@ -81,7 +76,7 @@ func main() {
 	commandline = `{
 		"input|i" : null,
 		"output|o" : null,
-		"decjson<Decodejson_handler>##jsonfile ... with decode json for config##" : {
+		"decjson<Decodejson_handler>##pemfile jsonfile  with decode json for config##" : {
 			"$" : "+"
 		}
 

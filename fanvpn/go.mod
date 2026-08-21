@@ -1,6 +1,14 @@
 module fanvpn
 
-go 1.26.3
+go 1.25
+
+replace dbgutil => ../src/dbgutil
+
+replace fileop => ../src/fileop
+
+replace aesext => ../src/aesext
+
+replace logutil => ../src/logutil
 
 require (
 	aesext v0.0.0-00010101000000-000000000000 // indirect
@@ -11,11 +19,3 @@ require (
 	github.com/tebeka/atexit v0.3.0 // indirect
 	logutil v0.0.0-00010101000000-000000000000 // indirect
 )
-
-replace dbgutil => ../src/dbgutil
-
-replace fileop => ../src/fileop
-
-replace aesext => ../src/aesext
-
-replace logutil => ../src/logutil
