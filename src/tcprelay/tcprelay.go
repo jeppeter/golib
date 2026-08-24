@@ -19,6 +19,7 @@ type RemoteConn interface {
 
 type CreateRemoteConn interface {
 	CreateRemote() (retconn RemoteConn, err error)
+	Close()
 }
 
 type DefaultRemoteConn struct {
@@ -49,6 +50,32 @@ func (retp *DefaultRemoteConn) WriteHandle(inbyte []byte) (outbytes []byte, err 
 }
 
 func (retp *DefaultRemoteConn) Close() {
+	return
+}
+
+type DefaultCreateRemoteConn struct {
+	remotestr string
+}
+
+func NewDefaultCreateRemoteConn(remotestr string) (retp *DefaultCreateRemoteConn, err error) {
+	retp = &DefaultCreateRemoteConn{}
+	retp.remotestr = remotestr
+	err = nil
+	return
+}
+
+func (retp *DefaultCreateRemoteConn) CreateRemote() (retconn RemoteConn, err error) {
+	var dret *DefaultRemoteConn
+	dret, err = NewDefaultRemoteConn(retp.remotestr)
+	if err != nil {
+		return
+	}
+	retconn = dret
+	err = nil
+	return
+}
+
+func (retp *DefaultCreateRemoteConn) Close() {
 	return
 }
 
