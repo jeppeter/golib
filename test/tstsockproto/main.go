@@ -9,11 +9,13 @@ import (
 	"logutil"
 	"sockproto"
 	"socktimeout"
+	"tcprelay"
 )
 
 func init() {
 	Sockserver_handler(nil, nil, nil)
 	Sockclient_handler(nil, nil, nil)
+	Tcprelay_handler(nil, nil, nil)
 }
 
 func LoadParser(parser *extargsparse.ExtArgsParse) (err error) {
@@ -26,6 +28,9 @@ func LoadParser(parser *extargsparse.ExtArgsParse) (err error) {
 		},
 		"sockcli<Sockclient_handler>##127.0.0.1:9090 files ... to send files##" : {
 			"$" : "+"
+		},
+		"tcprelay<Tcprelay_handler>##bindstr remotestr to make relay##" : {
+			"$" : 2
 		}
 	}`
 
@@ -192,6 +197,29 @@ func Sockclient_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	}
 
 	err = nil
+	return
+}
+
+func Tcprelay_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var i int
+	var fname string
+	var fstr string
+	var cli *socktimeout.SockClient = nil
+	var chl *sockproto.SockChannel = nil
+	var rets string
+	var timeout int
+	var connstr string
+
+	if ns == nil {
+		err = nil
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
 	return
 }
 

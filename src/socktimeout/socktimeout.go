@@ -85,6 +85,47 @@ func (retp *SockAccept) AcceptTimeout(mills int) (nretp *SockClient, err error) 
 	return
 }
 
+func (retp *SockAccept) AcceptTimeoutRaw(mills int) (nretp net.Conn, err error) {
+	var nconn *net.TCPConn
+	var tm time.Time
+	var curtime time.Time
+	nretp = nil
+	if mills != 0 {
+		tm = time.Now().Add(time.Duration(mills) * time.Millisecond)
+	} else {
+		tm = time.Time{}
+	}
+
+	if retp.ln == nil {
+		err = dbgutil.FormatError("closed socket")
+		return
+	}
+
+	err = retp.ln.SetDeadline(tm)
+	if err != nil {
+		err = dbgutil.FormatError("set %d timeout error %s", mills, err.Error())
+		return
+	}
+
+	nconn, err = retp.ln.AcceptTCP()
+	if err != nil {
+		if mills != 0 {
+			curtime = time.Now()
+			if curtime.After(tm) {
+				nretp = nil
+				err = nil
+				return
+			}
+		}
+		err = dbgutil.FormatError("accept error %s", err.Error())
+		return
+	}
+
+	nretp = nconn
+	err = nil
+	return
+}
+
 func read_tcp_buffer(conn *net.TCPConn, n int, mills int) (retb []byte, err error) {
 	var tm time.Time
 	var cbuf []byte
