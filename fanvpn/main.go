@@ -39,9 +39,7 @@ SF/pcEytM0rQhiJYmBXKeayUsICTxnSdixb42BSRDTL14F6Jzv2GcGRh80Jx1DVL
 zygLJrETnjWa1iAMPLnIB9lB
 -----END PRIVATE KEY-----`
 
-func DEFAULT_CONFIG_URLS() []string {
-	return []string{"https://gitlab.com/zhifan999/fq/-/raw/main/config.json", "https://www.githubip.xyz/config.json", "https://d23lye95wfkvbk.cloudfront.net/config.json"}
-}
+var DEFAULT_CONFIG_URLS []string = []string{"https://gitlab.com/zhifan999/fq/-/raw/main/config.json", "https://www.githubip.xyz/config.json", "https://d23lye95wfkvbk.cloudfront.net/config.json"}
 
 func Decodejson_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
 	var sarr []string
@@ -135,7 +133,7 @@ func Getcfg_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 
 	sarr = ns.GetArray("subnargs")
 	if len(sarr) == 0 {
-		urls = DEFAULT_CONFIG_URLS()
+		urls = DEFAULT_CONFIG_URLS
 	} else {
 		urls = sarr
 	}
