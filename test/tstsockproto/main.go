@@ -314,6 +314,8 @@ func Tcprelay_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx1 in
 		return
 	}
 
+	logutil.Debug("listen on [%s]", bindstr)
+
 	err = lister.Start()
 	if err != nil {
 		return

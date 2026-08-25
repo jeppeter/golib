@@ -227,6 +227,7 @@ outer_loop:
 		}
 	}
 
+	logutil.Debug("RelayConn Read Exit")
 	retp.outnotechl <- 1
 
 	/*we exit*/
@@ -293,6 +294,7 @@ outer_loop:
 		}
 	}
 
+	logutil.Debug("RelayConn Write Exit")
 	retp.outnotechl <- 1
 	/*we exit*/
 	retp.wrexited = 1
@@ -414,6 +416,7 @@ func (retp *RelayListen) MainProc() {
 		chosen, _, ok = reflect.Select(selcases)
 		if ok && chosen > 1 && chosen < len(selcases) {
 			/*ok we should remove */
+			logutil.Debug("chosen %d children to remove", chosen-2)
 			cconn = retp.chlds[chosen-2]
 			retp.chlds = slices.Delete(retp.chlds, chosen-2, chosen-1)
 			cconn.Close()
