@@ -2,8 +2,10 @@ package tcprelay
 
 import (
 	"dbgutil"
+	"errors"
 	"logutil"
 	"net"
+	"os"
 	"reflect"
 	"slices"
 	"socktimeout"
@@ -17,8 +19,8 @@ type RemoteConn interface {
 	Close()
 }
 
-type CreateRemoteConn interface {
-	CreateRemote() (retconn RemoteConn, err error)
+type CreateConn interface {
+	Create(conn net.Conn) (retconn RemoteConn, err error)
 	Close()
 }
 
@@ -53,18 +55,18 @@ func (retp *DefaultRemoteConn) Close() {
 	return
 }
 
-type DefaultCreateRemoteConn struct {
+type DefaultCreateConn struct {
 	remotestr string
 }
 
-func NewDefaultCreateRemoteConn(remotestr string) (retp *DefaultCreateRemoteConn, err error) {
-	retp = &DefaultCreateRemoteConn{}
+func NewDefaultCreateConn(remotestr string) (retp *DefaultCreateConn, err error) {
+	retp = &DefaultCreateConn{}
 	retp.remotestr = remotestr
 	err = nil
 	return
 }
 
-func (retp *DefaultCreateRemoteConn) CreateRemote() (retconn RemoteConn, err error) {
+func (retp *DefaultCreateConn) Create(conn net.Conn) (retconn RemoteConn, err error) {
 	var dret *DefaultRemoteConn
 	dret, err = NewDefaultRemoteConn(retp.remotestr)
 	if err != nil {
@@ -75,7 +77,7 @@ func (retp *DefaultCreateRemoteConn) CreateRemote() (retconn RemoteConn, err err
 	return
 }
 
-func (retp *DefaultCreateRemoteConn) Close() {
+func (retp *DefaultCreateConn) Close() {
 	return
 }
 
@@ -94,6 +96,7 @@ type RelayConn struct {
 func NewRelayConn(localchl net.Conn, remotehdl RemoteConn) (retp *RelayConn, err error) {
 	retp = &RelayConn{}
 	retp.localchl = localchl
+	retp.svrchl = nil
 	retp.remotehdl = remotehdl
 	retp.noteexited = 1
 	/*we make 10 size for not hanging when send the remote*/
@@ -125,16 +128,16 @@ func NewRelayConn(localchl net.Conn, remotehdl RemoteConn) (retp *RelayConn, err
 }
 
 func (retp *RelayConn) NotifyExit(bwait bool) (exited int) {
-	if retp.noteexited != 0 {
+	if retp.noteexited == 0 {
 		retp.localrdexit <- 1
 		retp.localwrexit <- 1
 		retp.noteexited = 1
 	}
 
-	for bwait == true {
+	for bwait {
 		if retp.rdexited == 0 || retp.wrexited == 0 {
 			/*we exited*/
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 10)
 		} else if retp.rdexited != 0 && retp.wrexited != 0 {
 			break
 		}
@@ -148,7 +151,11 @@ func (retp *RelayConn) NotifyExit(bwait bool) (exited int) {
 }
 
 func (retp *RelayConn) Close() {
-	retp.NotifyExit(true)
+	for {
+		if retp.NotifyExit(true) != 0 {
+			break
+		}
+	}
 	retp.localchl.Close()
 	retp.svrchl.Close()
 	retp.remotehdl.Close()
@@ -156,7 +163,7 @@ func (retp *RelayConn) Close() {
 }
 
 func (retp *RelayConn) Exited() bool {
-	if retp.wrexited != 0 || retp.rdexited != 0 {
+	if retp.wrexited != 0 && retp.rdexited != 0 {
 		return true
 	}
 	return false
@@ -170,27 +177,40 @@ func (retp *RelayConn) LocalReadProc() {
 	var tlen int
 	var wn int
 	var needexited bool
-	rdata = make([]byte, 2500)
+	var tm time.Time
+	rdata = make([]byte, 2048)
 outer_loop:
 	for {
-		n, err = retp.localchl.Read(rdata)
+		tm = time.Now().Add(time.Duration(500) * time.Millisecond)
+		err = retp.localchl.SetReadDeadline(tm)
 		if err != nil {
-			err = dbgutil.FormatError("read local data error [%s]", err.Error())
-			break
-		}
-		outbytes, err = retp.remotehdl.WriteHandle(rdata[:n])
-		if err != nil {
+			logutil.Error("localchl SetReadDeadline error %s", err.Error())
 			break
 		}
 
-		tlen = 0
-		for tlen < len(outbytes) {
-			wn, err = retp.svrchl.Write(outbytes[tlen:])
-			if err != nil {
-				err = dbgutil.FormatError("write server data [%d] error [%s]")
-				break outer_loop
+		n, err = retp.localchl.Read(rdata)
+		if err != nil {
+			if !errors.Is(err, os.ErrDeadlineExceeded) {
+				logutil.Error("read local data error [%s]", err.Error())
+				break
 			}
-			tlen += wn
+			n = 0
+		}
+		if n > 0 {
+			outbytes, err = retp.remotehdl.WriteHandle(rdata[:n])
+			if err != nil {
+				break
+			}
+
+			tlen = 0
+			for tlen < len(outbytes) {
+				wn, err = retp.svrchl.Write(outbytes[tlen:])
+				if err != nil {
+					err = dbgutil.FormatError("write server data [%d] error [%s]", tlen, err.Error())
+					break outer_loop
+				}
+				tlen += wn
+			}
 		}
 
 		needexited = false
@@ -221,28 +241,42 @@ func (retp *RelayConn) RemoteReadProc() {
 	var wn int
 	var outbytes []byte
 	var needexited bool
+	var tm time.Time
 	rdata = make([]byte, 2500)
 outer_loop:
 	for {
+		/*first to */
+		tm = time.Now().Add(time.Duration(500) * time.Millisecond)
+		err = retp.svrchl.SetReadDeadline(tm)
+		if err != nil {
+			logutil.Error("svrhdl SetReadDeadline error %s", err.Error())
+			break
+		}
 		n, err = retp.svrchl.Read(rdata)
 		if err != nil {
-			err = dbgutil.FormatError("read server data error [%s]", err.Error())
-			break
-		}
-
-		outbytes, err = retp.remotehdl.ReadHandle(rdata[:n])
-		if err != nil {
-			break
-		}
-
-		tlen = 0
-		for tlen < len(outbytes) {
-			wn, err = retp.localchl.Write(outbytes[tlen:])
-			if err != nil {
-				err = dbgutil.FormatError("write local data [%d] error [%s]")
-				break outer_loop
+			if !errors.Is(err, os.ErrDeadlineExceeded) {
+				logutil.Error("read server data error [%s]", err.Error())
+				break
 			}
-			tlen += wn
+			/*we make sure not read any data*/
+			n = 0
+		}
+
+		if n > 0 {
+			outbytes, err = retp.remotehdl.ReadHandle(rdata[:n])
+			if err != nil {
+				break
+			}
+
+			tlen = 0
+			for tlen < len(outbytes) {
+				wn, err = retp.localchl.Write(outbytes[tlen:])
+				if err != nil {
+					err = dbgutil.FormatError("write local data [%d] error [%s]", tlen, err.Error())
+					break outer_loop
+				}
+				tlen += wn
+			}
 		}
 
 		needexited = false
@@ -266,7 +300,7 @@ outer_loop:
 
 type RelayListen struct {
 	localstr     string
-	remoteconn   CreateRemoteConn
+	remoteconn   CreateConn
 	mainsvr      *socktimeout.SockAccept
 	chlds        []*RelayConn
 	noteexited   int
@@ -319,11 +353,23 @@ func (retp *RelayListen) MainProc() {
 	selcases = append(selcases, exitreflect)
 
 	for {
-		netconn, err = retp.mainsvr.AcceptTimeoutRaw(300)
+		if retp.mainsvr == nil {
+			retp.mainsvr, err = socktimeout.NewSockAccept("tcp", retp.localstr)
+			if err != nil {
+				retp.mainsvr = nil
+				logutil.Error("NewSockAccept error %s", err.Error())
+			}
+		}
+		err = nil
+		netconn = nil
+
+		if retp.mainsvr != nil {
+			netconn, err = retp.mainsvr.AcceptTimeoutRaw(300)
+		}
 		if err == nil {
 			if netconn != nil {
 				if retp.remoteconn != nil {
-					nconn, err = retp.remoteconn.CreateRemote()
+					nconn, err = retp.remoteconn.Create(netconn)
 					if err == nil {
 						/*now we should */
 						cconn, err = NewRelayConn(netconn, nconn)
@@ -353,6 +399,10 @@ func (retp *RelayListen) MainProc() {
 					logutil.Error("no call_remote")
 				}
 			}
+		} else {
+			logutil.Error("accept Error %s", err.Error())
+			retp.mainsvr.Close()
+			retp.mainsvr = nil
 		}
 
 		/*now we should give the chlds wait exited*/
@@ -398,7 +448,7 @@ func (retp *RelayListen) MainProc() {
 	retp.exited = 1
 }
 
-func NewRelayListen(localstr string, rconn CreateRemoteConn) (retp *RelayListen, err error) {
+func NewRelayListen(localstr string, rconn CreateConn) (retp *RelayListen, err error) {
 	retp = &RelayListen{}
 	retp.localstr = localstr
 	retp.remoteconn = rconn
