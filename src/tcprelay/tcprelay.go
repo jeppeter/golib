@@ -41,12 +41,14 @@ func (retp *DefaultRemoteConn) Open() (conn net.Conn, err error) {
 
 func (retp *DefaultRemoteConn) ReadHandle(inbyte []byte) (outbytes []byte, err error) {
 	outbytes = inbyte
+	logutil.DebugBuffer(inbyte, "Read")
 	err = nil
 	return
 }
 
 func (retp *DefaultRemoteConn) WriteHandle(inbyte []byte) (outbytes []byte, err error) {
 	outbytes = inbyte
+	logutil.DebugBuffer(inbyte, "Write")
 	err = nil
 	return
 }

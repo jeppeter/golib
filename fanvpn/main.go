@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"dbgutil"
 	"fileop"
 	"fmt"
@@ -8,6 +9,9 @@ import (
 	"github.com/tebeka/atexit"
 	"logutil"
 	"os"
+	"os/signal"
+	"tcprelay"
+	"time"
 )
 
 const PEM_DEFAULT = `-----BEGIN PRIVATE KEY-----
@@ -158,9 +162,70 @@ func Getcfg_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 	return
 }
 
+func Proxy_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx1 interface{}) (err error) {
+	var sarr []string
+	var localstr string
+	var remotestr string
+	var lister *tcprelay.RelayListen
+	var defremote *tcprelay.DefaultCreateConn
+	var ctx context.Context
+	var stop context.CancelFunc
+	var exited int = 0
+	err = nil
+	if ns == nil {
+		return nil
+	}
+	err = logutil.InitLog(ns)
+	if err != nil {
+		logutil.Error("can not Initlog err[%s]", err.Error())
+		return err
+	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need localstr remotestr")
+		return
+	}
+	localstr = sarr[0]
+	remotestr = sarr[1]
+
+	defremote, err = tcprelay.NewDefaultCreateConn(remotestr)
+	if err != nil {
+		return
+	}
+
+	lister, err = tcprelay.NewRelayListen(localstr, defremote)
+	if err != nil {
+		return
+	}
+
+	logutil.Debug("listen on [%s]", localstr)
+
+	err = lister.Start()
+	if err != nil {
+		return
+	}
+	defer lister.Close()
+
+	ctx, stop = signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	for exited == 0 {
+		select {
+		case <-ctx.Done():
+			exited = 1
+		case <-time.After(time.Second * 1):
+			exited = exited
+		}
+	}
+	err = nil
+	return
+}
+
 func init() {
 	Decodejson_handler(nil, nil, nil)
 	Getcfg_handler(nil, nil, nil)
+	Proxy_handler(nil, nil, nil)
 }
 func main() {
 	var commandline string
@@ -177,6 +242,9 @@ func main() {
 		},
 		"getcfg<Getcfg_handler>##url ... to get config##" : {
 			"$" : "*"
+		},
+		"proxy<Proxy_handler>##localstr remotestr to make proxy##" : {
+			"$" : 2
 		}
 
 	}`
