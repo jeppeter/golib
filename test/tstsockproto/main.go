@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
 	"dbgutil"
 	"fileop"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"github.com/tebeka/atexit"
 	"logutil"
+	"net"
+	"os"
+	"os/signal"
 	"sockproto"
 	"socktimeout"
 	"tcprelay"
+	"time"
 )
 
 func init() {
@@ -200,16 +205,86 @@ func Sockclient_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx i
 	return
 }
 
-func Tcprelay_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+type RemoteConn interface {
+	Open() (conn net.Conn, err error)
+	ReadHandle(inbyte []byte) (outbytes []byte, err error)
+	WriteHandle(inbyte []byte) (outbytes []byte, err error)
+	Close()
+}
+
+type CreateConn interface {
+	Create(conn net.Conn) (retconn RemoteConn, err error)
+	Close()
+}
+
+type LogRemoteConn struct {
+	bindstr string
+}
+
+func NewLogRemoteConn(bindstr string) (retp *LogRemoteConn, err error) {
+	retp = &LogRemoteConn{}
+	retp.bindstr = bindstr
+	err = nil
+	return
+}
+
+func (retp *LogRemoteConn) Open() (conn net.Conn, err error) {
+	return net.Dial("tcp", retp.bindstr)
+}
+
+func (retp *LogRemoteConn) ReadHandle(inbyte []byte) (outbytes []byte, err error) {
+	logutil.DebugBuffer(inbyte, "read")
+	outbytes = inbyte
+	err = nil
+	return
+}
+
+func (retp *LogRemoteConn) WriteHandle(inbyte []byte) (outbytes []byte, err error) {
+	logutil.DebugBuffer(inbyte, "write")
+	outbytes = inbyte
+	err = nil
+	return
+}
+
+func (retp *LogRemoteConn) Close() {
+	return
+}
+
+type LogCreateConn struct {
+	remotestr string
+}
+
+func NewLogCreateConn(remotestr string) (retp *LogCreateConn, err error) {
+	retp = &LogCreateConn{}
+	retp.remotestr = remotestr
+	err = nil
+	return
+}
+
+func (retp *LogCreateConn) Create(conn net.Conn) (retconn tcprelay.RemoteConn, err error) {
+	var dret *LogRemoteConn
+	dret, err = NewLogRemoteConn(retp.remotestr)
+	if err != nil {
+		return
+	}
+	retconn = dret
+	err = nil
+	return
+}
+
+func (retp *LogCreateConn) Close() {
+	return
+}
+
+func Tcprelay_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx1 interface{}) (err error) {
 	var sarr []string
-	var i int
-	var fname string
-	var fstr string
-	var cli *socktimeout.SockClient = nil
-	var chl *sockproto.SockChannel = nil
-	var rets string
-	var timeout int
-	var connstr string
+	var bindstr string
+	var remotestr string
+	var defremote *LogCreateConn
+	var lister *tcprelay.RelayListen
+	var ctx context.Context
+	var stop context.CancelFunc
+	var exited int = 0
 
 	if ns == nil {
 		err = nil
@@ -220,6 +295,44 @@ func Tcprelay_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx int
 	if err != nil {
 		return
 	}
+
+	sarr = ns.GetArray("subnargs")
+	if len(sarr) < 2 {
+		err = dbgutil.FormatError("need bindstr remotestr")
+		return
+	}
+	bindstr = sarr[0]
+	remotestr = sarr[1]
+
+	defremote, err = NewLogCreateConn(remotestr)
+	if err != nil {
+		return
+	}
+
+	lister, err = tcprelay.NewRelayListen(bindstr, defremote)
+	if err != nil {
+		return
+	}
+
+	err = lister.Start()
+	if err != nil {
+		return
+	}
+	defer lister.Close()
+
+	ctx, stop = signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	for exited == 0 {
+		select {
+		case <-ctx.Done():
+			exited = 1
+		case <-time.After(time.Second * 1):
+			exited = exited
+		}
+	}
+	err = nil
+
 	return
 }
 

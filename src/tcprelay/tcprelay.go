@@ -312,12 +312,17 @@ type RelayListen struct {
 }
 
 func (retp *RelayListen) TimeTick(mills int) {
+	var exited int = 0
 	for {
 		select {
 		case <-retp.tickexitchan:
-			break
+			exited = 1
 		case <-time.After(time.Duration(mills) * time.Millisecond):
 			retp = retp
+		}
+
+		if exited != 0 {
+			break
 		}
 
 		/*we send this to make sure */

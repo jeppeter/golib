@@ -14,14 +14,18 @@ replace jsonproto => ../../src/jsonproto
 
 replace fileop => ../../src/fileop
 
+replace tcprelay => ../../src/tcprelay
+
 require (
 	dbgutil v0.0.0-00010101000000-000000000000 // indirect
 	fileop v0.0.0-00010101000000-000000000000 // indirect
 	github.com/jeppeter/go-extargsparse v1.0.0 // indirect
 	github.com/jeppeter/log4go v0.0.0-20191224035337-ce096513aa1f // indirect
 	github.com/tebeka/atexit v0.3.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
 	jsonproto v0.0.0-00010101000000-000000000000 // indirect
 	logutil v0.0.0-00010101000000-000000000000 // indirect
 	sockproto v0.0.0-00010101000000-000000000000 // indirect
 	socktimeout v0.0.0-00010101000000-000000000000 // indirect
+	tcprelay v0.0.0-00010101000000-000000000000 // indirect
 )
