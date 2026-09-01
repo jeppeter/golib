@@ -156,7 +156,10 @@ func Getcfg_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx inter
 			totalerror = err
 			continue
 		}
-		cfg = cfg
+
+		for _, node := range cfg.Nodes {
+			fmt.Printf("server [%s] flag[%s] [%s:%d]\n", node.Name, node.Flag, node.Server, node.Port)
+		}
 	}
 	err = totalerror
 	return
