@@ -186,6 +186,7 @@ func Yaml_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfa
 	var vmap map[string]interface{}
 	var outb []byte
 	var keys StringArray
+	var output string
 	err = nil
 
 	if ns == nil {
@@ -219,6 +220,19 @@ func Yaml_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfa
 	sort.Sort(keys)
 	for _, k := range keys {
 		fmt.Printf("[%s]=%v\n", k, vmap[k])
+	}
+
+	output = ns.GetString("output")
+	if len(output) > 0 {
+		outb, err = yaml.Marshal(vmap)
+		if err != nil {
+			err = dbgutil.FormatError("can not marshal %s error %s", yamlfile, err.Error())
+			return
+		}
+		_, err = fileop.WriteFileBytes(output, outb)
+		if err != nil {
+			return
+		}
 	}
 	err = nil
 	return
