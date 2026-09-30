@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"dbgutil"
 	"fileop"
 	"fmt"
 	"github.com/jeppeter/go-extargsparse"
 	"github.com/tebeka/atexit"
+	"gopkg.in/yaml.v2"
 	"logutil"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
@@ -18,6 +21,7 @@ func init() {
 	Tempdir_handler(nil, nil, nil)
 	Walkdir_handler(nil, nil, nil)
 	Sig_handler(nil, nil, nil)
+	Yaml_handler(nil, nil, nil)
 }
 
 func Tempfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -158,6 +162,69 @@ func Sig_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx1 interfa
 	return
 }
 
+type StringArray []string
+
+func (a StringArray) Len() int {
+	return len(a)
+}
+
+func (a StringArray) Less(i, j int) bool {
+	var bval bool = false
+	if a[i] < a[j] {
+		bval = true
+	}
+	return bval
+}
+
+func (a StringArray) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func Yaml_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var yamlfile string
+	var vmap map[string]interface{}
+	var outb []byte
+	var keys StringArray
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+
+	yamlfile = sarr[0]
+	outb, err = fileop.ReadFileBytes(yamlfile)
+	if err != nil {
+		return
+	}
+
+	vmap = make(map[string]interface{})
+	err = yaml.Unmarshal(outb, &vmap)
+	if err != nil {
+		err = dbgutil.FormatError("can not parse [%s] error %s", yamlfile, err.Error())
+		return
+	}
+
+	keys = []string{}
+	for k, _ := range vmap {
+		keys = append(keys, k)
+	}
+	sort.Sort(keys)
+	for _, k := range keys {
+		fmt.Printf("[%s]=%v\n", k, vmap[k])
+	}
+	err = nil
+	return
+
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -179,6 +246,9 @@ func main() {
 		},
 		"sig<Sig_handler>##to demonstrate the signal##" : {
 			"$" : 0
+		},
+		"yaml<Yaml_handler>##file to decode yaml##" : {
+			"$" : 1
 		}
 
 	}`
