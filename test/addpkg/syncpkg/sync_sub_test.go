@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func SyncTestSub(t *testing.T) {
-	t.Logf("SyncTestSub")
+func TestSyncSub(t *testing.T) {
+	t.Logf("TestSyncSub")
 	assert.Equal(t, SyncSub(3, 1), 2)
 }
