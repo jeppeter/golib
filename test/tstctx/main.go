@@ -24,7 +24,9 @@ func merge_ctx(port int, mills int) {
 			conn.SetReadDeadline(time.Now())
 			close(stopc)
 		})
+		logutil.Debug("time.Now %v", time.Now())
 		n, err = conn.Read(b)
+		logutil.Debug("after time.Now %v", time.Now())
 		if !stop() {
 			// The AfterFunc was started.
 			// Wait for it to complete, and reset the Conn's deadline.
