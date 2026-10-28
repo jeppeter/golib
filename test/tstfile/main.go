@@ -9,10 +9,13 @@ import (
 	"github.com/tebeka/atexit"
 	"gopkg.in/yaml.v2"
 	"logutil"
+	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"randfile"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -22,6 +25,7 @@ func init() {
 	Walkdir_handler(nil, nil, nil)
 	Sig_handler(nil, nil, nil)
 	Yaml_handler(nil, nil, nil)
+	Rand_handler(nil, nil, nil)
 }
 
 func Tempfile_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
@@ -239,6 +243,65 @@ func Yaml_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interfa
 
 }
 
+func Rand_handler(ns *extargsparse.NameSpaceEx, ostruct interface{}, ctx interface{}) (err error) {
+	var sarr []string
+	var randf *randfile.RandFile
+	var input string
+	var orand *rand.Rand
+	var number int = 10
+	var inb []byte
+	var idx int
+	err = nil
+
+	if ns == nil {
+		return
+	}
+
+	err = logutil.InitLog(ns)
+	if err != nil {
+		return
+	}
+
+	sarr = ns.GetArray("subnargs")
+	input = ns.GetString("input")
+	if len(input) > 0 {
+		randf, err = randfile.NewRandFile(input)
+		if err != nil {
+			return
+		}
+	} else {
+		randf, err = randfile.NewRandFp(os.Stdin, "stdin")
+		if err != nil {
+			return
+		}
+	}
+
+	defer randf.Close()
+	orand = rand.New(randf)
+
+	if len(sarr) > 0 {
+		number, err = strconv.Atoi(sarr[0])
+		if err != nil {
+			err = dbgutil.FormatError("[%s] not number", sarr[0])
+			return
+		}
+	}
+	inb = make([]byte, 1)
+	for idx = 0; idx < number; idx += 1 {
+
+		_, err = orand.Read(inb)
+		if err != nil {
+			return
+		}
+		fmt.Printf("[%d] value 0x%x\n", idx, inb[0])
+
+	}
+
+	err = nil
+	return
+
+}
+
 func main() {
 	var commandline string
 	var err error
@@ -263,6 +326,9 @@ func main() {
 		},
 		"yaml<Yaml_handler>##file to decode yaml##" : {
 			"$" : 1
+		},
+		"rand<Rand_handler>##num ... to make rand number##" : {
+			"$" : "*"
 		}
 
 	}`

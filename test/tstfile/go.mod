@@ -8,6 +8,8 @@ replace fileop => ../../src/fileop
 
 replace dbgutil => ../../src/dbgutil
 
+replace randfile => ../../src/randfile
+
 require (
 	dbgutil v0.0.0-00010101000000-000000000000
 	fileop v0.0.0-00010101000000-000000000000
@@ -15,6 +17,7 @@ require (
 	github.com/tebeka/atexit v0.3.0
 	gopkg.in/yaml.v2 v2.4.0
 	logutil v0.0.0-00010101000000-000000000000
+	randfile v0.0.0-00010101000000-000000000000
 )
 
 require (
