@@ -66,6 +66,10 @@ func (retp *RandFile) Int63() (retv int64) {
 		retv <<= 8
 		retv |= int64(v)
 	}
+
+	if retv < 0 {
+		retv = -retv
+	}
 	logutil.TraceBuffer(inb, "read RandFile [%s]", retp.path)
 	return
 }
